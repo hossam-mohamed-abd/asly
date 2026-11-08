@@ -130,20 +130,23 @@
   window.openModal = (id) => document.getElementById(id)?.classList.add('open');
   window.closeModal = (id) => document.getElementById(id)?.classList.remove('open');
 
+  const staffAllowedTabs = new Set(['quick-scanner', 'pos', 'maintenance']);
+
   const tabTitles = {
-    'overview': IS_ADMIN
-      ? tr('لوحة المبيعات اليومية والأرباح الصافية', 'Daily Sales & Net Profit Overview')
-      : tr('ملخص المبيعات والتشغيل اليومي', 'Daily Sales & Operations'),
-    'quick-scanner': tr('كاشف السعر السريع بالكاميرا (الباركود المطاول والـ QR)', 'Quick Camera Price Checker (1D Barcode & QR)'),
+    'overview': tr('لوحة المبيعات اليومية والأرباح الصافية', 'Daily Sales & Net Profit Overview'),
+    'quick-scanner': tr('كاشف السعر السريع', 'Quick Price Scanner'),
     'pos': tr('نقطة البيع وإصدار الفواتير الرسمية', 'Point of Sale & Official Invoicing'),
     'add-product': tr('إضافة منتج جديد (مسح الكود أو توليد QR تلقائي)', 'Add Product (Scan Barcode or Generate Auto QR)'),
     'inventory': tr('إدارة المخزون والأجهزة واستيكرات الأكواد', 'Inventory Catalog & Printable Stickers'),
-    'maintenance': tr('إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل', 'Interactive QR Repair Tickets & Email Alerts'),
+    'maintenance': tr('إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل', 'Interactive QR Maintenance, Stages & Email'),
     'staff': tr('إدارة الموظفين وصلاحيات النظام', 'Staff Accounts & Role Permissions'),
     'settings': tr('الهوية البصرية وقنوات التواصل وإعدادات البريد', 'Brand Identity, Contact Channels & SMTP'),
   };
 
   window.switchTab = async (tabName) => {
+    if (!IS_ADMIN && !staffAllowedTabs.has(tabName)) {
+      tabName = 'quick-scanner';
+    }
     await stopAllCameras();
     document.querySelectorAll('.side-btn').forEach((b) => {
       b.classList.toggle('active', b.dataset.tab === tabName);
@@ -156,9 +159,9 @@
 
     document.getElementById('appSidebar')?.classList.remove('open');
 
-    if (tabName === 'overview') loadOverviewReport();
+    if (tabName === 'overview' && IS_ADMIN) loadOverviewReport();
     if (tabName === 'pos') loadPosCatalog();
-    if (tabName === 'inventory') loadInventoryTable();
+    if (tabName === 'inventory' && IS_ADMIN) loadInventoryTable();
     if (tabName === 'maintenance') loadMaintenanceList();
     if (tabName === 'staff' && IS_ADMIN) loadUsersList();
     if (tabName === 'settings' && IS_ADMIN) loadSettingsData();
@@ -262,9 +265,10 @@
   }
 
   // ============================================================
-  // TAB 1: OVERVIEW & DAILY SALES / REVENUE REPORT
+  // TAB 1: OVERVIEW & DAILY SALES / REVENUE REPORT (ADMIN ONLY)
   // ============================================================
   async function loadOverviewReport() {
+    if (!IS_ADMIN) return;
     const dFrom = document.getElementById('repDateFrom')?.value || '';
     const dTo = document.getElementById('repDateTo')?.value || '';
 
@@ -1143,6 +1147,7 @@
   let inventoryCache = [];
 
   async function loadInventoryTable() {
+    if (!IS_ADMIN) return;
     const q = document.getElementById('invSearch')?.value.trim() || '';
     const cat = document.getElementById('invCategory')?.value || 'all';
     const tbody = document.getElementById('inventoryTableBody');
@@ -1736,6 +1741,10 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderPosCart();
-    loadOverviewReport();
+    if (IS_ADMIN) {
+      loadOverviewReport();
+    } else {
+      document.getElementById('quickCodeInput')?.focus();
+    }
   });
 })();

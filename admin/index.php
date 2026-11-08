@@ -19,7 +19,7 @@ $otherLang = $en ? 'ar' : 'en';
 
 $unreadMaintNotes = (int)$pdo->query("SELECT COALESCE(SUM(unread_customer_notes), 0) FROM maintenance_tickets")->fetchColumn();
 $activeMaintCount = (int)$pdo->query("SELECT COUNT(*) FROM maintenance_tickets")->fetchColumn();
-$lowStockCount = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE quantity <= low_stock_threshold")->fetchColumn();
+$lowStockCount = $isAdmin ? (int)$pdo->query("SELECT COUNT(*) FROM products WHERE quantity <= low_stock_threshold")->fetchColumn() : 0;
 
 $inventoryStats = ['total_skus' => 0, 'total_units' => 0, 'total_capital' => 0.0, 'expected_sales' => 0.0];
 if ($isAdmin) {
@@ -98,47 +98,45 @@ $jsConfig = [
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-label"><?= $en ? 'Daily Operations & Sales' : 'التشغيل اليومي والمبيعات' ?></div>
-
-      <button type="button" class="side-btn active" data-tab="overview">
-        <span class="side-btn-left"><i class="fa-solid fa-chart-pie"></i> <?= $isAdmin ? ($en ? 'Daily Sales & Profit' : 'المبيعات اليومية والأرباح') : ($en ? 'Daily Sales Summary' : 'ملخص المبيعات اليومية') ?></span>
-      </button>
-
-      <button type="button" class="side-btn" data-tab="quick-scanner">
-        <span class="side-btn-left"><i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Checker' : 'كاشف السعر السريع' ?></span>
-        <span style="font-size:0.7rem;color:var(--db-gold-600);font-weight:800;"><?= $en ? 'Client Safe' : 'أمام العميل' ?></span>
-      </button>
-
-      <button type="button" class="side-btn" data-tab="pos">
-        <span class="side-btn-left"><i class="fa-solid fa-cash-register"></i> <?= $en ? 'POS & Invoicing' : 'نقطة البيع والفواتير' ?></span>
-        <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-teal-700);color:#fff;">0</span>
-      </button>
-
-      <div class="nav-section-label"><?= $en ? 'Inventory & QR/Barcode' : 'المخزون والباركود / QR' ?></div>
-
       <?php if ($isAdmin): ?>
+        <div class="nav-section-label"><?= $en ? 'Daily Operations & Sales' : 'التشغيل اليومي والمبيعات' ?></div>
+
+        <button type="button" class="side-btn active" data-tab="overview">
+          <span class="side-btn-left"><i class="fa-solid fa-chart-pie"></i> <?= $en ? 'Daily Sales & Profit' : 'المبيعات اليومية والأرباح' ?></span>
+        </button>
+
+        <button type="button" class="side-btn" data-tab="quick-scanner">
+          <span class="side-btn-left"><i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Scanner' : 'كاشف السعر السريع' ?></span>
+          <span style="font-size:0.7rem;color:var(--db-gold-600);font-weight:800;"><?= $en ? 'Client Safe' : 'أمام العميل' ?></span>
+        </button>
+
+        <button type="button" class="side-btn" data-tab="pos">
+          <span class="side-btn-left"><i class="fa-solid fa-cash-register"></i> <?= $en ? 'POS & Official Invoices' : 'نقطة البيع وإصدار الفواتير الرسمية' ?></span>
+          <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-teal-700);color:#fff;">0</span>
+        </button>
+
+        <div class="nav-section-label"><?= $en ? 'Inventory & QR/Barcode' : 'المخزون والباركود / QR' ?></div>
+
         <button type="button" class="side-btn" data-tab="add-product">
           <span class="side-btn-left"><i class="fa-solid fa-circle-plus"></i> <?= $en ? 'Add Product (Scan / QR)' : 'إضافة منتج (اسكان / QR)' ?></span>
         </button>
-      <?php endif; ?>
 
-      <button type="button" class="side-btn" data-tab="inventory">
-        <span class="side-btn-left"><i class="fa-solid fa-boxes-stacked"></i> <?= $en ? 'Inventory Catalog' : 'المخزون والمنتجات' ?></span>
-        <?php if ($lowStockCount > 0): ?>
-          <span class="badge-alert" title="Low stock"><?= $lowStockCount ?></span>
-        <?php endif; ?>
-      </button>
+        <button type="button" class="side-btn" data-tab="inventory">
+          <span class="side-btn-left"><i class="fa-solid fa-boxes-stacked"></i> <?= $en ? 'Inventory Catalog' : 'المخزون والمنتجات' ?></span>
+          <?php if ($lowStockCount > 0): ?>
+            <span class="badge-alert" title="Low stock"><?= $lowStockCount ?></span>
+          <?php endif; ?>
+        </button>
 
-      <div class="nav-section-label"><?= $en ? 'Interactive Repair Lab' : 'قسم الصيانة التفاعلي' ?></div>
+        <div class="nav-section-label"><?= $en ? 'Interactive Repair Lab' : 'قسم الصيانة التفاعلي' ?></div>
 
-      <button type="button" class="side-btn" data-tab="maintenance">
-        <span class="side-btn-left"><i class="fa-solid fa-screwdriver-wrench"></i> <?= $en ? 'QR Repair Tickets' : 'الصيانة وتتبع الـ QR' ?></span>
-        <span id="maintNavBadge" class="badge-alert" style="display:<?= $unreadMaintNotes > 0 ? 'inline-block' : 'none' ?>;">
-          <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
-        </span>
-      </button>
+        <button type="button" class="side-btn" data-tab="maintenance">
+          <span class="side-btn-left"><i class="fa-solid fa-screwdriver-wrench"></i> <?= $en ? 'QR Maintenance, Stages & Email' : 'إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل' ?></span>
+          <span id="maintNavBadge" class="badge-alert" style="display:<?= $unreadMaintNotes > 0 ? 'inline-block' : 'none' ?>;">
+            <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
+          </span>
+        </button>
 
-      <?php if ($isAdmin): ?>
         <div class="nav-section-label"><?= $en ? 'Administration & Brand' : 'الإدارة والهوية' ?></div>
 
         <button type="button" class="side-btn" data-tab="staff">
@@ -147,6 +145,24 @@ $jsConfig = [
 
         <button type="button" class="side-btn" data-tab="settings">
           <span class="side-btn-left"><i class="fa-solid fa-sliders"></i> <?= $en ? 'Brand & Social Links' : 'الهوية وروابط السوشيال' ?></span>
+        </button>
+      <?php else: ?>
+        <div class="nav-section-label"><?= $en ? 'Staff Workspace' : 'مهام الموظف المعتمدة' ?></div>
+
+        <button type="button" class="side-btn active" data-tab="quick-scanner">
+          <span class="side-btn-left"><i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Scanner' : 'كاشف السعر السريع' ?></span>
+        </button>
+
+        <button type="button" class="side-btn" data-tab="pos">
+          <span class="side-btn-left"><i class="fa-solid fa-cash-register"></i> <?= $en ? 'POS & Official Invoices' : 'نقطة البيع وإصدار الفواتير الرسمية' ?></span>
+          <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-teal-700);color:#fff;">0</span>
+        </button>
+
+        <button type="button" class="side-btn" data-tab="maintenance">
+          <span class="side-btn-left"><i class="fa-solid fa-screwdriver-wrench"></i> <?= $en ? 'QR Maintenance, Stages & Email' : 'إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل' ?></span>
+          <span id="maintNavBadge" class="badge-alert" style="display:<?= $unreadMaintNotes > 0 ? 'inline-block' : 'none' ?>;">
+            <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
+          </span>
         </button>
       <?php endif; ?>
     </nav>
@@ -171,7 +187,7 @@ $jsConfig = [
         <button type="button" class="mobile-menu-btn" id="btnMobileSidebar"><i class="fa-solid fa-bars"></i></button>
         <div>
           <h2 id="activePageTitle" style="margin:0;font-size:1.2rem;color:var(--db-text);">
-            <?= $isAdmin ? ($en ? 'Daily Sales & Net Profit Overview' : 'لوحة المبيعات اليومية والأرباح') : ($en ? 'Daily Sales & Operations' : 'ملخص المبيعات والتشغيل اليومي') ?>
+            <?= $isAdmin ? ($en ? 'Daily Sales & Net Profit Overview' : 'لوحة المبيعات اليومية والأرباح') : ($en ? 'Quick Price Scanner' : 'كاشف السعر السريع') ?>
           </h2>
           <span style="font-size:0.78rem;color:var(--db-muted);"><?= e($displayStore) ?> • <?= date('Y-m-d') ?></span>
         </div>
@@ -179,11 +195,16 @@ $jsConfig = [
 
       <div class="quick-bar-btns">
         <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">
-          <i class="fa-solid fa-camera"></i> <?= $en ? 'Price Scanner' : 'فحص سعر بالكاميرا' ?>
+          <i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Scanner' : 'كاشف السعر السريع' ?>
         </button>
         <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">
-          <i class="fa-solid fa-file-invoice-dollar"></i> <?= $en ? 'New Sale Invoice' : 'فاتورة بيع جديدة' ?>
+          <i class="fa-solid fa-file-invoice-dollar"></i> <?= $en ? 'POS & Invoices' : 'نقطة البيع والفواتير' ?>
         </button>
+        <?php if (!$isAdmin): ?>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="switchTab('maintenance')">
+            <i class="fa-solid fa-screwdriver-wrench"></i> <?= $en ? 'QR Maintenance' : 'إدارة الصيانة بالـ QR' ?>
+          </button>
+        <?php endif; ?>
         <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">
           <i class="fa-solid fa-globe"></i> <?= e(t('lang_switch_label')) ?>
         </a>
@@ -195,8 +216,9 @@ $jsConfig = [
 
     <div class="content-wrap">
 
+      <?php if ($isAdmin): ?>
       <!-- ========================================================
-           TAB 1: OVERVIEW & DAILY SALES / REVENUE DASHBOARD
+           TAB 1: OVERVIEW & DAILY SALES / REVENUE DASHBOARD (ADMIN ONLY)
            ======================================================== -->
       <section class="tab-panel active" id="tab-overview">
         <div class="card" style="padding:16px 22px;">
@@ -278,11 +300,12 @@ $jsConfig = [
           </div>
         <?php endif; ?>
       </section>
+      <?php endif; ?>
 
       <!-- ========================================================
            TAB 2: QUICK CAMERA PRICE CHECKER (IN FRONT OF CUSTOMER)
            ======================================================== -->
-      <section class="tab-panel" id="tab-quick-scanner">
+      <section class="tab-panel<?= !$isAdmin ? ' active' : '' ?>" id="tab-quick-scanner">
         <div class="scanner-grid">
 
           <div class="camera-viewport-box">
@@ -567,10 +590,8 @@ $jsConfig = [
 
         </div>
       </section>
-      <?php endif; ?>
-
       <!-- ========================================================
-           TAB 5: INVENTORY & PRODUCTS TABLE
+           TAB 5: INVENTORY & PRODUCTS TABLE (ADMIN ONLY)
            ======================================================== -->
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
@@ -612,6 +633,7 @@ $jsConfig = [
           </div>
         </div>
       </section>
+      <?php endif; ?>
 
       <!-- ========================================================
            TAB 6: INTERACTIVE QR MAINTENANCE SYSTEM
@@ -664,7 +686,7 @@ $jsConfig = [
           <h3 style="margin:0 0 8px;color:var(--db-teal-800);"><i class="fa-solid fa-shield-halved"></i> <?= $en ? 'Role Separation & Price Floor Protection' : 'نظام حماية الأسعار والصلاحيات بين المدير والموظفين' ?></h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;font-size:0.86rem;color:var(--db-text);">
             <div><strong><i class="fa-solid fa-user-shield" style="color:var(--db-gold-600);"></i> Admin:</strong> <?= $en ? 'Full access to true purchase cost, inventory capital, net invoice profit, delivered maintenance revenues, and social/brand settings.' : 'يتحكم في كل شيء، يرى سعر الشراء الحقيقي، رأس مال المخزن، صافي أرباح كل فاتورة، إيرادات الصيانة اليومية، وروابط السوشيال ميديا.' ?></div>
-            <div><strong><i class="fa-solid fa-id-badge" style="color:var(--db-teal-700);"></i> Staff:</strong> <?= $en ? 'Sees only Selling Price & Minimum Floor Price, issues invoices, decrements stock, and is strictly blocked from selling below Minimum Floor Price!' : 'يفحص الأسعار بالكاميرا، يرى فقط (سعر البيع) و(أقل سعر بيع)، يُصدر فواتير البيع ويخصم المخزون، ويُمنع برمجياً من البيع بأقل من الحد الأدنى المسموح!' ?></div>
+            <div><strong><i class="fa-solid fa-id-badge" style="color:var(--db-teal-700);"></i> Staff:</strong> <?= $en ? 'Sees ONLY 3 modules: Quick Price Scanner, POS & Official Invoices (strictly blocked below Minimum Floor Price), and Interactive QR Maintenance with stages & email alerts.' : 'يظهر له 3 أقسام فقط: (كاشف السعر السريع)، (نقطة البيع وإصدار الفواتير الرسمية مع المنع من البيع بأقل من الحد الأدنى)، و(إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل).' ?></div>
           </div>
         </div>
 
@@ -1097,6 +1119,7 @@ $jsConfig = [
   </div>
 </div>
 
+<?php if ($isAdmin): ?>
 <!-- 4. Sticker Print Modal -->
 <div class="db-modal-backdrop" id="stickerModal">
   <div class="db-modal" style="width:min(440px,100%);">
@@ -1119,7 +1142,6 @@ $jsConfig = [
   </div>
 </div>
 
-<?php if ($isAdmin): ?>
 <!-- 5. Add/Edit Staff or Admin Modal -->
 <div class="db-modal-backdrop" id="userModal">
   <div class="db-modal" style="width:min(500px,100%);">

@@ -45,7 +45,8 @@ if ($method === 'GET') {
         jsonResponse(['ok' => true, 'invoice' => $invoice, 'items' => $items]);
     }
 
-    // Daily / Date-Range Sales & Revenue Dashboard
+    // Daily / Date-Range Sales & Revenue Dashboard (Admin Only)
+    requireAdminApi();
     $dateFrom = trim((string)($_GET['date_from'] ?? date('Y-m-d')));
     $dateTo = trim((string)($_GET['date_to'] ?? $dateFrom));
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
