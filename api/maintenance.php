@@ -1,12 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Maintenance Management API:
- * - Ticket Registration + QR Code Generation
- * - Stage Updates + Automatic Branded HTML Email Notifications
- * - Stage-by-Stage Notes (Admin & Customer)
- * - Final Delivery Handover -> Permanent Data Wipe (keeping ONLY financial revenue!)
- */
 
 declare(strict_types=1);
 
@@ -31,7 +23,7 @@ if ($method === 'GET') {
             jsonResponse(['ok' => false, 'error' => 'التذكرة غير موجودة أو تم تسليم الجهاز بالفعل.'], 404);
         }
 
-        // Clear unread customer notes counter when opened
+        
         if ((int)$ticket['unread_customer_notes'] > 0) {
             $pdo->prepare("UPDATE maintenance_tickets SET unread_customer_notes = 0 WHERE id = ?")->execute([$id]);
             $ticket['unread_customer_notes'] = 0;
@@ -59,7 +51,7 @@ if ($method === 'GET') {
         ]);
     }
 
-    // List active maintenance tickets
+    
     $stageFilter = trim((string)($_GET['stage'] ?? ''));
     $q = trim((string)($_GET['q'] ?? ''));
 
@@ -111,7 +103,7 @@ if ($method === 'POST') {
     $input = readJsonInput();
     $action = $input['action'] ?? '';
 
-    // 1. Register New Maintenance Device + Generate QR + Send Stage 1 Email
+    
     if ($action === 'create') {
         $customerName = trim((string)($input['customer_name'] ?? ''));
         $customerPhone = trim((string)($input['customer_phone'] ?? ''));
@@ -191,7 +183,7 @@ if ($method === 'POST') {
         ]);
     }
 
-    // 2. Update Maintenance Stage + Optional Note + Email Customer
+    
     if ($action === 'update_stage') {
         $id = (int)($input['id'] ?? 0);
         $newStage = trim((string)($input['stage_key'] ?? ''));
@@ -228,7 +220,7 @@ if ($method === 'POST') {
         ");
         $insNote->execute([$id, $newStage, $user['full_name'], $autoNote, $now]);
 
-        // Refresh ticket & send email notification if customer registered an email
+        
         $stmt->execute([$id]);
         $updatedTicket = $stmt->fetch();
 
@@ -244,7 +236,7 @@ if ($method === 'POST') {
         ]);
     }
 
-    // 3. Add Admin Note on Any Specific Stage + Email Customer if registered
+    
     if ($action === 'add_note') {
         $id = (int)($input['id'] ?? 0);
         $stageKey = trim((string)($input['stage_key'] ?? ''));
@@ -285,7 +277,7 @@ if ($method === 'POST') {
         ]);
     }
 
-    // 4. Final Delivery Handover -> Send Final Email -> Record Paid Revenue -> WIPE ALL DEVICE & PERSONAL DATA!
+    
     if ($action === 'deliver_and_wipe') {
         $id = (int)($input['id'] ?? 0);
         $finalPaidAmount = round(max(0, (float)($input['final_paid_amount'] ?? 0)), 2);
@@ -304,7 +296,7 @@ if ($method === 'POST') {
             : round((float)$ticket['parts_cost'], 2);
         $netProfit = round($finalPaidAmount - $partsCost, 2);
 
-        // Send final handover email BEFORE wiping personal info (with recordInLog = false so no personal log persists!)
+        
         if (!empty($ticket['customer_email'])) {
             AslyMailer::sendMaintenanceStageEmail(
                 $pdo,
@@ -318,7 +310,7 @@ if ($method === 'POST') {
         try {
             $pdo->beginTransaction();
 
-            // 1. Preserve ONLY the financial revenue record for Daily Sales/Revenue Dashboard
+            
             $revIns = $pdo->prepare("
                 INSERT INTO maintenance_revenues (
                     ticket_code_ref, device_category, amount_paid, parts_cost, net_profit,
@@ -338,7 +330,7 @@ if ($method === 'POST') {
                 date('Y-m-d H:i:s'),
             ]);
 
-            // 2. Permanently DELETE all notes, email logs, and the maintenance ticket itself!
+            
             $pdo->prepare("DELETE FROM maintenance_notes WHERE ticket_id = ?")->execute([$id]);
             $pdo->prepare("DELETE FROM email_logs WHERE ticket_id = ?")->execute([$id]);
             $pdo->prepare("DELETE FROM maintenance_tickets WHERE id = ?")->execute([$id]);

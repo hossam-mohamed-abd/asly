@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Public API: Live Maintenance QR Lookup & Customer Stage Replies (Bilingual, Zero Emojis)
- */
 
 declare(strict_types=1);
 

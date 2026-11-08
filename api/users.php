@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Admin-Only Staff & Admin Users Management API
- */
 
 declare(strict_types=1);
 

@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Products Management API (Bilingual Inventory CRUD, Dual Images, 3-Tier Pricing, QR/Barcode)
- */
 
 declare(strict_types=1);
 

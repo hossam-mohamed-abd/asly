@@ -1,9 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Scanner API: Lookup Barcode / QR & Generate New Product QR Codes
- * Role-aware: Staff NEVER receives real purchase_price!
- */
 
 declare(strict_types=1);
 
@@ -28,7 +23,7 @@ if ($action === 'lookup') {
         jsonResponse(['ok' => false, 'error' => 'الكود الممسوح فارغ.'], 400);
     }
 
-    // If a full URL was scanned (e.g. from a custom QR), extract code parameter if present
+    
     if (strpos($code, 'code=') !== false) {
         $parts = parse_url($code);
         if (!empty($parts['query'])) {
@@ -44,7 +39,7 @@ if ($action === 'lookup') {
     $product = $stmt->fetch();
 
     if (!$product) {
-        // Also check if scanned QR is a maintenance ticket!
+        
         $mStmt = $pdo->prepare("SELECT id, ticket_code, device_model, customer_name, current_stage FROM maintenance_tickets WHERE UPPER(ticket_code) = UPPER(?) LIMIT 1");
         $mStmt->execute([$code]);
         $mTicket = $mStmt->fetch();
@@ -73,10 +68,10 @@ if ($action === 'lookup') {
     $product['display_name'] = pickLangField($product, 'name');
     $product['display_specs'] = pickLangField($product, 'specs');
 
-    // Decoy "Show Purchase Price" button ALWAYS displays min_sell_price in Quick Scanner!
+    
     $product['display_floor_price'] = (float)$product['min_sell_price'];
 
-    // Strip real purchase_price if staff!
+    
     if ($user['role'] !== 'admin') {
         unset($product['purchase_price']);
     } else {

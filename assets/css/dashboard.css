@@ -1,9 +1,3 @@
-/* ============================================================
-   ASLY | أصلي TECH STORE
-   Bright Daylight Admin & Staff Dashboard Design System (EN LTR + AR RTL)
-   Zero Dark Colors • Zero Grid Squares • Logical Bidirectional Layout
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap');
 
 :root {
@@ -59,13 +53,11 @@ html[lang="en"] .kpi-value {
   letter-spacing: -0.02em;
 }
 
-/* App Shell */
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* Bright Daylight Frosted Sidebar */
 .sidebar {
   width: var(--sidebar-w);
   background: linear-gradient(180deg, #ffffff 0%, #f6fcfc 65%, #fffdf6 100%);
@@ -192,7 +184,6 @@ html[lang="en"] .kpi-value {
   font-size: 0.84rem;
 }
 
-/* Main Workspace */
 .main-area {
   flex: 1;
   margin-inline-start: var(--sidebar-w);
@@ -258,7 +249,6 @@ html[lang="en"] .kpi-value {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -325,7 +315,6 @@ html[lang="en"] .kpi-value {
   font-size: 0.8rem;
 }
 
-/* Cards & KPI Grid */
 .card {
   background: var(--db-card);
   border-radius: 22px;
@@ -399,7 +388,6 @@ html[lang="en"] .kpi-value {
   color: var(--db-muted);
 }
 
-/* Forms */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -441,7 +429,6 @@ html[lang="en"] .kpi-value {
   background: #fef2f2;
 }
 
-/* Tables */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
@@ -473,7 +460,6 @@ html[lang="en"] .kpi-value {
   background: #fafefe;
 }
 
-/* Bright Daylight Camera Scanner Box (Zero Dark Backgrounds!) */
 .scanner-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -505,7 +491,6 @@ html[lang="en"] .kpi-value {
   color: var(--db-muted);
 }
 
-/* Quick Price Result Card (Customer-Safe Display!) */
 .price-reveal-card {
   background: #ffffff;
   border: 1.5px solid var(--db-gold-500);
@@ -552,7 +537,6 @@ html[lang="en"] .kpi-value {
   display: block;
 }
 
-/* POS Layout */
 .pos-layout {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -603,7 +587,6 @@ html[lang="en"] .kpi-value {
   margin-bottom: 12px;
 }
 
-/* Bright Frosted Modals (Zero Dark Overlays!) */
 .db-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -647,7 +630,6 @@ html[lang="en"] .kpi-value {
   padding: 24px;
 }
 
-/* Bright Toast Notification */
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -678,7 +660,6 @@ html[lang="en"] .kpi-value {
   border-inline-start-color: #ef4444;
 }
 
-/* Sticker Preview */
 .sticker-preview-box {
   background: #ffffff;
   border: 2px dashed var(--db-teal-700);
@@ -692,7 +673,6 @@ html[lang="en"] .kpi-value {
   min-width: 240px;
 }
 
-/* Responsive Bidirectional Sidebar */
 @media (max-width: 1040px) {
   .scanner-grid,
   .pos-layout {

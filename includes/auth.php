@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Session Authentication, Role-Based Access & CSRF Protection
- */
 
 declare(strict_types=1);
 

@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Bilingual Internationalization Engine (Arabic RTL + English LTR) — Zero Emojis
- */
 
 declare(strict_types=1);
 
@@ -109,7 +105,7 @@ function translateChannelLabel(string $label, string $type): string
 function t(string $key): string
 {
     static $dict = [
-        // Navigation & Global
+        
         'nav_about' => ['ar' => 'من نحن', 'en' => 'Who We Are'],
         'nav_craft' => ['ar' => 'تخصصاتنا', 'en' => 'Our Craft'],
         'nav_lab' => ['ar' => 'متابعة الصيانة', 'en' => 'Repair Tracker'],
@@ -121,13 +117,13 @@ function t(string $key): string
         'lang_switch_label' => ['ar' => 'EN', 'en' => 'عربي'],
         'currency' => ['ar' => 'ج.م', 'en' => 'EGP'],
 
-        // Kinetic Marquee Ribbons
+        
         'marquee_1' => ['ar' => 'استوديو التقنية الأصلية ومعمل الفحص الهندسي', 'en' => 'AUTHENTIC TECH STUDIO & DIAGNOSTIC LAB'],
         'marquee_2' => ['ar' => 'تتبع مباشر لمراحل الصيانة عبر رمز QR', 'en' => 'LIVE 7-STAGE QR REPAIR TELEMETRY'],
         'marquee_3' => ['ar' => 'لابتوبات احترافية • هواتف رائدة • صيانة دقيقة على مستوى البوردة', 'en' => 'WORKSTATIONS • FLAGSHIP PHONES • BOARD-LEVEL REPAIR'],
         'marquee_4' => ['ar' => 'حماية كاملة للخصوصية ومسح تلقائي لبيانات التذكرة فور التسليم', 'en' => 'PRIVACY-FIRST AUTO-WIPE PROTOCOL UPON DELIVERY'],
 
-        // Hero Collage
+        
         'hero_eyebrow' => ['ar' => '01 // هويتنا الهندسية • ASLY TECH STUDIO', 'en' => '01 // IDENTITY & LAB • ASLY TECH STUDIO'],
         'hero_title_1' => ['ar' => 'حيث تلتقي', 'en' => 'Where Authentic'],
         'hero_title_2' => ['ar' => 'الأصالة التقنية', 'en' => 'Hardware Craft'],
@@ -140,7 +136,7 @@ function t(string $key): string
         'hero_cta_who' => ['ar' => 'تعرّف علينا أكثر', 'en' => 'Discover Who We Are'],
         'hero_cta_social' => ['ar' => 'تابع منصاتنا الرسمية', 'en' => 'Our Social Channels'],
 
-        // Who We Are Mosaic
+        
         'who_eyebrow' => ['ar' => '02 // من نحن • WHO WE ARE', 'en' => '02 // WHO WE ARE • THE STUDIO'],
         'who_title' => ['ar' => 'أكثر من مجرد متجر — منظومة هندسية مبنية على الثقة والشفافية.', 'en' => 'More Than A Store — An Engineering Standard Built On Trust.'],
         'pillar_1_tag' => ['ar' => 'الفلسفة • 01', 'en' => '01 // PHILOSOPHY'],
@@ -162,7 +158,7 @@ function t(string $key): string
             'en' => 'Follow all 7 stages via your receipt QR code and email alerts — then enjoy automatic personal record deletion the moment you pick up your device.'
         ],
 
-        // Domains of Craft (No Products, Pure Capabilities)
+        
         'craft_eyebrow' => ['ar' => '03 // مجالات تخصصنا • DOMAINS OF CRAFT', 'en' => '03 // DOMAINS OF CRAFT • WHAT WE DO'],
         'craft_title' => ['ar' => 'أربعة أركان تصنع تجربة أصلي', 'en' => 'Four Pillars Defining The ASLY Experience'],
         'craft_1_title' => ['ar' => 'أجهزة اللابتوب والووركستيشن الاحترافية', 'en' => 'Workstations & Creator Laptops'],
@@ -174,7 +170,7 @@ function t(string $key): string
         'craft_4_title' => ['ar' => 'الساعات الذكية والصوتيات والحلول المعتمدة', 'en' => 'Smart Wearables & Studio Acoustics'],
         'craft_4_sub' => ['ar' => 'حلول شحن وصوتيات وإكسسوارات أصلية تحافظ على عمر أجهزتك وأدائها اليومي.', 'en' => 'Certified charging, spatial acoustics, and smart wearables curated to protect your devices every day.'],
 
-        // Interactive Repair Lab Console
+        
         'lab_eyebrow' => ['ar' => '04 // بوابة متابعة الصيانة الحية • LIVE QR TELEMETRY', 'en' => '04 // LIVE REPAIR TELEMETRY • QR TRACKER'],
         'lab_title' => ['ar' => 'تابع جهازك في الصيانة الآن بخطوة واحدة', 'en' => 'Inspect Your Device Repair Status Instantly'],
         'lab_desc' => [
@@ -187,7 +183,7 @@ function t(string $key): string
         'lab_btn_open_portal' => ['ar' => 'فتح بوابة متابعة الصيانة الكاملة', 'en' => 'Open Full Repair Portal'],
         'lab_btn_open_full' => ['ar' => 'فتح صفحة المحادثة والملاحظات الكاملة', 'en' => 'Open Full Interactive Ticket & Reply'],
 
-        // Social Universe & Direct Contact
+        
         'social_eyebrow' => ['ar' => '05 // مجتمع أصلي ومنصات التواصل • CONNECT WITH US', 'en' => '05 // SOCIAL UNIVERSE • FOLLOW & CONNECT'],
         'social_title' => ['ar' => 'كن قريباً منا على منصاتنا الرسمية', 'en' => 'Follow Our Studio Across Social Media'],
         'social_sub' => [
@@ -202,7 +198,7 @@ function t(string $key): string
         'footer_rights' => ['ar' => 'جميع الحقوق محفوظة', 'en' => 'All rights reserved'],
         'close' => ['ar' => 'إغلاق', 'en' => 'Close'],
 
-        // FAQ Accordion
+        
         'faq_eyebrow' => ['ar' => '07 // أسئلة متكررة • GOOD TO KNOW', 'en' => '07 // FAQ • GOOD TO KNOW'],
         'faq_title' => ['ar' => 'كل ما تود معرفته عن أصلي', 'en' => 'Answers To Common Questions'],
         'faq_q1' => ['ar' => 'كيف أتابع حالة جهازي الموجود في قسم الصيانة؟', 'en' => 'How do I track my device while it is in the repair lab?'],
@@ -221,7 +217,7 @@ function t(string $key): string
             'en' => 'Tap our Direct WhatsApp button or message us on Facebook, Instagram, TikTok, or Telegram in our Social Hub above — our engineering team responds promptly.'
         ],
 
-        // Track Page
+        
         'track_page_title' => ['ar' => 'تتبع حالة الصيانة المباشر', 'en' => 'Live Repair Status Portal'],
         'track_back_home' => ['ar' => 'العودة للصفحة الرئيسية', 'en' => 'Back to Home'],
         'track_wa_support' => ['ar' => 'واتساب الصيانة', 'en' => 'Repair WhatsApp'],
@@ -255,7 +251,7 @@ function t(string $key): string
         'track_eng_prefix' => ['ar' => 'إدارة الصيانة', 'en' => 'Repair Engineer'],
         'track_cust_prefix' => ['ar' => 'العميل', 'en' => 'Customer'],
 
-        // Invoice Page
+        
         'inv_not_found' => ['ar' => 'الفاتورة غير موجودة', 'en' => 'Invoice Not Found'],
         'inv_not_found_sub' => ['ar' => 'يرجى التأكد من رابط الفاتورة المرسل إليك من مركز أصلي تك ستور.', 'en' => 'Please check the invoice link sent to you by ASLY Tech Store.'],
         'inv_download_png' => ['ar' => 'تحميل الفاتورة كصورة (PNG)', 'en' => 'Download Invoice Image (PNG)'],
@@ -273,7 +269,7 @@ function t(string $key): string
         'inv_grand_total' => ['ar' => 'الإجمالي النهائي المدفوع', 'en' => 'Total Amount Paid'],
         'inv_notes' => ['ar' => 'ملاحظات', 'en' => 'Notes'],
 
-        // Login Page
+        
         'login_title' => ['ar' => 'بوابة الإدارة ونقطة البيع والصيانة الذكية', 'en' => 'Smart POS, Inventory & Repair Management'],
         'login_user_lbl' => ['ar' => 'اسم المستخدم', 'en' => 'Username'],
         'login_user_ph' => ['ar' => 'أدخل اسم المستخدم', 'en' => 'Enter username'],

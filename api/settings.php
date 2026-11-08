@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Admin-Only Settings, Brand Identity, Social Media Links, Contact Channels & SMTP Config API
- */
 
 declare(strict_types=1);
 
@@ -40,7 +36,11 @@ if ($method === 'POST') {
             'store_tagline', 'store_tagline_en',
             'founders_line', 'founders_line_en',
             'about_story_ar', 'about_story_en',
-            'primary_whatsapp', 'primary_phone', 'secondary_phone', 'primary_email',
+            'primary_phone', 'primary_phone_label',
+            'secondary_phone', 'secondary_phone_label',
+            'primary_whatsapp', 'primary_whatsapp_label',
+            'secondary_whatsapp', 'secondary_whatsapp_label',
+            'primary_email',
             'store_address', 'store_address_en',
             'working_hours', 'working_hours_en',
             'google_maps_url',
@@ -56,7 +56,7 @@ if ($method === 'POST') {
         foreach ($allowedKeys as $key) {
             if (array_key_exists($key, $incoming)) {
                 $val = trim((string)$incoming[$key]);
-                if ($key === 'primary_whatsapp' && $val !== '') {
+                if (($key === 'primary_whatsapp' || $key === 'secondary_whatsapp') && $val !== '') {
                     $val = normalizeWhatsappNumber($val);
                 }
                 saveSetting($pdo, $key, $val);

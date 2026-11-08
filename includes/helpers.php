@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Core Helpers, Formatters, Settings, Bilingual Meta & File Uploads
- */
 
 declare(strict_types=1);
 
@@ -34,14 +30,133 @@ function readJsonInput(): array
     return $_POST;
 }
 
+function getDefaultSettings(): array
+{
+    return [
+        'store_name_ar'           => 'أصلي تك ستور',
+        'store_name_en'           => 'ASLY TECH STORE',
+        'store_tagline'           => 'المركز المتكامل للتقنية الأصلية ومعمل الصيانة الذكي بتتبع الـ QR',
+        'store_tagline_en'        => 'Engineering-Led Technology Studio & Live QR-Tracked Precision Repair Lab',
+        'founders_line'           => 'إشراف وإدارة: م. حسام محمد • م. رمضان سلام',
+        'founders_line_en'        => 'Supervised by Eng. Hossam Mohamed & Eng. Ramadan Sallam',
+        'about_story_ar'          => 'أصلي تك ستور ليس مجرد معرض تقني تقليدي؛ بل استوديو هندسي ومعمل فحص وصيانة دقيقة تأسس ليضع معياراً حقيقياً للثقة والأصالة. كل جهاز يمر عبر بروتوكول فحص متعدد النقاط، وكل عملية صيانة موثقة لحظة بلحظة عبر نظام تتبع QR شفاف يحمي خصوصيتك وبياناتك.',
+        'about_story_en'          => 'ASLY TECH STORE is not an ordinary retail counter — it is an engineering-first technology studio and precision diagnostic lab built to set an uncompromising standard for hardware authenticity. Every device undergoes multi-point verification, and every repair is documented in real time via transparent QR telemetry.',
+        'primary_phone'           => '01015981677',
+        'primary_phone_label'     => 'مبيعات وصيانة - الرقم الرئيسي',
+        'secondary_phone'         => '01154639718',
+        'secondary_phone_label'   => 'مبيعات وصيانة - الرقم الإضافي',
+        'primary_whatsapp'        => '201015981677',
+        'primary_whatsapp_label'  => 'واتساب الاستفسارات والمبيعات',
+        'secondary_whatsapp'      => '201154639718',
+        'secondary_whatsapp_label'=> 'واتساب قسم الصيانة والدعم الفني',
+        'store_address'           => 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا',
+        'store_address_en'        => 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum',
+        'working_hours'           => 'يومياً من ١١:٠٠ صباحاً حتى ١١:٠٠ مساءً',
+        'working_hours_en'        => 'Daily from 11:00 AM to 11:00 PM',
+        'primary_email'           => 'contact@aslystore.com',
+        'google_maps_url'         => 'https://www.google.com/maps/search/?api=1&query=%D8%A7%D9%84%D9%81%D9%8A%D9%88%D9%85+%D8%B3%D9%86%D9%88%D8%B1%D8%B3+%D8%AA%D8%B1%D8%B3%D8%A7+%D8%B4%D8%A7%D8%B1%D8%B9+%D8%A7%D9%84%D8%B3%D9%88%D9%82+%D9%83%D9%86%D9%8A%D8%B3%D8%A9+%D8%AA%D8%B1%D8%B3%D8%A7',
+        'social_facebook'         => 'https://facebook.com/aslytechstore',
+        'social_instagram'        => 'https://instagram.com/aslytechstore',
+        'social_tiktok'           => 'https://tiktok.com/@aslytechstore',
+        'social_telegram'         => 'https://t.me/aslytechstore',
+        'social_youtube'          => 'https://youtube.com/@aslytechstore',
+        'social_x'                => 'https://x.com/aslytechstore',
+        'invoice_footer_note'     => 'جميع الأجهزة تخضع لضمان الفحص المعتمد من مركز أصلي ASLY TECH STORE. يرجى الاحتفاظ بالفاتورة عند المراجعة.',
+        'invoice_footer_note_en'  => 'All devices include ASLY TECH STORE certified hardware inspection & warranty. Please retain this invoice for service.',
+        'public_base_url'         => APP_URL_ENV,
+        'smtp_enabled'            => MAIL_ENABLED,
+        'smtp_host'               => MAIL_HOST,
+        'smtp_port'               => MAIL_PORT,
+        'smtp_encryption'         => MAIL_ENCRYPTION,
+        'smtp_username'           => MAIL_USERNAME,
+        'smtp_password'           => MAIL_PASSWORD,
+        'smtp_from_email'         => MAIL_FROM_ADDRESS,
+        'smtp_from_name'          => MAIL_FROM_NAME,
+    ];
+}
+
 function getAllSettings(PDO $pdo): array
 {
+    $map = getDefaultSettings();
     $rows = $pdo->query("SELECT setting_key, setting_value FROM settings")->fetchAll();
-    $map = [];
     foreach ($rows as $r) {
         $map[$r['setting_key']] = (string)($r['setting_value'] ?? '');
     }
     return $map;
+}
+
+function getWebsiteDisplayChannels(PDO $pdo, array $settings): array
+{
+    $list = [];
+    $seen = [];
+
+    $primaryPhone = trim((string)($settings['primary_phone'] ?? ''));
+    if ($primaryPhone !== '') {
+        $clean = preg_replace('/\s+/', '', $primaryPhone);
+        $list[] = [
+            'channel_type' => 'phone',
+            'label'        => trim((string)($settings['primary_phone_label'] ?? '')) ?: 'مبيعات وصيانة - الرقم الرئيسي',
+            'value'        => $primaryPhone,
+            'url'          => 'tel:' . $clean,
+        ];
+        $seen['phone:' . $clean] = true;
+    }
+
+    $secondaryPhone = trim((string)($settings['secondary_phone'] ?? ''));
+    if ($secondaryPhone !== '') {
+        $clean = preg_replace('/\s+/', '', $secondaryPhone);
+        if (!isset($seen['phone:' . $clean])) {
+            $list[] = [
+                'channel_type' => 'phone',
+                'label'        => trim((string)($settings['secondary_phone_label'] ?? '')) ?: 'مبيعات وصيانة - الرقم الإضافي',
+                'value'        => $secondaryPhone,
+                'url'          => 'tel:' . $clean,
+            ];
+            $seen['phone:' . $clean] = true;
+        }
+    }
+
+    $primaryWa = normalizeWhatsappNumber((string)($settings['primary_whatsapp'] ?? ''));
+    if ($primaryWa !== '') {
+        $displayWa = str_starts_with($primaryWa, '20') ? ('0' . substr($primaryWa, 2)) : ('+' . $primaryWa);
+        $list[] = [
+            'channel_type' => 'whatsapp',
+            'label'        => trim((string)($settings['primary_whatsapp_label'] ?? '')) ?: 'واتساب الاستفسارات والمبيعات',
+            'value'        => $displayWa,
+            'url'          => 'https://wa.me/' . $primaryWa,
+        ];
+        $seen['whatsapp:' . $primaryWa] = true;
+    }
+
+    $secondaryWa = normalizeWhatsappNumber((string)($settings['secondary_whatsapp'] ?? ''));
+    if ($secondaryWa !== '' && !isset($seen['whatsapp:' . $secondaryWa])) {
+        $displayWa2 = str_starts_with($secondaryWa, '20') ? ('0' . substr($secondaryWa, 2)) : ('+' . $secondaryWa);
+        $list[] = [
+            'channel_type' => 'whatsapp',
+            'label'        => trim((string)($settings['secondary_whatsapp_label'] ?? '')) ?: 'واتساب قسم الصيانة والدعم الفني',
+            'value'        => $displayWa2,
+            'url'          => 'https://wa.me/' . $secondaryWa,
+        ];
+        $seen['whatsapp:' . $secondaryWa] = true;
+    }
+
+    foreach (getActiveContactChannels($pdo, false) as $ch) {
+        $type = strtolower(trim((string)($ch['channel_type'] ?? 'phone')));
+        $val = trim((string)($ch['value'] ?? ''));
+        if ($val === '') {
+            continue;
+        }
+        $normKey = $type === 'whatsapp'
+            ? ('whatsapp:' . normalizeWhatsappNumber($val))
+            : ($type . ':' . preg_replace('/\s+/', '', $val));
+        if (isset($seen[$normKey])) {
+            continue;
+        }
+        $seen[$normKey] = true;
+        $list[] = $ch;
+    }
+
+    return $list;
 }
 
 function saveSetting(PDO $pdo, string $key, string $value): void
@@ -213,7 +328,7 @@ function normalizeWhatsappNumber(string $phone): string
         $digits = substr($digits, 2);
     }
     if (strpos($digits, '01') === 0 && strlen($digits) === 11) {
-        return '2' . $digits; // Egypt +20
+        return '2' . $digits; 
     }
     return $digits;
 }
@@ -226,7 +341,7 @@ function handleProductImageUpload(array $file): ?string
     if (!is_dir(UPLOADS_DIR)) {
         mkdir(UPLOADS_DIR, 0775, true);
     }
-    $maxSize = 8 * 1024 * 1024; // 8 MB
+    $maxSize = 8 * 1024 * 1024; 
     if (($file['size'] ?? 0) > $maxSize) {
         throw new RuntimeException(isEn() ? 'Image size must not exceed 8 MB.' : 'حجم الصورة يجب ألا يتجاوز 8 ميجابايت.');
     }
@@ -270,7 +385,7 @@ function getChannelFontAwesomeIcon(string $type): string
 function getSocialPlatforms(array $settings): array
 {
     $en = isEn();
-    $waNum = normalizeWhatsappNumber($settings['primary_whatsapp'] ?? '201015981677');
+    $waNum = normalizeWhatsappNumber((string)($settings['primary_whatsapp'] ?? ''));
     $waUrl = $waNum !== '' ? ('https://wa.me/' . $waNum) : '';
 
     $raw = [
@@ -342,7 +457,7 @@ function getSocialPlatforms(array $settings): array
     $active = [];
     foreach ($raw as $item) {
         if ($item['url'] !== '') {
-            // Extract readable handle from URL if customized by Admin
+            
             if ($item['key'] !== 'whatsapp' && preg_match('#https?://[^/]+/(@?[A-Za-z0-9._-]+)#', $item['url'], $m)) {
                 $h = trim($m[1], '/');
                 if ($h !== '') {

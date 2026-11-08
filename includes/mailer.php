@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Branded Bright Daylight HTML Email Notification Engine (Pure PHP TLS/SSL SMTP + mail() + Log)
- */
 
 declare(strict_types=1);
 
@@ -10,9 +6,7 @@ require_once __DIR__ . '/helpers.php';
 
 class AslyMailer
 {
-    /**
-     * Send branded maintenance stage update email when customer has registered an email.
-     */
+    
     public static function sendMaintenanceStageEmail(
         PDO $pdo,
         array $ticket,
@@ -167,18 +161,23 @@ class AslyMailer
 
     public static function deliverEmail(array $settings, string $to, string $subject, string $htmlBody): array
     {
-        $fromEmail = trim($settings['smtp_from_email'] ?? '') ?: 'noreply@aslystore.com';
-        $fromName  = trim($settings['smtp_from_name'] ?? '') ?: 'ASLY | أصلي TECH STORE';
-        $smtpEnabled = ($settings['smtp_enabled'] ?? '0') === '1';
+        $fromEmail = trim((string)($settings['smtp_from_email'] ?? '')) ?: (MAIL_FROM_ADDRESS ?: 'noreply@aslystore.com');
+        $fromName  = trim((string)($settings['smtp_from_name'] ?? '')) ?: (MAIL_FROM_NAME ?: 'ASLY | أصلي TECH STORE');
+        $smtpEnabled = (($settings['smtp_enabled'] ?? MAIL_ENABLED) === '1');
+        $smtpHost = trim((string)($settings['smtp_host'] ?? '')) ?: MAIL_HOST;
+        $smtpPort = (int)(($settings['smtp_port'] ?? '') !== '' ? $settings['smtp_port'] : (MAIL_PORT ?: 587));
+        $smtpEnc  = strtolower(trim((string)($settings['smtp_encryption'] ?? '')) ?: (MAIL_ENCRYPTION ?: 'tls'));
+        $smtpUser = trim((string)($settings['smtp_username'] ?? '')) ?: MAIL_USERNAME;
+        $smtpPass = (string)(($settings['smtp_password'] ?? '') !== '' ? $settings['smtp_password'] : MAIL_PASSWORD);
 
-        if ($smtpEnabled && trim($settings['smtp_host'] ?? '') !== '') {
+        if ($smtpEnabled && $smtpHost !== '') {
             try {
                 self::sendViaSmtp(
-                    trim($settings['smtp_host']),
-                    (int)($settings['smtp_port'] ?: 587),
-                    strtolower(trim($settings['smtp_encryption'] ?: 'tls')),
-                    trim($settings['smtp_username'] ?? ''),
-                    (string)($settings['smtp_password'] ?? ''),
+                    $smtpHost,
+                    $smtpPort,
+                    $smtpEnc,
+                    $smtpUser,
+                    $smtpPass,
                     $fromEmail,
                     $fromName,
                     $to,
@@ -202,7 +201,7 @@ class AslyMailer
         ]);
 
         $sentMail = false;
-        if (function_exists('mail') && ini_get('sendmail_path')) {
+        if (function_exists('mail')) {
             $sentMail = @mail($to, $encodedSubject, chunk_split(base64_encode($htmlBody)), $headers);
         }
 
@@ -254,15 +253,16 @@ class AslyMailer
             return $expect($fp, $codes);
         };
 
+        $ehloHost = MAIL_EHLO_DOMAIN ?: 'aslystore.local';
         $expect($socket, [220]);
-        $cmd($socket, 'EHLO aslystore.local', [250]);
+        $cmd($socket, 'EHLO ' . $ehloHost, [250]);
 
         if ($encryption === 'tls') {
             $cmd($socket, 'STARTTLS', [220]);
             if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
                 throw new RuntimeException('Failed to enable STARTTLS encryption.');
             }
-            $cmd($socket, 'EHLO aslystore.local', [250]);
+            $cmd($socket, 'EHLO ' . $ehloHost, [250]);
         }
 
         if ($username !== '') {

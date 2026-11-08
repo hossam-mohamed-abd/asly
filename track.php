@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Interactive Customer QR Maintenance Tracking & Stage Commenting Page (Zero Emojis • Font Awesome 6)
- */
 
 declare(strict_types=1);
 
@@ -138,7 +134,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
 
   <main class="track-wrap">
 
-    <!-- Search Card -->
+    
     <div class="track-card" style="padding: 28px 32px;">
       <div class="eyebrow-chip">
         <i class="fa-solid fa-microscope"></i>
@@ -200,7 +196,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
           </div>
         </div>
 
-        <!-- Device Summary -->
+        
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; padding: 22px 30px; background: var(--bg-ivory); border-bottom: 1px solid var(--line-warm); font-size: 0.9rem;">
           <div><strong style="color: var(--ink-1);"><i class="fa-solid fa-user" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_client_name')) ?>:</strong><br><?= e((string)$ticket['customer_name']) ?></div>
           <div><strong style="color: var(--ink-1);"><i class="fa-solid fa-microchip" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_specs')) ?>:</strong><br><?= e($ticket['device_specs'] ?: '—') ?></div>
@@ -211,7 +207,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
           </div>
         </div>
 
-        <!-- Stages Timeline & Mutual Notes -->
+        
         <div class="timeline-box">
           <div>
             <h3 style="margin: 0 0 4px; color: var(--ink-1); font-weight: 900;"><?= e(t('track_timeline_title')) ?></h3>

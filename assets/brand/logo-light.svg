@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 150" fill="none">
-  <!-- Upper Champagne-Gold Orbital Swoosh -->
+  
   <path d="M182 37C242 12 326 9 366 31C372 34 375 41 371 49C366 40 354 34 334 31C289 24 232 27 182 37Z" fill="#E4B453"/>
-  <!-- Top-Right Floating Digital Pixel Squares -->
+  
   <rect x="348" y="25" width="13" height="13" rx="2.5" fill="#14B4B8" stroke="#FFFFFF" stroke-width="2"/>
   <rect x="362" y="14" width="10" height="10" rx="2" fill="#14B4B8"/>
   <rect x="372" y="23" width="10" height="10" rx="2" fill="#14B4B8"/>
   <rect x="376" y="7" width="15" height="15" rx="2.5" fill="#E4B453"/>
-  <!-- Luminous Turquoise-Teal ASLY Wordmark -->
-  <!-- A -->
+  
+  
   <path d="M81 44L32 102H55L65 89H105L115 102H138L89 44H81ZM74 76L85 61L96 76H74Z" fill="#14B4B8"/>
-  <!-- S -->
+  
   <path d="M148 59C148 49 158 44 176 44H224L215 57H175C169 57 166 58.5 166 61.5C166 64.5 169 66 176 66H205C223 66 232 72 232 83.5C232 95.5 222 102 203 102H144L153 89H201C208 89 212 87 212 83.5C212 80 208 78.5 201 78.5H173C156 78.5 148 71.5 148 59Z" fill="#14B4B8"/>
-  <!-- L -->
+  
   <path d="M244 44H265V88H314L306 102H244V44Z" fill="#14B4B8"/>
-  <!-- Y -->
+  
   <path d="M294 44H318L343 69L368 44H392L353 82V102H332V82L294 44Z" fill="#14B4B8"/>
-  <!-- Gold Accent Swoosh Across A & Lower Orbit -->
+  
   <path d="M24 105C52 80 94 74 134 86C98 81 62 87 24 105Z" fill="#E4B453"/>
   <path d="M36 106C26 125 62 141 132 138C182 136 228 126 262 113C218 124 166 130 118 129C68 128 41 118 36 106Z" fill="#E4B453"/>
-  <!-- TECH STORE Subtitle & Gold Lines -->
+  
   <rect x="44" y="114" width="38" height="2.6" rx="1.3" fill="#E4B453"/>
   <text x="210" y="120" text-anchor="middle" fill="#D9A33A" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="16" font-weight="800" letter-spacing="6">TECH STORE</text>
   <rect x="338" y="114" width="44" height="2.6" rx="1.3" fill="#E4B453"/>

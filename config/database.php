@@ -1,9 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * PDO Database Connection Manager (MySQL / phpMyAdmin on XAMPP + Preview SQLite)
- */
-
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
@@ -18,7 +13,7 @@ class Database
             return self::$pdo;
         }
 
-        $driver = strtolower((string)(getenv('ASLY_DB_DRIVER') ?: 'mysql'));
+        $driver = DB_DRIVER;
 
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -35,12 +30,10 @@ class Database
                 self::initializeSqliteSchema(self::$pdo);
             } else {
                 self::ensureProductColumnsSqlite(self::$pdo);
-                self::ensureDefaultSettings(self::$pdo);
             }
             return self::$pdo;
         }
 
-        // Standard MySQL / MariaDB connection for XAMPP & phpMyAdmin
         $dsnWithDb = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=%s',
             DB_HOST,
@@ -57,7 +50,6 @@ class Database
                 self::importMysqlDump(self::$pdo);
             } else {
                 self::ensureProductColumnsMysql(self::$pdo);
-                self::ensureDefaultSettings(self::$pdo);
             }
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
@@ -114,34 +106,6 @@ class Database
         }
     }
 
-    private static function ensureDefaultSettings(PDO $pdo): void
-    {
-        $defaults = [
-            'store_address'    => 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا',
-            'store_address_en' => 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum',
-            'primary_email'    => 'contact@aslystore.com',
-            'google_maps_url'  => 'https://www.google.com/maps/search/?api=1&query=%D8%A7%D9%84%D9%81%D9%8A%D9%88%D9%85+%D8%B3%D9%86%D9%88%D8%B1%D8%B3+%D8%AA%D8%B1%D8%B3%D8%A7+%D8%B4%D8%A7%D8%B1%D8%B9+%D8%A7%D9%84%D8%B3%D9%88%D9%82+%D9%83%D9%86%D9%8A%D8%B3%D8%A9+%D8%AA%D8%B1%D8%B3%D8%A7',
-            'social_facebook'  => 'https://facebook.com/aslytechstore',
-            'social_instagram' => 'https://instagram.com/aslytechstore',
-            'social_tiktok'    => 'https://tiktok.com/@aslytechstore',
-            'social_telegram'  => 'https://t.me/aslytechstore',
-            'social_youtube'   => 'https://youtube.com/@aslytechstore',
-            'social_x'         => 'https://x.com/aslytechstore',
-            'about_story_ar'   => 'أصلي تك ستور ليس مجرد معرض تقني تقليدي؛ بل استوديو هندسي ومعمل فحص وصيانة دقيقة تأسس ليضع معياراً حقيقياً للثقة والأصالة. كل جهاز يمر عبر بروتوكول فحص متعدد النقاط، وكل عملية صيانة موثقة لحظة بلحظة عبر نظام تتبع QR شفاف يحمي خصوصيتك وبياناتك.',
-            'about_story_en'   => 'ASLY TECH STORE is not an ordinary retail counter — it is an engineering-first technology studio and precision diagnostic lab built to set an uncompromising standard for hardware authenticity. Every device undergoes multi-point verification, and every repair is documented in real time via transparent QR telemetry.',
-        ];
-        $existing = [];
-        foreach ($pdo->query("SELECT setting_key FROM settings")->fetchAll() as $row) {
-            $existing[$row['setting_key']] = true;
-        }
-        $ins = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)");
-        foreach ($defaults as $k => $v) {
-            if (!isset($existing[$k])) {
-                $ins->execute([$k, $v]);
-            }
-        }
-    }
-
     public static function importMysqlDump(PDO $pdo): void
     {
         $sqlFile = APP_ROOT . '/database/asly_store.sql';
@@ -159,7 +123,7 @@ class Database
             $cleanLines[] = $line;
         }
         $cleanSql = implode("\n", $cleanLines);
-        $statements = preg_split('/;\s*(?:\r\n|\r|\n|$)/', $cleanSql) ?: [];
+        $statements = preg_split('/;\s*/', $cleanSql) ?: [];
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
             if ($stmt === '' || stripos($stmt, 'CREATE DATABASE') === 0 || stripos($stmt, 'USE ') === 0) {
@@ -321,20 +285,16 @@ class Database
         $sqlFile = APP_ROOT . '/database/asly_store.sql';
         if (is_file($sqlFile)) {
             $sql = (string)file_get_contents($sqlFile);
-            $lines = preg_split('/\r\n|\r|\n/', $sql) ?: [];
-            $clean = [];
-            foreach ($lines as $line) {
-                $t = ltrim($line);
-                if ($t === '' || strpos($t, '--') === 0) {
-                    continue;
-                }
-                $clean[] = $line;
-            }
-            $statements = preg_split('/;\s*(?:\r\n|\r|\n|$)/', implode("\n", $clean)) ?: [];
+            $statements = preg_split('/;\s*/', $sql) ?: [];
             foreach ($statements as $stmt) {
                 $stmt = trim($stmt);
                 if (stripos($stmt, 'INSERT IGNORE INTO') === 0) {
                     $sqliteStmt = preg_replace('/^INSERT\s+IGNORE\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt);
+                    if ($sqliteStmt) {
+                        $pdo->exec($sqliteStmt);
+                    }
+                } elseif (stripos($stmt, 'INSERT INTO') === 0) {
+                    $sqliteStmt = preg_replace('/^INSERT\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt);
                     if ($sqliteStmt) {
                         $pdo->exec($sqliteStmt);
                     }

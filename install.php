@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * 1-Click XAMPP / MySQL Database Setup Wizard (Zero Emojis • Font Awesome 6 • Bright Bilingual)
- */
 
 declare(strict_types=1);
 

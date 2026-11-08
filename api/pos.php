@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * POS Checkout, Multi-Item Invoicing, Minimum Price Enforcement & Daily Revenue Reports
- */
 
 declare(strict_types=1);
 
@@ -45,7 +41,7 @@ if ($method === 'GET') {
         jsonResponse(['ok' => true, 'invoice' => $invoice, 'items' => $items]);
     }
 
-    // Daily / Date-Range Sales & Revenue Dashboard (Admin Only)
+    
     requireAdminApi();
     $dateFrom = trim((string)($_GET['date_from'] ?? date('Y-m-d')));
     $dateTo = trim((string)($_GET['date_to'] ?? $dateFrom));
@@ -64,7 +60,7 @@ if ($method === 'GET') {
     $invStmt->execute([$dateFrom, $dateTo]);
     $invoices = $invStmt->fetchAll();
 
-    // Load items per invoice
+    
     $itemsByInvoice = [];
     if ($invoices) {
         $ids = array_map(static fn($r) => (int)$r['id'], $invoices);
@@ -203,7 +199,7 @@ if ($method === 'POST') {
                 }
 
                 $minSellPrice = round((float)$product['min_sell_price'], 2);
-                // STRICT RULE: Neither Staff nor POS can sell below min_sell_price!
+                
                 if ($soldUnitPrice + 0.001 < $minSellPrice) {
                     throw new RuntimeException(sprintf(
                         'مرفوض! سعر البيع المدخل للمنتج "%s" (%s) أقل من أقل سعر بيع مسموح به (%s).',
@@ -308,7 +304,7 @@ if ($method === 'POST') {
                 $settings['public_base_url'] ?? null
             );
 
-            // Sanitize response for Staff
+            
             $responseItems = $validatedItems;
             if ($user['role'] !== 'admin') {
                 foreach ($responseItems as &$ri) {

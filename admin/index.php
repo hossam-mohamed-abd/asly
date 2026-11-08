@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Complete Unified Bright Daylight Admin & Staff Dashboard (Zero Emojis • Font Awesome 6 • Bilingual EN/AR)
- */
 
 declare(strict_types=1);
 
@@ -87,7 +83,7 @@ $jsConfig = [
 
 <div class="app-layout">
 
-  <!-- Bright Daylight Frosted Sidebar -->
+  
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
       <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
@@ -178,10 +174,10 @@ $jsConfig = [
     </div>
   </aside>
 
-  <!-- Main Workspace -->
+  
   <div class="main-area">
 
-    <!-- Top Header -->
+    
     <header class="topbar-admin">
       <div class="topbar-title-wrap">
         <button type="button" class="mobile-menu-btn" id="btnMobileSidebar"><i class="fa-solid fa-bars"></i></button>
@@ -217,9 +213,7 @@ $jsConfig = [
     <div class="content-wrap">
 
       <?php if ($isAdmin): ?>
-      <!-- ========================================================
-           TAB 1: OVERVIEW & DAILY SALES / REVENUE DASHBOARD (ADMIN ONLY)
-           ======================================================== -->
+      
       <section class="tab-panel active" id="tab-overview">
         <div class="card" style="padding:16px 22px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
@@ -241,7 +235,7 @@ $jsConfig = [
 
         <div class="kpi-grid" id="overviewKpis"></div>
 
-        <!-- Daily Sold Invoices Table -->
+        
         <div class="card">
           <div class="card-header">
             <h3><i class="fa-solid fa-receipt" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Sales Invoices & Sold Items' : 'سجل الفواتير والقطع المباعة خلال الفترة المحددة' ?></h3>
@@ -302,9 +296,7 @@ $jsConfig = [
       </section>
       <?php endif; ?>
 
-      <!-- ========================================================
-           TAB 2: QUICK CAMERA PRICE CHECKER (IN FRONT OF CUSTOMER)
-           ======================================================== -->
+      
       <section class="tab-panel<?= !$isAdmin ? ' active' : '' ?>" id="tab-quick-scanner">
         <div class="scanner-grid">
 
@@ -346,9 +338,7 @@ $jsConfig = [
         </div>
       </section>
 
-      <!-- ========================================================
-           TAB 3: POS MULTI-ITEM SALES & INVOICE GENERATOR
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-pos">
         <div class="pos-layout">
 
@@ -426,9 +416,7 @@ $jsConfig = [
       </section>
 
       <?php if ($isAdmin): ?>
-      <!-- ========================================================
-           TAB 4: ADD / EDIT PRODUCT WITH SCANNER & AUTO-QR
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-add-product">
         <div class="scanner-grid">
 
@@ -523,7 +511,7 @@ $jsConfig = [
                 </div>
               </div>
 
-              <!-- Bright 3-Tier Pricing Highlight Box -->
+              
               <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:16px;">
                 <div style="font-weight:800;color:var(--db-teal-800);margin-bottom:10px;font-size:0.92rem;">
                   <i class="fa-solid fa-coins" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Smart 3-Tier Pricing System (Role-Protected)' : 'نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)' ?>
@@ -590,9 +578,7 @@ $jsConfig = [
 
         </div>
       </section>
-      <!-- ========================================================
-           TAB 5: INVENTORY & PRODUCTS TABLE (ADMIN ONLY)
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
           <div class="card-header">
@@ -635,9 +621,7 @@ $jsConfig = [
       </section>
       <?php endif; ?>
 
-      <!-- ========================================================
-           TAB 6: INTERACTIVE QR MAINTENANCE SYSTEM
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-maintenance">
         <div class="card">
           <div class="card-header">
@@ -678,9 +662,7 @@ $jsConfig = [
       </section>
 
       <?php if ($isAdmin): ?>
-      <!-- ========================================================
-           TAB 7: STAFF & ROLES MANAGEMENT (ADMIN ONLY)
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-staff">
         <div class="card" style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));border-color:var(--db-gold-500);">
           <h3 style="margin:0 0 8px;color:var(--db-teal-800);"><i class="fa-solid fa-shield-halved"></i> <?= $en ? 'Role Separation & Price Floor Protection' : 'نظام حماية الأسعار والصلاحيات بين المدير والموظفين' ?></h3>
@@ -714,12 +696,10 @@ $jsConfig = [
         </div>
       </section>
 
-      <!-- ========================================================
-           TAB 8: BRAND IDENTITY, SOCIAL MEDIA LINKS & SMTP SETTINGS
-           ======================================================== -->
+      
       <section class="tab-panel" id="tab-settings">
 
-        <!-- Brand Story, Official Social Media URLs & SMTP Settings Form -->
+        
         <form id="settingsSaveForm" class="card">
           <div class="card-header">
             <div>
@@ -729,16 +709,53 @@ $jsConfig = [
             <button type="button" class="btn btn-ghost btn-sm" id="btnViewEmailLogs"><i class="fa-solid fa-inbox"></i> <?= $en ? 'Sent Email Outbox' : 'سجل البريد المرسل' ?></button>
           </div>
 
-          <!-- Dedicated Official Social Media Links Box -->
+          <div style="background:linear-gradient(135deg,var(--db-teal-50),#ffffff);padding:20px;border-radius:18px;border:1.5px solid var(--db-teal-100);margin-bottom:22px;">
+            <div style="font-weight:900;color:var(--db-teal-800);margin-bottom:14px;font-size:0.98rem;">
+              <i class="fa-solid fa-phone-volume"></i> <?= $en ? 'Website & Invoice Phone & WhatsApp Numbers (Live Editable)' : 'أرقام الهاتف والواتساب الظاهرة في الموقع والفواتير (قابلة للتعديل الفوري)' ?>
+            </div>
+            <div class="form-grid" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label><i class="fa-solid fa-phone" style="color:#0d9499;margin-inline-end:5px;"></i><?= $en ? 'Website & Invoice Phone 1' : 'رقم الهاتف الأول بالموقع والفواتير' ?></label>
+                <input type="text" name="primary_phone" id="set_primary_phone" class="form-control" placeholder="01015981677" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'Phone 1 Display Label' : 'عنوان رقم الهاتف الأول بالموقع' ?></label>
+                <input type="text" name="primary_phone_label" id="set_primary_phone_label" class="form-control" placeholder="مبيعات وصيانة - الرقم الرئيسي">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-phone" style="color:#0d9499;margin-inline-end:5px;"></i><?= $en ? 'Website & Invoice Phone 2' : 'رقم الهاتف الثاني بالموقع والفواتير' ?></label>
+                <input type="text" name="secondary_phone" id="set_secondary_phone" class="form-control" placeholder="01154639718" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'Phone 2 Display Label' : 'عنوان رقم الهاتف الثاني بالموقع' ?></label>
+                <input type="text" name="secondary_phone_label" id="set_secondary_phone_label" class="form-control" placeholder="مبيعات وصيانة - الرقم الإضافي">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i class="fa-brands fa-whatsapp" style="color:#059669;margin-inline-end:5px;"></i><?= $en ? 'Official WhatsApp 1' : 'رقم واتساب الأول بالموقع' ?></label>
+                <input type="text" name="primary_whatsapp" id="set_primary_whatsapp" class="form-control" placeholder="201015981677" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'WhatsApp 1 Display Label' : 'عنوان واتساب الأول بالموقع' ?></label>
+                <input type="text" name="primary_whatsapp_label" id="set_primary_whatsapp_label" class="form-control" placeholder="واتساب الاستفسارات والمبيعات">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-whatsapp" style="color:#059669;margin-inline-end:5px;"></i><?= $en ? 'Official WhatsApp 2' : 'رقم واتساب الثاني بالموقع' ?></label>
+                <input type="text" name="secondary_whatsapp" id="set_secondary_whatsapp" class="form-control" placeholder="201154639718" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'WhatsApp 2 Display Label' : 'عنوان واتساب الثاني بالموقع' ?></label>
+                <input type="text" name="secondary_whatsapp_label" id="set_secondary_whatsapp_label" class="form-control" placeholder="واتساب قسم الصيانة والدعم الفني">
+              </div>
+            </div>
+          </div>
+
           <div style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));padding:20px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:22px;">
             <div style="font-weight:900;color:var(--db-teal-800);margin-bottom:14px;font-size:0.98rem;">
               <i class="fa-solid fa-hashtag"></i> <?= $en ? 'Social Media Links (Live on Public Website)' : 'روابط حسابات السوشيال ميديا الرسمية (تظهر مباشرة باللاندينج بيدج)' ?>
             </div>
             <div class="form-grid">
-              <div class="form-group">
-                <label><i class="fa-brands fa-whatsapp" style="color:#059669;margin-inline-end:5px;"></i><?= $en ? 'Official WhatsApp Number (with 20)' : 'رقم واتساب الرسمي (بكود الدولة 20)' ?></label>
-                <input type="text" name="primary_whatsapp" id="set_primary_whatsapp" class="form-control" placeholder="201015981677" style="direction:ltr;">
-              </div>
               <div class="form-group">
                 <label><i class="fa-brands fa-facebook-f" style="color:#0d9499;margin-inline-end:5px;"></i>Facebook URL</label>
                 <input type="url" name="social_facebook" id="set_social_facebook" class="form-control" placeholder="https://facebook.com/..." style="direction:ltr;">
@@ -774,7 +791,7 @@ $jsConfig = [
             </div>
           </div>
 
-          <!-- Store Identity & Story ("Who We Are") -->
+          
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
               <label><?= $en ? 'Store Name (Arabic)' : 'اسم المركز بالعربية' ?></label>
@@ -821,17 +838,6 @@ $jsConfig = [
 
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label><?= $en ? 'Invoice Phone 1' : 'هاتف الفواتير الرئيسي 1' ?></label>
-              <input type="text" name="primary_phone" id="set_primary_phone" class="form-control" style="direction:ltr;">
-            </div>
-            <div class="form-group">
-              <label><?= $en ? 'Invoice Phone 2' : 'هاتف الفواتير 2' ?></label>
-              <input type="text" name="secondary_phone" id="set_secondary_phone" class="form-control" style="direction:ltr;">
-            </div>
-          </div>
-
-          <div class="form-grid" style="margin-bottom:18px;">
-            <div class="form-group">
               <label><?= $en ? 'Address (Arabic)' : 'العنوان (عربي)' ?></label>
               <input type="text" name="store_address" id="set_store_address" class="form-control">
             </div>
@@ -863,7 +869,7 @@ $jsConfig = [
             </div>
           </div>
 
-          <!-- SMTP Configuration -->
+          
           <div style="background:var(--db-teal-50);padding:20px;border-radius:18px;border:1px solid var(--db-teal-100);margin-bottom:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
               <div>
@@ -918,7 +924,7 @@ $jsConfig = [
           </button>
         </form>
 
-        <!-- Dynamic Extra Contact Lines Manager -->
+        
         <div class="card">
           <div class="card-header">
             <div>
@@ -945,7 +951,7 @@ $jsConfig = [
           </div>
         </div>
 
-        <!-- Brand Kit Card -->
+        
         <div class="card">
           <div class="card-header">
             <div>
@@ -978,11 +984,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- ============================================================
-     BRIGHT DAYLIGHT MODALS (ZERO EMOJIS • FONT AWESOME 6)
-     ============================================================ -->
-
-<!-- 1. Invoice Preview, PNG Export, WhatsApp Share & Print Modal -->
 <div class="db-modal-backdrop" id="invoiceModal">
   <div class="db-modal" style="width:min(820px,100%);">
     <div class="db-modal-head">
@@ -1001,7 +1002,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- 2. Register New Maintenance Ticket Modal -->
 <div class="db-modal-backdrop" id="newMaintModal">
   <div class="db-modal">
     <div class="db-modal-head">
@@ -1108,7 +1108,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- 3. Maintenance Ticket Detail Modal -->
 <div class="db-modal-backdrop" id="maintDetailModal">
   <div class="db-modal" style="width:min(920px,100%);">
     <div class="db-modal-head">
@@ -1120,7 +1119,7 @@ $jsConfig = [
 </div>
 
 <?php if ($isAdmin): ?>
-<!-- 4. Sticker Print Modal -->
+
 <div class="db-modal-backdrop" id="stickerModal">
   <div class="db-modal" style="width:min(440px,100%);">
     <div class="db-modal-head">
@@ -1142,7 +1141,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- 5. Add/Edit Staff or Admin Modal -->
 <div class="db-modal-backdrop" id="userModal">
   <div class="db-modal" style="width:min(500px,100%);">
     <div class="db-modal-head">
@@ -1186,7 +1184,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- 6. Add/Edit Contact Channel Modal -->
 <div class="db-modal-backdrop" id="channelModal">
   <div class="db-modal" style="width:min(520px,100%);">
     <div class="db-modal-head">
@@ -1237,7 +1234,6 @@ $jsConfig = [
   </div>
 </div>
 
-<!-- 7. Email Outbox Logs Modal -->
 <div class="db-modal-backdrop" id="emailLogsModal">
   <div class="db-modal" style="width:min(860px,100%);">
     <div class="db-modal-head">

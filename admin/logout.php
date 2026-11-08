@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Secure Logout Handler
- */
 
 declare(strict_types=1);
 

@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Bright Daylight Admin & Staff Login Portal (Zero Emojis • Font Awesome 6 • Bilingual EN + AR)
- */
 
 declare(strict_types=1);
 

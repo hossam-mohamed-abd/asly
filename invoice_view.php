@@ -1,8 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Bright Branded Digital Customer Invoice (Zero Emojis • Font Awesome 6 • PNG & Print)
- */
 
 declare(strict_types=1);
 

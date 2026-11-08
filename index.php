@@ -1,10 +1,4 @@
 <?php
-/**
- * ASLY | أصلي TECH STORE
- * Avant-Garde Geometric & Curated Asymmetric Bright Editorial Landing Page
- * Identity ("Who We Are") + Domains of Craft + Live QR Repair Lab + Dynamic Social Hub
- * Zero Products • Zero Prices • Zero Emojis • Font Awesome 6 • Bilingual (AR RTL / EN LTR)
- */
 
 declare(strict_types=1);
 
@@ -12,7 +6,7 @@ require_once __DIR__ . '/includes/helpers.php';
 
 $pdo = Database::getConnection();
 $settings = getAllSettings($pdo);
-$channels = getActiveContactChannels($pdo, false);
+$channels = getWebsiteDisplayChannels($pdo, $settings);
 $socialPlatforms = getSocialPlatforms($settings);
 
 $en = isEn();
@@ -35,8 +29,10 @@ $address = $en
 $hours = $en
     ? (($settings['working_hours_en'] ?? '') !== '' ? $settings['working_hours_en'] : ($settings['working_hours'] ?? 'Daily 11:00 AM – 11:00 PM'))
     : ($settings['working_hours'] ?? 'يومياً من ١١:٠٠ صباحاً حتى ١١:٠٠ مساءً');
-$primaryWa = normalizeWhatsappNumber($settings['primary_whatsapp'] ?? '201015981677');
-$primaryEmail = trim((string)($settings['primary_email'] ?? 'contact@aslystore.com'));
+$primaryPhone = trim((string)($settings['primary_phone'] ?? ''));
+$secondaryPhone = trim((string)($settings['secondary_phone'] ?? ''));
+$primaryWa = normalizeWhatsappNumber($settings['primary_whatsapp'] ?? '');
+$primaryEmail = trim((string)($settings['primary_email'] ?? ''));
 $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 ?>
 <!DOCTYPE html>
@@ -52,11 +48,11 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 </head>
 <body class="ambient-canvas">
 
-  <!-- Soft Daylight Ambient Auras (Zero Dark, Zero Grids) -->
+  
   <div class="geo-orb geo-orb-aqua" style="top: -120px; inset-inline-end: -140px;"></div>
   <div class="geo-orb geo-orb-gold" style="top: 380px; inset-inline-start: -180px;"></div>
 
-  <!-- 1. Floating Frosted Architectural Capsule Navbar -->
+  
   <header class="nav-shell">
     <nav class="nav-capsule" aria-label="Main navigation">
       <a href="<?= e(appUrl('index.php')) ?>" class="brand-mark">
@@ -95,16 +91,16 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </nav>
   </header>
 
-  <!-- 2. Hero Stage: Avant-Garde Geometric + Asymmetric Collage -->
+  
   <section class="hero-stage">
-    <!-- Floating Parallax Geometric Shapes ("عشوائية هندسية مدروسة") -->
+    
     <div class="geo-shape geo-ring" data-parallax="18" style="width: 92px; height: 92px; top: 8%; left: 46%;"></div>
     <div class="geo-shape geo-ring-dashed" data-parallax="-14" style="width: 150px; height: 150px; bottom: 8%; right: 44%;"></div>
     <div class="geo-shape geo-diamond" data-parallax="24" style="top: 18%; left: 6%;"></div>
     <div class="geo-shape geo-capsule" data-parallax="-20" style="width: 84px; height: 30px; bottom: 16%; left: 38%; transform: rotate(-22deg);"></div>
 
     <div class="container hero-grid">
-      <!-- Text Manifesto Column -->
+      
       <div class="hero-copy reveal-up in-view">
         <div class="eyebrow-chip">
           <i class="fa-solid fa-compass-drafting"></i>
@@ -145,9 +141,9 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         <?php endif; ?>
       </div>
 
-      <!-- Scattered Asymmetric Geometric Collage Column -->
+      
       <div class="collage-stage reveal-up in-view">
-        <!-- Spinning Circular Architectural Stamp -->
+        
         <div class="orbital-stamp" aria-hidden="true">
           <svg viewBox="0 0 120 120">
             <defs>
@@ -162,22 +158,22 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <!-- Primary Arched Asymmetric Studio Frame -->
+        
         <div class="collage-main-arch" data-parallax="-10">
           <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="ASLY Sunlit Architectural Studio">
         </div>
 
-        <!-- Overlapping Travertine & Aqua Acrylic Flat-Lay Frame -->
+        
         <div class="collage-sub-chamfer" data-parallax="16">
           <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="Precision Tech Craft">
         </div>
 
-        <!-- Top Pill Lens Frame -->
+        
         <div class="collage-top-pill" data-parallax="-18">
           <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="ASLY Diagnostic Engineer">
         </div>
 
-        <!-- Floating Telemetry Badge -->
+        
         <div class="floating-chip floating-chip-end">
           <div class="chip-icon gold">
             <i class="fa-solid fa-shield-halved"></i>
@@ -191,7 +187,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 3. Crisscrossing Angled Kinetic Marquee Ribbons -->
+  
   <div class="kinetic-ribbons-wrap" aria-hidden="true">
     <div class="marquee-ribbon ribbon-aqua">
       <div class="marquee-track">
@@ -216,7 +212,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </div>
 
-  <!-- 4. Section 01: WHO WE ARE — Asymmetric Architectural Mosaic -->
+  
   <section id="who-we-are" class="section-pad">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -231,7 +227,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
       </div>
 
       <div class="who-mosaic">
-        <!-- Span 7: Main Brand Story & Founders Card -->
+        
         <article class="mosaic-card mosaic-story reveal-up">
           <span class="hollow-num">ASLY</span>
           <div>
@@ -251,7 +247,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </article>
 
-        <!-- Span 5: Offset Tilted Architectural Photo -->
+        
         <div class="mosaic-card mosaic-photo-tall reveal-up">
           <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg')) ?>" alt="ASLY Everyday Experience">
           <div class="mosaic-photo-caption">
@@ -260,7 +256,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <!-- 3 Staggered Irregular Pillar Cards -->
+        
         <article class="mosaic-card mosaic-pillar reveal-up">
           <span class="hollow-num">01</span>
           <div class="pillar-icon-orb">
@@ -294,7 +290,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 5. Section 02: DOMAINS OF CRAFT — Expandable Architectural Slices (Zero Products!) -->
+  
   <section id="our-craft" class="section-pad section-ivory">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -359,14 +355,14 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 6. Section 03: INTERACTIVE QR & TICKET MAINTENANCE TELEMETRY CONSOLE -->
+  
   <section id="repair-lab" class="section-pad">
     <div class="container">
       <div class="lab-console-shell reveal-up">
         <div class="geo-orb geo-orb-aqua" style="bottom: -160px; inset-inline-end: -120px;"></div>
 
         <div class="lab-console-grid">
-          <!-- Left: Instant Lookup & Camera QR Trigger -->
+          
           <div>
             <div class="eyebrow-chip" style="background: #ffffff;">
               <i class="fa-solid fa-satellite-dish"></i>
@@ -398,11 +394,11 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </a>
             </div>
 
-            <!-- Instant Live AJAX Telemetry Preview Box -->
+            
             <div id="inlineTicketResult" class="inline-ticket-result" aria-live="polite"></div>
           </div>
 
-          <!-- Right: Scattered 7-Stage Constellation -->
+          
           <div class="stage-constellation">
             <div class="constellation-node">
               <div class="c-node-ico"><i class="fa-solid fa-clipboard-check"></i></div>
@@ -449,7 +445,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 7. Section 04: ASYMMETRIC SOCIAL MEDIA UNIVERSE (100% Editable by Admin!) -->
+  
   <section id="social-universe" class="section-pad section-ivory">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -488,7 +484,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 8. Section 05: STUDIO ADDRESS, HOURS & DIRECT LINES -->
+  
   <section id="contact-studio" class="section-pad">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -502,7 +498,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
       </div>
 
       <div class="concierge-grid reveal-up">
-        <!-- Left: Architectural Location & Hours Card -->
+        
         <div class="location-arch-card">
           <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="loc-row">
@@ -520,6 +516,26 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
                 <div style="font-size: 1.04rem; font-weight: 800; color: var(--ink-1);"><?= e($hours) ?></div>
               </div>
             </div>
+
+            <?php if ($primaryPhone !== '' || $secondaryPhone !== ''): ?>
+            <div class="loc-row">
+              <div class="loc-ico"><i class="fa-solid fa-phone-volume"></i></div>
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--ink-3);"><?= $en ? 'Direct Numbers' : 'أرقام التواصل المباشر' ?></div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 2px;">
+                  <?php if ($primaryPhone !== ''): ?>
+                    <a href="tel:<?= e(preg_replace('/\s+/', '', $primaryPhone)) ?>" style="font-size: 1.02rem; font-weight: 900; color: var(--ink-1); direction: ltr; display: inline-block;"><?= e($primaryPhone) ?></a>
+                  <?php endif; ?>
+                  <?php if ($primaryPhone !== '' && $secondaryPhone !== ''): ?>
+                    <span style="color: var(--ink-3);">•</span>
+                  <?php endif; ?>
+                  <?php if ($secondaryPhone !== ''): ?>
+                    <a href="tel:<?= e(preg_replace('/\s+/', '', $secondaryPhone)) ?>" style="font-size: 1.02rem; font-weight: 900; color: var(--ink-1); direction: ltr; display: inline-block;"><?= e($secondaryPhone) ?></a>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+            <?php endif; ?>
 
             <?php if ($primaryEmail !== ''): ?>
             <div class="loc-row">
@@ -548,7 +564,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <!-- Right: Dynamic Admin Contact Channels -->
+        
         <div class="channels-stack">
           <?php foreach ($channels as $ch):
               $type = (string)($ch['channel_type'] ?? 'phone');
@@ -576,7 +592,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 9. Section 06: ARCHITECTURAL FAQ -->
+  
   <section id="faq" class="section-pad section-ivory">
     <div class="container faq-asym-grid reveal-up">
       <div>
@@ -604,7 +620,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  <!-- 10. Sculptural Pure-Bright Footer -->
+  
   <footer class="bright-footer">
     <div class="container">
       <div class="footer-top-grid">
@@ -649,7 +665,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </footer>
 
-  <!-- Live QR Receipt Camera Modal -->
+  
   <div class="bright-modal-backdrop" id="landingQrModal" aria-hidden="true">
     <div class="bright-modal-card">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
@@ -677,7 +693,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </div>
 
-  <!-- Mobile Navigation Drawer -->
+  
   <div class="bright-modal-backdrop" id="mobileNavModal" aria-hidden="true">
     <div class="bright-modal-card">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
