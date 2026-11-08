@@ -4,39 +4,7 @@
    Zero Dark Colors • Zero Grid Squares • Logical Bidirectional Layout
    ============================================================ */
 
-@font-face {
-  font-family: 'Alexandria';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/alexandria-arabic-wght-normal.woff2') format('woff2');
-  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
-}
-
-@font-face {
-  font-family: 'Alexandria';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/alexandria-latin-wght-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/outfit-latin-wght-normal.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url('../vendor/fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
-}
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap');
 
 :root {
   --db-white: #ffffff;
@@ -72,7 +40,7 @@
 
 body {
   margin: 0;
-  font-family: 'Alexandria', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--db-bg);
   color: var(--db-text);
   text-align: start;
@@ -80,7 +48,15 @@ body {
 }
 
 html[lang="en"] body {
-  font-family: 'Plus Jakarta Sans', 'Outfit', 'Alexandria', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', 'Manrope', 'Cairo', system-ui, -apple-system, sans-serif;
+}
+
+html[lang="en"] h1,
+html[lang="en"] h2,
+html[lang="en"] h3,
+html[lang="en"] .kpi-value {
+  font-family: 'Manrope', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* App Shell */

@@ -128,7 +128,7 @@ function t(string $key): string
         'marquee_4' => ['ar' => 'حماية كاملة للخصوصية ومسح تلقائي لبيانات التذكرة فور التسليم', 'en' => 'PRIVACY-FIRST AUTO-WIPE PROTOCOL UPON DELIVERY'],
 
         // Hero Collage
-        'hero_eyebrow' => ['ar' => 'هويتنا الهندسية • ASLY TECH STUDIO', 'en' => 'IDENTITY & LAB • ASLY TECH STUDIO'],
+        'hero_eyebrow' => ['ar' => '01 // هويتنا الهندسية • ASLY TECH STUDIO', 'en' => '01 // IDENTITY & LAB • ASLY TECH STUDIO'],
         'hero_title_1' => ['ar' => 'حيث تلتقي', 'en' => 'Where Authentic'],
         'hero_title_2' => ['ar' => 'الأصالة التقنية', 'en' => 'Hardware Craft'],
         'hero_title_3' => ['ar' => 'بالدقة الهندسية.', 'en' => 'Meets Precision.'],

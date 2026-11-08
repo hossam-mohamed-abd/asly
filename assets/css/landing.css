@@ -4,39 +4,7 @@
    100% Pure Daylight Palette • Zero Dark/Black • Zero Grid Lines • RTL + LTR
    ========================================================================== */
 
-@font-face {
-  font-family: 'Alexandria';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/alexandria-arabic-wght-normal.woff2') format('woff2');
-  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
-}
-
-@font-face {
-  font-family: 'Alexandria';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/alexandria-latin-wght-normal.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+20AC, U+2122;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 400 900;
-  font-display: swap;
-  src: url('../vendor/fonts/outfit-latin-wght-normal.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url('../vendor/fonts/plus-jakarta-sans-latin-wght-normal.woff2') format('woff2');
-}
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800;900&family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@500;600;700;800&display=swap');
 
 :root {
   /* Pure Sunlit Architectural Surfaces */
@@ -72,11 +40,11 @@
   --shadow-md: 0 24px 60px rgba(30, 41, 59, 0.07), 0 8px 24px rgba(18, 178, 183, 0.08);
   --shadow-lg: 0 34px 84px rgba(13, 146, 151, 0.12), 0 12px 32px rgba(223, 176, 75, 0.09);
 
-  /* Clean Luxury Studio Fonts (Self-Hosted Variable WOFF2) */
-  --font-ar: 'Alexandria', system-ui, sans-serif;
-  --font-en-display: 'Outfit', 'Alexandria', 'Plus Jakarta Sans', -apple-system, sans-serif;
-  --font-en-body: 'Plus Jakarta Sans', 'Outfit', 'Alexandria', -apple-system, sans-serif;
-  --font-mono: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  /* Fonts — Original Arabic (Alexandria + Cairo) Preserved 100%, Modern English (Manrope + Inter) */
+  --font-ar: 'Alexandria', 'Cairo', system-ui, sans-serif;
+  --font-en-display: 'Manrope', 'Inter', system-ui, sans-serif;
+  --font-en-body: 'Inter', 'Manrope', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -453,15 +421,21 @@ html[dir="rtl"] .eyebrow-chip {
 html[lang="en"] .hero-display {
   font-family: var(--font-en-display);
   font-weight: 800;
-  line-height: 1.06;
-  letter-spacing: -0.025em;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
 }
 
 .hero-display .stroke-word {
-  color: var(--ink-1);
+  color: transparent;
+  -webkit-text-stroke: 2px var(--teal-deep);
   display: inline-block;
   padding-inline: 4px;
-  box-shadow: inset 0 -0.26em 0 rgba(223, 176, 75, 0.28);
+}
+
+html[lang="en"] .hero-display .stroke-word {
+  color: var(--ink-1);
+  -webkit-text-stroke: 0;
+  box-shadow: inset 0 -0.24em 0 rgba(223, 176, 75, 0.28);
   border-radius: 6px;
 }
 
@@ -1669,15 +1643,13 @@ html[lang="en"] .footer-links-list a:hover {
 
 .footer-giant-word {
   font-family: var(--font-en-display);
-  font-size: clamp(3rem, 8.8vw, 7.6rem);
+  font-size: clamp(3.2rem, 9.5vw, 8.2rem);
   font-weight: 800;
-  line-height: 1;
+  line-height: 0.95;
   text-align: center;
-  background: linear-gradient(90deg, rgba(18, 178, 183, 0.14), rgba(223, 176, 75, 0.16), rgba(18, 178, 183, 0.14));
-  -webkit-background-clip: text;
-  background-clip: text;
   color: transparent;
-  letter-spacing: -0.02em;
+  -webkit-text-stroke: 1.5px rgba(18, 178, 183, 0.22);
+  letter-spacing: 0.02em;
   margin: 30px 0 20px;
   user-select: none;
 }
