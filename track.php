@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Interactive Customer QR Maintenance Tracking & Stage Commenting Page (Bilingual EN + AR)
+ * Interactive Customer QR Maintenance Tracking & Stage Commenting Page (Zero Emojis • Font Awesome 6)
  */
 
 declare(strict_types=1);
@@ -58,163 +58,238 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= e(t('track_page_title')) ?> | <?= e($displayStore) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
+  <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css')) ?>">
+  <style>
+    body { background: var(--bg-ivory); }
+    .track-wrap { max-width: 960px; margin: 36px auto 72px; padding: 0 16px; display: flex; flex-direction: column; gap: 24px; }
+    .track-card {
+      background: #ffffff;
+      border-radius: 38px 16px 38px 16px;
+      border: 1.5px solid var(--teal-border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .track-head {
+      padding: 26px 30px;
+      background: linear-gradient(135deg, var(--bg-aqua-soft) 0%, #ffffff 55%, var(--bg-gold-soft) 100%);
+      border-bottom: 1.5px solid var(--teal-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .timeline-box { padding: 28px 30px; display: flex; flex-direction: column; gap: 16px; }
+    .stage-step {
+      border: 1.5px solid var(--line);
+      border-radius: 26px 10px 26px 10px;
+      padding: 20px 22px;
+      background: #ffffff;
+      transition: all 0.25s ease;
+    }
+    .stage-step.completed { border-color: var(--teal-border); background: #f8fefe; }
+    .stage-step.current { border-color: var(--gold); background: var(--bg-gold-soft); box-shadow: var(--shadow-xs); }
+    .stage-step-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .stage-num {
+      width: 40px; height: 40px; border-radius: 14px;
+      background: var(--bg-ivory); color: var(--ink-2);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 900; flex-shrink: 0; border: 1px solid var(--line);
+    }
+    .stage-step.completed .stage-num { background: var(--teal); color: #ffffff; border-color: var(--teal); }
+    .stage-step.current .stage-num { background: var(--gold); color: #ffffff; border-color: var(--gold); }
+    .stage-notes-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .stage-notes-list:empty { margin-top: 0; }
+    .note-bubble {
+      padding: 12px 16px;
+      border-radius: 18px 8px 18px 8px;
+      font-size: 0.9rem;
+      border: 1px solid var(--line);
+      background: #ffffff;
+    }
+    .note-bubble.admin { border-color: var(--teal-border); background: var(--bg-aqua-soft); }
+    .note-bubble.customer { border-color: var(--gold-border); background: #ffffff; }
+  </style>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="container nav-inner">
-      <a href="<?= e(appUrl('index.php')) ?>" class="brand-logo">
-        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
+  <header class="subpage-header">
+    <div class="container subpage-header-inner">
+      <a href="<?= e(appUrl('index.php')) ?>">
+        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store" class="subpage-logo">
       </a>
       <div class="nav-actions">
         <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="icon-pill-btn lang-pill">
-          🌐 <?= e(t('lang_switch_label')) ?>
+          <i class="fa-solid fa-globe"></i>
+          <span><?= e(t('lang_switch_label')) ?></span>
         </a>
-        <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-soft btn-sm"><?= e(t('track_back_home')) ?></a>
-        <a href="https://wa.me/<?= e($primaryWa) ?>" target="_blank" rel="noopener" class="btn btn-teal btn-sm">💬 <?= e(t('track_wa_support')) ?></a>
+        <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-outline btn-sm">
+          <i class="fa-solid fa-house"></i>
+          <span><?= e(t('track_back_home')) ?></span>
+        </a>
+        <a href="https://wa.me/<?= e($primaryWa) ?>" target="_blank" rel="noopener" class="btn btn-teal btn-sm">
+          <i class="fa-brands fa-whatsapp"></i>
+          <span><?= e(t('track_wa_support')) ?></span>
+        </a>
       </div>
     </div>
   </header>
 
-  <main class="track-shell">
-    <div class="container" style="max-width:940px;">
+  <main class="track-wrap">
 
-      <!-- Search Box -->
-      <div class="track-card" style="padding:28px 32px;">
-        <div class="eyebrow-pill">🔬 <?= e(t('lab_eyebrow')) ?></div>
-        <h1 style="margin:0 0 8px;font-size:1.65rem;color:var(--ink-heading);"><?= e(t('track_heading')) ?></h1>
-        <p style="margin:0 0 20px;color:var(--ink-muted);font-size:0.95rem;"><?= e(t('track_subheading')) ?></p>
-        <form method="get" action="<?= e(appUrl('track.php')) ?>" class="track-mini-form">
-          <input type="text" name="code" value="<?= e($code) ?>" placeholder="<?= e(t('lab_input_ph')) ?>" required>
-          <button type="submit" class="btn btn-teal"><?= e(t('track_search_btn')) ?></button>
-        </form>
+    <!-- Search Card -->
+    <div class="track-card" style="padding: 28px 32px;">
+      <div class="eyebrow-chip">
+        <i class="fa-solid fa-microscope"></i>
+        <span><?= e(t('lab_eyebrow')) ?></span>
       </div>
+      <h1 style="margin: 0 0 8px; font-size: 1.65rem; font-weight: 900; color: var(--ink-1);"><?= e(t('track_heading')) ?></h1>
+      <p style="margin: 0 0 18px; color: var(--ink-2); font-size: 0.95rem;"><?= e(t('track_subheading')) ?></p>
+      <form method="get" action="<?= e(appUrl('track.php')) ?>" class="lab-search-box" style="margin-top: 0;">
+        <input type="hidden" name="lang" value="<?= e(currentLang()) ?>">
+        <i class="fa-solid fa-qrcode prefix-ico"></i>
+        <input type="text" name="code" value="<?= e($code) ?>" placeholder="<?= e(t('lab_input_ph')) ?>" required>
+        <button type="submit" class="btn btn-teal">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span><?= e(t('track_search_btn')) ?></span>
+        </button>
+      </form>
+    </div>
 
-      <?php if ($lookupError !== ''): ?>
-        <div class="track-card" style="padding:26px;border-color:#fca5a5;background:#fef2f2;color:#b91c1c;text-align:center;font-weight:700;">
-          <?= e($lookupError) ?>
+    <?php if ($lookupError !== ''): ?>
+      <div class="track-card" style="padding: 26px; border-color: #fca5a5; background: #fef2f2; color: #b91c1c; text-align: center; font-weight: 800;">
+        <i class="fa-solid fa-circle-exclamation" style="margin-inline-end: 8px;"></i>
+        <?= e($lookupError) ?>
+      </div>
+    <?php endif; ?>
+
+    <?php if ($deliveredRef): ?>
+      <div class="track-card" style="padding: 44px 30px; text-align: center;">
+        <div style="width: 72px; height: 72px; border-radius: 24px 10px 24px 10px; background: #dcfce7; color: #059669; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 16px;">
+          <i class="fa-solid fa-check-double"></i>
         </div>
-      <?php endif; ?>
+        <h2 style="margin: 0 0 10px; color: var(--ink-1);"><?= e(t('track_delivered_title')) ?> (<?= e((string)$deliveredRef['ticket_code_ref']) ?>)</h2>
+        <p style="margin: 0 auto 24px; max-width: 580px; color: var(--ink-2);">
+          <?= e(t('track_delivered_desc')) ?> (<?= e((string)$deliveredRef['revenue_date']) ?>)
+        </p>
+        <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-teal">
+          <i class="fa-solid fa-house"></i>
+          <span><?= e(t('track_back_home')) ?></span>
+        </a>
+      </div>
+    <?php endif; ?>
 
-      <?php if ($deliveredRef): ?>
-        <div class="track-card" style="padding:40px 30px;text-align:center;">
-          <div style="width:68px;height:68px;border-radius:50%;background:#ecfdf5;color:#059669;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:14px;">✓</div>
-          <h2 style="margin:0 0 10px;color:var(--ink-heading);"><?= e(t('track_delivered_title')) ?> (<?= e((string)$deliveredRef['ticket_code_ref']) ?>)</h2>
-          <p style="margin:0 auto 22px;max-width:560px;color:var(--ink-muted);">
-            <?= e(t('track_delivered_desc')) ?> (<?= e((string)$deliveredRef['revenue_date']) ?>)
-          </p>
-          <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-teal"><?= e(t('track_back_home')) ?></a>
-        </div>
-      <?php endif; ?>
-
-      <?php if ($ticket):
+    <?php if ($ticket):
         $currentOrder = (int)($stages[$ticket['current_stage']]['order'] ?? 1);
-      ?>
-        <div class="track-card">
-          <div class="track-card-header">
-            <div>
-              <div style="font-size:0.82rem;color:var(--asly-teal-600);font-weight:800;"><?= e(t('track_verified_ticket')) ?> • <?= e((string)$ticket['ticket_code']) ?></div>
-              <h2 style="margin:4px 0 0;font-size:1.5rem;color:var(--ink-heading);"><?= e((string)$ticket['device_model']) ?></h2>
+    ?>
+      <div class="track-card">
+        <div class="track-head">
+          <div>
+            <div style="font-size: 0.82rem; color: var(--teal-deep); font-weight: 800;">
+              <i class="fa-solid fa-shield-halved" style="margin-inline-end: 6px;"></i>
+              <?= e(t('track_verified_ticket')) ?> • <?= e((string)$ticket['ticket_code']) ?>
             </div>
-            <div>
-              <span style="display:inline-block;padding:8px 18px;border-radius:999px;background:var(--asly-teal-500);color:#ffffff;font-weight:800;font-size:0.9rem;">
-                <?= e($stages[$ticket['current_stage']]['title'] ?? $ticket['current_stage']) ?>
-              </span>
-            </div>
+            <h2 style="margin: 4px 0 0; font-size: 1.5rem; font-weight: 900; color: var(--ink-1);"><?= e((string)$ticket['device_model']) ?></h2>
+          </div>
+          <div>
+            <span class="btn btn-teal btn-sm" style="pointer-events: none;">
+              <i class="<?= e($stages[$ticket['current_stage']]['icon'] ?? 'fa-solid fa-screwdriver-wrench') ?>"></i>
+              <span><?= e($stages[$ticket['current_stage']]['title'] ?? $ticket['current_stage']) ?></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Device Summary -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; padding: 22px 30px; background: var(--bg-ivory); border-bottom: 1px solid var(--line-warm); font-size: 0.9rem;">
+          <div><strong style="color: var(--ink-1);"><i class="fa-solid fa-user" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_client_name')) ?>:</strong><br><?= e((string)$ticket['customer_name']) ?></div>
+          <div><strong style="color: var(--ink-1);"><i class="fa-solid fa-microchip" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_specs')) ?>:</strong><br><?= e($ticket['device_specs'] ?: '—') ?></div>
+          <div><strong style="color: var(--ink-1);"><i class="fa-solid fa-stethoscope" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_issue')) ?>:</strong><br><?= e((string)$ticket['problem_description']) ?></div>
+          <div>
+            <strong style="color: var(--ink-1);"><i class="fa-solid fa-receipt" style="color: var(--gold-deep); margin-inline-end: 5px;"></i><?= e(t('track_cost_deposit')) ?>:</strong><br>
+            <?= formatMoney((float)$ticket['estimated_cost']) ?> (<?= e(t('track_paid_prefix')) ?>: <?= formatMoney((float)$ticket['deposit_paid']) ?>)
+          </div>
+        </div>
+
+        <!-- Stages Timeline & Mutual Notes -->
+        <div class="timeline-box">
+          <div>
+            <h3 style="margin: 0 0 4px; color: var(--ink-1); font-weight: 900;"><?= e(t('track_timeline_title')) ?></h3>
+            <p style="margin: 0; font-size: 0.88rem; color: var(--ink-3);"><?= e(t('track_timeline_sub')) ?></p>
           </div>
 
-          <!-- Device Summary Grid -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;padding:22px 30px;background:var(--bg-ivory);border-bottom:1px solid var(--line-soft);font-size:0.9rem;">
-            <div><strong style="color:var(--ink-heading);"><?= e(t('track_client_name')) ?>:</strong><br><?= e((string)$ticket['customer_name']) ?></div>
-            <div><strong style="color:var(--ink-heading);"><?= e(t('track_specs')) ?>:</strong><br><?= e($ticket['device_specs'] ?: '—') ?></div>
-            <div><strong style="color:var(--ink-heading);"><?= e(t('track_issue')) ?>:</strong><br><?= e((string)$ticket['problem_description']) ?></div>
-            <div>
-              <strong style="color:var(--ink-heading);"><?= e(t('track_cost_deposit')) ?>:</strong><br>
-              <?= formatMoney((float)$ticket['estimated_cost']) ?> (<?= e(t('track_paid_prefix')) ?>: <?= formatMoney((float)$ticket['deposit_paid']) ?>)
-            </div>
-          </div>
-
-          <!-- Stages Timeline & Mutual Notes -->
-          <div class="timeline-steps">
-            <h3 style="margin:0 0 4px;color:var(--ink-heading);"><?= e(t('track_timeline_title')) ?></h3>
-            <p style="margin:0 0 12px;font-size:0.88rem;color:var(--ink-muted);"><?= e(t('track_timeline_sub')) ?></p>
-
-            <?php foreach ($stages as $stageKey => $st):
+          <?php foreach ($stages as $stageKey => $st):
               if ($stageKey === 'delivered') continue;
               $order = (int)$st['order'];
               $stateClass = $order < $currentOrder ? 'completed' : ($order === $currentOrder ? 'current' : '');
               $stageNotes = $notesByStage[$stageKey] ?? [];
-            ?>
-              <div class="stage-step <?= $stateClass ?>">
-                <div class="stage-step-head">
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <span class="stage-num"><?= $order < $currentOrder ? '✓' : $order ?></span>
-                    <div>
-                      <strong style="font-size:1.03rem;color:var(--ink-heading);"><?= e($st['title']) ?></strong>
-                      <div style="font-size:0.84rem;color:var(--ink-muted);"><?= e($st['desc']) ?></div>
-                    </div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                    <?php if ($order === $currentOrder): ?>
-                      <span style="padding:4px 12px;border-radius:999px;background:var(--bg-white);color:var(--asly-gold-600);border:1px solid var(--asly-gold-500);font-size:0.78rem;font-weight:800;"><?= e(t('track_current_badge')) ?></span>
-                    <?php elseif ($order < $currentOrder): ?>
-                      <span style="font-size:0.78rem;color:var(--asly-teal-600);font-weight:800;"><?= e(t('track_completed_badge')) ?></span>
+          ?>
+            <div class="stage-step <?= $stateClass ?>">
+              <div class="stage-step-head">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span class="stage-num">
+                    <?php if ($order < $currentOrder): ?>
+                      <i class="fa-solid fa-check"></i>
+                    <?php else: ?>
+                      <i class="<?= e($st['icon'] ?? 'fa-solid fa-gear') ?>"></i>
                     <?php endif; ?>
-                    <button
-                      type="button"
-                      class="btn btn-soft btn-sm js-toggle-reply"
-                      data-stage="<?= e($stageKey) ?>"
-                    >
-                      <?= e(t('track_add_note_btn')) ?>
-                    </button>
+                  </span>
+                  <div>
+                    <strong style="font-size: 1.03rem; color: var(--ink-1);"><?= e($st['title']) ?></strong>
+                    <div style="font-size: 0.84rem; color: var(--ink-3);"><?= e($st['desc']) ?></div>
                   </div>
                 </div>
-
-                <!-- Notes on this stage -->
-                <div class="stage-notes-list" id="notes-<?= e($stageKey) ?>">
-                  <?php foreach ($stageNotes as $note): ?>
-                    <div class="note-bubble <?= e((string)$note['sender_type']) ?>">
-                      <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px;color:var(--ink-muted);">
-                        <strong><?= $note['sender_type'] === 'admin' ? '👨‍🔧 ' . e(t('track_eng_prefix')) . ' (' . e((string)$note['sender_name']) . ')' : '👤 ' . e(t('track_cust_prefix')) . ' (' . e((string)$note['sender_name']) . ')' ?></strong>
-                        <span style="direction:ltr;"><?= e((string)$note['created_at']) ?></span>
-                      </div>
-                      <div><?= nl2br(e((string)$note['note_text'])) ?></div>
-                    </div>
-                  <?php endforeach; ?>
-                </div>
-
-                <!-- Customer Reply Form for this Stage -->
-                <form class="js-customer-note-form" data-stage="<?= e($stageKey) ?>" style="display:<?= $order === $currentOrder ? 'block' : 'none' ?>;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line-aqua);">
-                  <?php if (!$hasValidQrToken): ?>
-                    <div style="margin-bottom:8px;">
-                      <input
-                        type="text"
-                        name="phone_verify"
-                        placeholder="<?= e(t('track_phone_verify_ph')) ?>"
-                        required
-                        style="width:100%;padding:10px 14px;border-radius:14px;border:1px solid var(--line-aqua);font-family:inherit;font-size:0.86rem;"
-                      >
-                    </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <?php if ($order === $currentOrder): ?>
+                    <span style="padding: 5px 12px; border-radius: 999px; background: #ffffff; color: var(--gold-deep); border: 1px solid var(--gold); font-size: 0.78rem; font-weight: 800;"><?= e(t('track_current_badge')) ?></span>
+                  <?php elseif ($order < $currentOrder): ?>
+                    <span style="font-size: 0.78rem; color: var(--teal-deep); font-weight: 800;"><i class="fa-solid fa-circle-check"></i> <?= e(t('track_completed_badge')) ?></span>
                   <?php endif; ?>
-                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input
-                      type="text"
-                      name="note_text"
-                      placeholder="<?= e(t('track_note_ph')) ?>"
-                      required
-                      style="flex:1;min-width:220px;padding:11px 16px;border-radius:999px;border:1px solid var(--line-aqua);font-family:inherit;font-size:0.9rem;"
-                    >
-                    <button type="submit" class="btn btn-teal btn-sm" style="padding:11px 22px;"><?= e(t('track_send_note')) ?></button>
-                  </div>
-                </form>
+                  <button type="button" class="btn btn-outline btn-sm js-toggle-reply" data-stage="<?= e($stageKey) ?>">
+                    <i class="fa-solid fa-comment-medical"></i>
+                    <span><?= e(t('track_add_note_btn')) ?></span>
+                  </button>
+                </div>
               </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-      <?php endif; ?>
 
-    </div>
+              <div class="stage-notes-list" id="notes-<?= e($stageKey) ?>">
+                <?php foreach ($stageNotes as $note): ?>
+                  <div class="note-bubble <?= e((string)$note['sender_type']) ?>">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 4px; color: var(--ink-3);">
+                      <strong>
+                        <?php if ($note['sender_type'] === 'admin'): ?>
+                          <i class="fa-solid fa-user-gear" style="color: var(--teal-deep); margin-inline-end: 5px;"></i><?= e(t('track_eng_prefix')) ?> (<?= e((string)$note['sender_name']) ?>)
+                        <?php else: ?>
+                          <i class="fa-solid fa-user" style="color: var(--gold-deep); margin-inline-end: 5px;"></i><?= e(t('track_cust_prefix')) ?> (<?= e((string)$note['sender_name']) ?>)
+                        <?php endif; ?>
+                      </strong>
+                      <span style="direction: ltr;"><?= e((string)$note['created_at']) ?></span>
+                    </div>
+                    <div><?= nl2br(e((string)$note['note_text'])) ?></div>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+
+              <form class="js-customer-note-form" data-stage="<?= e($stageKey) ?>" style="display: <?= $order === $currentOrder ? 'block' : 'none' ?>; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--teal-border);">
+                <?php if (!$hasValidQrToken): ?>
+                  <div style="margin-bottom: 8px;">
+                    <input type="text" name="phone_verify" placeholder="<?= e(t('track_phone_verify_ph')) ?>" required style="width: 100%; padding: 10px 14px; border-radius: 14px; border: 1.5px solid var(--teal-border); font-size: 0.86rem;">
+                  </div>
+                <?php endif; ?>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <input type="text" name="note_text" placeholder="<?= e(t('track_note_ph')) ?>" required style="flex: 1; min-width: 220px; padding: 11px 16px; border-radius: 999px; border: 1.5px solid var(--teal-border); font-size: 0.9rem;">
+                  <button type="submit" class="btn btn-teal btn-sm" style="padding: 11px 22px;">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span><?= e(t('track_send_note')) ?></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endif; ?>
+
   </main>
 
   <script>
@@ -244,6 +319,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
         const noteInput = form.querySelector('input[name="note_text"]');
         const phoneInput = form.querySelector('input[name="phone_verify"]');
         const btn = form.querySelector('button[type="submit"]');
+        const btnSpan = btn.querySelector('span');
 
         const payload = {
           action: 'customer_note',
@@ -255,7 +331,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
         };
 
         btn.disabled = true;
-        btn.textContent = LBL_SENDING;
+        if (btnSpan) btnSpan.textContent = LBL_SENDING;
         try {
           const res = await fetch(TRACK_API, {
             method: 'POST',
@@ -269,7 +345,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
             const list = document.getElementById('notes-' + stageKey);
             const div = document.createElement('div');
             div.className = 'note-bubble customer';
-            div.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px;color:var(--ink-muted);"><strong>👤 ${LBL_CUST} (${data.note.sender_name})</strong><span style="direction:ltr;">${data.note.created_at}</span></div><div></div>`;
+            div.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px;color:var(--ink-3);"><strong><i class="fa-solid fa-user" style="color:var(--gold-deep);margin-inline-end:5px;"></i>${LBL_CUST} (${data.note.sender_name})</strong><span style="direction:ltr;">${data.note.created_at}</span></div><div></div>`;
             div.lastElementChild.textContent = data.note.note_text;
             list.appendChild(div);
             noteInput.value = '';
@@ -278,7 +354,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
           alert('Connection error.');
         } finally {
           btn.disabled = false;
-          btn.textContent = LBL_SEND;
+          if (btnSpan) btnSpan.textContent = LBL_SEND;
         }
       });
     });

@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Bilingual Internationalization Engine (Arabic RTL + English LTR)
+ * Bilingual Internationalization Engine (Arabic RTL + English LTR) — Zero Emojis
  */
 
 declare(strict_types=1);
@@ -63,9 +63,6 @@ function langSwitchUrl(string $targetLang): string
     return $uri . '?' . http_build_query($params);
 }
 
-/**
- * Pick localized field from a product/channel row with graceful fallback
- */
 function pickLangField(array $row, string $baseKey): string
 {
     if (isEn()) {
@@ -77,24 +74,20 @@ function pickLangField(array $row, string $baseKey): string
     return (string)($row[$baseKey] ?? '');
 }
 
-/**
- * Translate channel labels stored in DB when viewing in English
- */
 function translateChannelLabel(string $label, string $type): string
 {
     if (!isEn()) {
         return $label;
     }
     $map = [
-        'مبيعات وصيانة - م. حسام محمد' => 'Sales & Service — Eng. Hossam Mohamed',
-        'مبيعات وصيانة - م. رمضان سلام' => 'Sales & Service — Eng. Ramadan Sallam',
-        'واتساب المبيعات والاستفسار عن الأسعار' => 'Sales & Price Inquiry WhatsApp',
-        'واتساب قسم الصيانة والدعم الفني' => 'Maintenance & Technical Support WhatsApp',
+        'مبيعات وصيانة - م. حسام محمد' => 'Engineering & Service — Eng. Hossam Mohamed',
+        'مبيعات وصيانة - م. رمضان سلام' => 'Engineering & Service — Eng. Ramadan Sallam',
+        'واتساب المبيعات والاستفسار عن الأسعار' => 'Official Inquiries WhatsApp',
+        'واتساب قسم الصيانة والدعم الفني' => 'Repair Lab & Technical Support WhatsApp',
     ];
     if (isset($map[$label])) {
         return $map[$label];
     }
-    // If label contains Arabic characters and isn't in static map, provide clean English fallback prefix
     if (preg_match('/\p{Arabic}/u', $label)) {
         $typeNames = [
             'phone' => 'Direct Phone Line',
@@ -103,10 +96,12 @@ function translateChannelLabel(string $label, string $type): string
             'instagram' => 'Instagram Official',
             'tiktok' => 'TikTok Account',
             'telegram' => 'Telegram Channel',
+            'youtube' => 'YouTube Channel',
+            'x' => 'X Official',
             'email' => 'Official Email',
-            'location' => 'Showroom Location',
+            'location' => 'Studio Location',
         ];
-        return $typeNames[$type] ?? 'Contact Channel';
+        return $typeNames[$type] ?? 'Direct Channel';
     }
     return $label;
 }
@@ -115,150 +110,120 @@ function t(string $key): string
 {
     static $dict = [
         // Navigation & Global
-        'nav_collections' => ['ar' => 'المجموعات', 'en' => 'Collections'],
-        'nav_catalog' => ['ar' => 'المعرض', 'en' => 'Catalog'],
-        'nav_story' => ['ar' => 'فلسفة أصلي', 'en' => 'The Idea'],
-        'nav_lab' => ['ar' => 'معمل الصيانة', 'en' => 'Repair Lab'],
-        'nav_gallery' => ['ar' => 'في الحياة اليومية', 'en' => 'In Real Life'],
-        'nav_faq' => ['ar' => 'الأسئلة الشائعة', 'en' => 'FAQ'],
-        'nav_contact' => ['ar' => 'تواصل معنا', 'en' => 'Contact'],
-        'nav_track_btn' => ['ar' => 'تتبع جهاز صيانة', 'en' => 'Track Repair'],
-        'nav_search_btn' => ['ar' => 'بحث', 'en' => 'Search'],
-        'nav_staff_portal' => ['ar' => 'بوابة الإدارة', 'en' => 'Staff Portal'],
+        'nav_about' => ['ar' => 'من نحن', 'en' => 'Who We Are'],
+        'nav_craft' => ['ar' => 'تخصصاتنا', 'en' => 'Our Craft'],
+        'nav_lab' => ['ar' => 'متابعة الصيانة', 'en' => 'Repair Tracker'],
+        'nav_social' => ['ar' => 'منصاتنا', 'en' => 'Social Hub'],
+        'nav_faq' => ['ar' => 'الأسئلة', 'en' => 'FAQ'],
+        'nav_contact' => ['ar' => 'العنوان والتواصل', 'en' => 'Contact'],
+        'nav_track_btn' => ['ar' => 'تتبع صيانة جهازك', 'en' => 'Track Repair'],
+        'nav_staff_portal' => ['ar' => 'بوابة الإدارة', 'en' => 'Admin Portal'],
         'lang_switch_label' => ['ar' => 'EN', 'en' => 'عربي'],
         'currency' => ['ar' => 'ج.م', 'en' => 'EGP'],
 
-        // Announcement Marquee
-        'marquee_1' => ['ar' => 'أجهزة أصلية مفحوصة هندسياً ١٠٠٪', 'en' => '100% ENGINEER-VERIFIED AUTHENTIC TECH'],
-        'marquee_2' => ['ar' => 'صيانة احترافية بتتبع مباشر عبر رمز QR', 'en' => 'LIVE QR-TRACKED PRECISION DIAGNOSTICS'],
-        'marquee_3' => ['ar' => 'لابتوبات • هواتف ذكية • ساعات ذكية • إكسسوارات أصلية', 'en' => 'LAPTOPS • SMARTPHONES • WEARABLES • ORIGINAL ACCESSORIES'],
-        'marquee_4' => ['ar' => 'ضمان الفحص والتجربة المعتمد من ASLY TECH STORE', 'en' => 'CERTIFIED TESTING & WARRANTY BY ASLY TECH STORE'],
+        // Kinetic Marquee Ribbons
+        'marquee_1' => ['ar' => 'استوديو التقنية الأصلية ومعمل الفحص الهندسي', 'en' => 'AUTHENTIC TECH STUDIO & DIAGNOSTIC LAB'],
+        'marquee_2' => ['ar' => 'تتبع مباشر لمراحل الصيانة عبر رمز QR', 'en' => 'LIVE 7-STAGE QR REPAIR TELEMETRY'],
+        'marquee_3' => ['ar' => 'لابتوبات احترافية • هواتف رائدة • صيانة دقيقة على مستوى البوردة', 'en' => 'WORKSTATIONS • FLAGSHIP PHONES • BOARD-LEVEL REPAIR'],
+        'marquee_4' => ['ar' => 'حماية كاملة للخصوصية ومسح تلقائي لبيانات التذكرة فور التسليم', 'en' => 'PRIVACY-FIRST AUTO-WIPE PROTOCOL UPON DELIVERY'],
 
-        // Hero Lookbook
-        'hero_eyebrow' => ['ar' => 'مجموعة ٢٠٢٦ المختارة • ASLY LOOKBOOK', 'en' => '2026 CURATED EDITION • ASLY LOOKBOOK'],
-        'hero_title' => ['ar' => 'تقنية أصلية، مصممة لحياتك اليومية.', 'en' => 'Original Tech, Curated For Everyday Life.'],
+        // Hero Collage
+        'hero_eyebrow' => ['ar' => '01 // هويتنا الهندسية • ASLY TECH STUDIO', 'en' => '01 // IDENTITY & LAB • ASLY TECH STUDIO'],
+        'hero_title_1' => ['ar' => 'حيث تلتقي', 'en' => 'WHERE PURE'],
+        'hero_title_2' => ['ar' => 'الأصالة التقنية', 'en' => 'HARDWARE CRAFT'],
+        'hero_title_3' => ['ar' => 'بالدقة الهندسية.', 'en' => 'MEETS PRECISION.'],
         'hero_subtitle' => [
-            'ar' => 'لابتوبات احترافية، هواتف رائدة، إكسسوارات منتقاة، ومعمل صيانة ذكي بتتبع فوري عبر الـ QR — بإشراف هندسي يضمن لك راحة البال في كل تفصيلة.',
-            'en' => 'Workstation laptops, flagship smartphones, refined accessories, and a live QR-tracked repair studio — engineer-inspected for effortless daily performance.'
+            'ar' => 'أصلي تك ستور هو وجهتك الموثوقة للأجهزة الأصلية المفحوصة هندسياً ومعمل الصيانة الذكي المدعوم بنظام تتبع تفاعلي عبر رمز الـ QR لحظة بلحظة.',
+            'en' => 'ASLY Tech Store is an engineering-led technology house and precision diagnostic studio — uniting certified authentic hardware with transparent, real-time QR repair tracking.'
         ],
-        'hero_cta_explore' => ['ar' => 'استكشف المجموعة الكاملة', 'en' => 'Explore Collection'],
-        'hero_cta_track' => ['ar' => 'تتبع حالة صيانة جهازك', 'en' => 'Track Your Device'],
-        'hero_badge_1_top' => ['ar' => 'فحص هندسي شامل', 'en' => 'Engineer Verified'],
-        'hero_badge_1_sub' => ['ar' => 'قبل عرض أي جهاز بالمعرض', 'en' => 'Multi-point hardware check'],
-        'hero_badge_2_top' => ['ar' => 'تتبع صيانة بالـ QR', 'en' => 'Live QR Repair'],
-        'hero_badge_2_sub' => ['ar' => 'شفافية كاملة مرحلة بمرحلة', 'en' => 'Real-time stage transparency'],
+        'hero_cta_track' => ['ar' => 'تتبع حالة جهازك بالـ QR', 'en' => 'Track Repair Status'],
+        'hero_cta_who' => ['ar' => 'تعرّف علينا أكثر', 'en' => 'Discover Who We Are'],
+        'hero_cta_social' => ['ar' => 'تابع منصاتنا الرسمية', 'en' => 'Our Social Channels'],
 
-        // Curated Collections Strip
-        'collections_eyebrow' => ['ar' => 'تسوق حسب الفئة', 'en' => 'BROWSE BY CATEGORY'],
-        'collections_title' => ['ar' => 'مجموعاتنا المختارة', 'en' => 'Curated Tech Collections'],
-        'cat_all' => ['ar' => 'كل المعروضات', 'en' => 'All Pieces'],
-        'cat_laptops' => ['ar' => 'لابتوب ووركستيشن', 'en' => 'Laptops & Workstations'],
-        'cat_mobiles' => ['ar' => 'هواتف ذكية', 'en' => 'Smartphones'],
-        'cat_accessories' => ['ar' => 'صوتيات وإكسسوارات', 'en' => 'Audio & Accessories'],
-        'cat_wearables' => ['ar' => 'ساعات وأجهزة ذكية', 'en' => 'Smart Wearables'],
-
-        // Catalog Showcase (Zero Public Prices!)
-        'catalog_eyebrow' => ['ar' => 'معرض أصلي الحصري • بدون قوائم أسعار ثابتة لضمان أفضل عرض يومي', 'en' => 'THE SHOWROOM EDIT • DIRECT WHATSAPP CONCIERGE'],
-        'catalog_title' => ['ar' => 'أحدث الأجهزة المتوفرة بالمعرض', 'en' => 'Featured Devices & Essentials'],
-        'catalog_search_ph' => ['ar' => 'ابحث عن موديل لابتوب، آيفون، سماعة، ساعة...', 'en' => 'Search MacBook, Dell, iPhone, Watch, ANC...'],
-        'badge_featured' => ['ar' => 'مختار بعناية', 'en' => 'Editor’s Pick'],
-        'hover_hint' => ['ar' => 'مرّر لمشاهدة اللقطة الحية', 'en' => 'Hover for lifestyle view'],
-        'btn_inquire_wa' => ['ar' => 'اسأل عن التوفر والعرض عبر واتساب', 'en' => 'Inquire on WhatsApp'],
-        'btn_quick_view' => ['ar' => 'التفاصيل الكاملة', 'en' => 'Quick View'],
-        'wa_inquiry_msg' => ['ar' => 'مرحباً أصلي تك ستور، أرغب في الاستفسار عن توفر وتفاصيل الجهاز: ', 'en' => 'Hello ASLY Tech Store, I would like to inquire about availability & details for: '],
-        'empty_catalog' => ['ar' => 'لا توجد أجهزة مطابقة لبحثك حالياً — تواصل معنا مباشرة عبر واتساب لتوفير طلبك.', 'en' => 'No matching items right now — message us on WhatsApp and we will source it for you.'],
-
-        // 3 Pillars ("WHY ASLY" — getbouga-inspired editorial columns)
-        'pillars_eyebrow' => ['ar' => 'لماذا يختار العملاء أصلي؟', 'en' => 'THE ASLY STANDARD'],
-        'pillar_1_tag' => ['ar' => 'الفكرة • THE IDEA', 'en' => '01 • THE IDEA'],
-        'pillar_1_title' => ['ar' => 'أجهزة منتقاة بعين مهندس، لا مجرد تاجر.', 'en' => 'Selected By Engineers, Not Just Retailers.'],
+        // Who We Are Mosaic
+        'who_eyebrow' => ['ar' => '02 // من نحن • WHO WE ARE', 'en' => '02 // WHO WE ARE • THE STUDIO'],
+        'who_title' => ['ar' => 'أكثر من مجرد متجر — منظومة هندسية مبنية على الثقة والشفافية.', 'en' => 'More Than A Store — An Engineering Standard Built On Trust.'],
+        'pillar_1_tag' => ['ar' => 'الفلسفة • 01', 'en' => '01 // PHILOSOPHY'],
+        'pillar_1_title' => ['ar' => 'فحص بعين مهندس مختص في كل تفصيلة.', 'en' => 'Engineered Verification, Zero Guesswork.'],
         'pillar_1_desc' => [
-            'ar' => 'كل لابتوب أو هاتف في أصلي يمر باختبارات ضغط دقيقة للشاشة، البطارية، الهارد NVMe، ودوائر التبريد قبل أن يُعرض أمامك.',
-            'en' => 'Every laptop and smartphone at ASLY undergoes strict thermal, battery, NVMe, and display diagnostics before earning a spot in our showroom.'
+            'ar' => 'نؤمن أن اقتناء أو صيانة جهاز تقني يعتمد أولاً على الأمانة الهندسية؛ لذلك يمر كل جهاز باختبارات دقيقة للأداء، الحرارة، البطارية، والقطع الأصلية.',
+            'en' => 'Every laptop, smartphone, and board passing through ASLY undergoes calibrated thermal, power, storage, and component verification.'
         ],
-        'pillar_2_tag' => ['ar' => 'الأصالة • AUTHENTICITY', 'en' => '02 • PURE AUTHENTICITY'],
-        'pillar_2_title' => ['ar' => 'ضمان الفحص والتجربة وقطع أصلية ١٠٠٪.', 'en' => 'Certified Warranty & Genuine Components.'],
+        'pillar_2_tag' => ['ar' => 'معمل الصيانة • 02', 'en' => '02 // MICRO-LAB'],
+        'pillar_2_title' => ['ar' => 'تشخيص وصيانة احترافية بتوثيق كامل.', 'en' => 'Board-Level Diagnostics & Cleanroom Care.'],
         'pillar_2_desc' => [
-            'ar' => 'سواء اخترت جهازاً جديداً متبرشماً أو كسر زيرو بحالة المصنع، تحصل على فاتورة رسمية موثقة وضمان حقيقي يضمن حقك.',
-            'en' => 'Whether factory-sealed or pristine open-box, every purchase comes with a documented digital invoice and our trusted testing warranty.'
+            'ar' => 'معمل مجهز لصيانة اللابتوبات الاحترافية والهواتف الرائدة باستخدام أدوات قياس دقيقة وقطع معتمدة مع تواصل مباشر بينك وبين المهندس.',
+            'en' => 'Equipped for workstation laptops and flagship smartphones with direct two-way communication between you and your engineer.'
         ],
-        'pillar_3_tag' => ['ar' => 'الشفافية • LIVE QR LAB', 'en' => '03 • TRANSPARENT REPAIR LAB'],
-        'pillar_3_title' => ['ar' => 'تتبع جهازك لحظة بلحظة مع حماية كاملة لخصوصيتك.', 'en' => 'Step-By-Step QR Tracking & Privacy First.'],
+        'pillar_3_tag' => ['ar' => 'الخصوصية • 03', 'en' => '03 // PRIVACY SHIELD'],
+        'pillar_3_title' => ['ar' => 'شفافية كاملة أثناء الصيانة ومسح فوري عند الاستلام.', 'en' => 'Live QR Updates & Automatic Data Wipe.'],
         'pillar_3_desc' => [
-            'ar' => 'امسح كود الـ QR المطبوع على إيصالك لمتابعة مراحل الفحص ومراسلة المهندس مباشرة، مع مسح تلقائي لبيانات التذكرة فور التسليم.',
-            'en' => 'Scan your receipt QR code to view live repair stages, message your technician, receive email alerts, and enjoy automatic data wipe upon handover.'
+            'ar' => 'تتابع كل مرحلة عبر كود الـ QR المطبوع على إيصالك أو عبر البريد الإلكتروني، وفور تسليمك الجهاز تُحذف سجلاتك الشخصية تلقائياً.',
+            'en' => 'Follow all 7 stages via your receipt QR code and email alerts — then enjoy automatic personal record deletion the moment you pick up your device.'
         ],
 
-        // Stats Strip (getbouga 3-stat rhythm)
-        'stat_1_num' => ['ar' => '١٠٠٪', 'en' => '100%'],
-        'stat_1_lbl' => ['ar' => 'فحص هندسي شامل قبل التسليم', 'en' => 'Multi-Point Hardware Diagnostics'],
-        'stat_2_num' => ['ar' => '٧ مراحل', 'en' => '7 Stages'],
-        'stat_2_lbl' => ['ar' => 'تتبع تفاعلي للصيانة عبر الـ QR والإيميل', 'en' => 'Interactive QR & Email Repair Tracking'],
-        'stat_3_num' => ['ar' => '٠٪ قلق', 'en' => 'Zero Worry'],
-        'stat_3_lbl' => ['ar' => 'خصوصية تامة ومسح فوري للبيانات عند الاستلام', 'en' => 'Automatic Personal Data Wipe Upon Delivery'],
+        // Domains of Craft (No Products, Pure Capabilities)
+        'craft_eyebrow' => ['ar' => '03 // مجالات تخصصنا • DOMAINS OF CRAFT', 'en' => '03 // DOMAINS OF CRAFT • WHAT WE DO'],
+        'craft_title' => ['ar' => 'أربعة أركان تصنع تجربة أصلي', 'en' => 'Four Pillars Defining The ASLY Experience'],
+        'craft_1_title' => ['ar' => 'أجهزة اللابتوب والووركستيشن الاحترافية', 'en' => 'Workstations & Creator Laptops'],
+        'craft_1_sub' => ['ar' => 'اختيار وفحص أجهزة التصميم الهندسي، البرمجة، والمونتاج بأعلى معايير الكفاءة الحرارية.', 'en' => 'Precision selection, thermal calibration, and stress-testing for engineering, coding, and studio laptops.'],
+        'craft_2_title' => ['ar' => 'الهواتف الذكية الرائدة والأجهزة الأصلية', 'en' => 'Flagship Smartphones & Ecosystems'],
+        'craft_2_sub' => ['ar' => 'فحص أصالة المكونات، كفاءة البطارية، والشاشات لضمان تجربة استخدام خالية من المفاجآت.', 'en' => 'Authentic flagship mobility backed by strict component verification and documented testing warranty.'],
+        'craft_3_title' => ['ar' => 'معمل الصيانة الدقيقة وتتبع الـ QR التفاعلي', 'en' => 'Precision Repair & Live QR Telemetry'],
+        'craft_3_sub' => ['ar' => 'صيانة الهاردوير والسوفتوير في 7 مراحل واضحة يمكنك متابعتها والرد على المهندس من هاتفك.', 'en' => 'Hardware & board-level restoration across 7 transparent stages you can track and reply to from your phone.'],
+        'craft_4_title' => ['ar' => 'الساعات الذكية والصوتيات والحلول المعتمدة', 'en' => 'Smart Wearables & Studio Acoustics'],
+        'craft_4_sub' => ['ar' => 'حلول شحن وصوتيات وإكسسوارات أصلية تحافظ على عمر أجهزتك وأدائها اليومي.', 'en' => 'Certified charging, spatial acoustics, and smart wearables curated to protect your devices every day.'],
 
-        // Interactive Repair Lab Section
-        'lab_eyebrow' => ['ar' => 'معمل أصلي للصيانة الدقيقة • LIVE QR TRACKING', 'en' => 'ASLY PRECISION LAB • LIVE QR TRACKING'],
-        'lab_title' => ['ar' => 'تابع حالة جهازك في الصيانة مباشرة', 'en' => 'Track Your Device Repair In Real Time'],
+        // Interactive Repair Lab Console
+        'lab_eyebrow' => ['ar' => '04 // بوابة متابعة الصيانة الحية • LIVE QR TELEMETRY', 'en' => '04 // LIVE REPAIR TELEMETRY • QR TRACKER'],
+        'lab_title' => ['ar' => 'تابع جهازك في الصيانة الآن بخطوة واحدة', 'en' => 'Inspect Your Device Repair Status Instantly'],
         'lab_desc' => [
-            'ar' => 'أدخل كود تذكرة الصيانة الموجود على الإيصال (أو امسح رمز الـ QR بكاميرا هاتفك) للاطلاع على التقرير الفني، المرحلة الحالية، وإضافة ملاحظاتك لمهندس الصيانة.',
-            'en' => 'Enter your receipt ticket code (or scan your printed QR sticker) to view live technician reports, current repair stage, and leave direct notes for our engineers.'
+            'ar' => 'أدخل كود التذكرة المطبوع على إيصال الاستلام لعرض المرحلة الحالية فوراً داخل الصفحة، أو امسح كود الـ QR بالكاميرا لفتح سجل المحادثة الكامل مع المهندس.',
+            'en' => 'Enter your receipt ticket code to preview live stage progress right here, or scan your printed QR sticker with your camera to open two-way engineer notes.'
         ],
-        'lab_input_ph' => ['ar' => 'أدخل كود الصيانة — مثال: MNT-2026-101', 'en' => 'Enter ticket code — e.g. MNT-2026-101'],
-        'lab_btn_track' => ['ar' => 'اعرض حالة الجهاز الآن', 'en' => 'Track Status Now'],
-        'lab_try_demo' => ['ar' => 'جرّب تذكرة حية للتجربة: MNT-2026-101', 'en' => 'Try live demo ticket: MNT-2026-101'],
+        'lab_input_ph' => ['ar' => 'اكتب كود التذكرة — مثال: MNT-2026-101', 'en' => 'Enter Ticket Code — e.g. MNT-2026-101'],
+        'lab_btn_instant' => ['ar' => 'فحص فوري للحالة', 'en' => 'Check Status Now'],
+        'lab_btn_scan_qr' => ['ar' => 'مسح QR بالكاميرا', 'en' => 'Scan QR Receipt'],
+        'lab_btn_open_full' => ['ar' => 'فتح صفحة المحادثة والملاحظات الكاملة', 'en' => 'Open Full Interactive Ticket & Reply'],
+        'lab_try_demo' => ['ar' => 'جرّب كود تذكرة حي للتجربة: MNT-2026-101', 'en' => 'Test live demo ticket: MNT-2026-101'],
 
-        // In Real Life Lookbook Gallery ("In Use — In Our Real Life")
-        'gallery_eyebrow' => ['ar' => 'في الاستخدام اليومي • IN REAL LIFE', 'en' => 'IN USE • IN OUR REAL LIFE'],
-        'gallery_title' => ['ar' => 'الأداء والأناقة في كل مكان تذهب إليه', 'en' => 'Designed To Move With Your Day'],
-        'gallery_sub' => [
-            'ar' => 'لقطات حية من بيئة العمل، الدراسة، السفر، وداخل معمل الفحص الهندسي بمركز أصلي.',
-            'en' => 'From sunlit study desks and travel courtyards to our bright diagnostic lab — tech that fits effortlessly.'
+        // Social Universe & Direct Contact
+        'social_eyebrow' => ['ar' => '05 // مجتمع أصلي ومنصات التواصل • CONNECT WITH US', 'en' => '05 // SOCIAL UNIVERSE • FOLLOW & CONNECT'],
+        'social_title' => ['ar' => 'كن قريباً منا على منصاتنا الرسمية', 'en' => 'Follow Our Studio Across Social Media'],
+        'social_sub' => [
+            'ar' => 'تابع كواليس الفحص الهندسي، نصائح الحفاظ على أجهزتك، وأحدث أخبار المركز عبر حساباتنا الرسمية أو تواصل معنا مباشرة.',
+            'en' => 'Explore behind-the-scenes diagnostics, hardware care tips, and studio updates across our official platforms — or reach our engineers directly.'
         ],
-        'gal_cap_1' => ['ar' => 'مساحة عمل هادئة • لابتوبات فائقة النحافة', 'en' => 'Bright Studio Workstations'],
-        'gal_cap_2' => ['ar' => 'رفيقك اليومي • هواتف رائدة وساعات ذكية', 'en' => 'Everyday Flagship Mobility'],
-        'gal_cap_3' => ['ar' => 'معمل أصلي • دقة تشخيص بأحدث الأجهزة', 'en' => 'Precision Hardware Diagnostics'],
-        'gal_cap_4' => ['ar' => 'تجربة صوتية غامرة وعزل ضوضاء نقي', 'en' => 'Pure Studio Acoustic Comfort'],
-        'gal_cap_5' => ['ar' => 'قوة الأداء الهندسي في كل تفصيلة', 'en' => 'Creator-Grade Laptop Power'],
-        'gal_cap_6' => ['ar' => 'تصميم تيتانيوم أنيق يدوم طويلاً', 'en' => 'Natural Titanium Craftsmanship'],
-
-        // FAQ Accordion (getbouga-inspired)
-        'faq_eyebrow' => ['ar' => 'معلومات تهمك • FAQ', 'en' => 'GOOD TO KNOW • FAQ'],
-        'faq_title' => ['ar' => 'الأسئلة الأكثر شيوعاً', 'en' => 'Frequently Asked Questions'],
-        'faq_q1' => ['ar' => 'لماذا لا تظهر أسعار ثابتة على الموقع؟ وكيف أعرف السعر الحالي؟', 'en' => 'Why aren’t fixed prices listed publicly, and how do I get a quote?'],
-        'faq_a1' => [
-            'ar' => 'نظراً لتغير عروض الأجهزة والمواصفات يومياً (سواء الأجهزة المتبرشمة أو كسر الزيرو)، يتيح لك زر الواتساب أسفل كل جهاز الحصول على أفضل سعر لحظي مع فيديو وفحص حي للجهاز قبل الشراء.',
-            'en' => 'Because configurations and daily offers update rapidly across sealed and open-box stock, tapping “Inquire on WhatsApp” on any item connects you directly with our team for our best live quote and inspection photos.'
-        ],
-        'faq_q2' => ['ar' => 'ما هو ضمان الأجهزة المستعملة أو كسر الزيرو في أصلي تك ستور؟', 'en' => 'What warranty comes with Open-Box and Pre-Owned laptops or phones?'],
-        'faq_a2' => [
-            'ar' => 'جميع الأجهزة تمر بفحص هندسي شامل قبل العرض، وتصدر بفاتورة رسمية مختومة تشمل فترة ضمان الفحص والتجربة المحددة لكل جهاز لراحة بالك التامة.',
-            'en' => 'Every open-box and pre-owned device passes our multi-point engineering check and includes a documented warranty period printed right on your official digital & paper invoice.'
-        ],
-        'faq_q3' => ['ar' => 'كيف يعمل نظام تتبع الصيانة بالـ QR؟ وماذا يحدث لبياناتي بعد الاستلام؟', 'en' => 'How does QR repair tracking work, and how is my privacy protected?'],
-        'faq_a3' => [
-            'ar' => 'عند تسليم جهازك للصيانة تحصل على إيصال مطبوع عليه كود QR خاص بك؛ بمسحه ترى المرحلة الحالية وملاحظات المهندس ويمكنك الرد عليه، كما يصلك إيميل بكل تحديث. وفور استلامك للجهاز يتم حذف سجل بيانات التذكرة الشخصية تلقائياً.',
-            'en' => 'Upon drop-off, you receive a unique QR receipt. Scan it anytime to see live repair stages, read engineer notes, reply directly, and get automatic email updates. Once delivered, personal device records are automatically wiped.'
-        ],
-        'faq_q4' => ['ar' => 'هل تتوفر فواتير رسمية وإمكانية الدفع عبر المحافظ وإنستا باي؟', 'en' => 'Do you provide official invoices and support InstaPay / mobile wallets?'],
-        'faq_a4' => [
-            'ar' => 'نعم، كل عملية شراء تصدر لها فاتورة رقمية ومطبوعة فورية يمكن إرسالها لك كصورة عبر واتساب، مع دعم الدفع النقدي، فودافون كاش، وإنستا باي (InstaPay).',
-            'en' => 'Yes! Every purchase generates an instant branded invoice (printable and downloadable as a PNG image via WhatsApp), with Cash, Vodafone Cash, InstaPay, and Card options.'
-        ],
-
-        // Contact & Footer
-        'contact_eyebrow' => ['ar' => 'تفضل بزيارتنا أو تواصل معنا', 'en' => 'GET IN TOUCH'],
-        'contact_title' => ['ar' => 'قنوات التواصل الرسمية لمركز أصلي', 'en' => 'Direct Concierge & Showroom Channels'],
-        'contact_hours' => ['ar' => 'مواعيد العمل', 'en' => 'Working Hours'],
-        'contact_location' => ['ar' => 'العنوان', 'en' => 'Showroom Location'],
-        'contact_map_btn' => ['ar' => 'افتح الموقع على خرائط جوجل', 'en' => 'Open in Google Maps'],
+        'contact_eyebrow' => ['ar' => '06 // المقر ومواعيد العمل • VISIT THE STUDIO', 'en' => '06 // VISIT & DIRECT LINES • STUDIO CONCIERGE'],
+        'contact_title' => ['ar' => 'تشرفنا زيارتك أو تواصلك المباشر', 'en' => 'Direct Engineering Lines & Location'],
+        'contact_hours' => ['ar' => 'مواعيد استقبال العملاء', 'en' => 'Studio Hours'],
+        'contact_location' => ['ar' => 'عنوان المركز', 'en' => 'Studio Address'],
+        'contact_map_btn' => ['ar' => 'افتح الاتجاهات على خرائط جوجل', 'en' => 'Open Directions in Google Maps'],
         'footer_rights' => ['ar' => 'جميع الحقوق محفوظة', 'en' => 'All rights reserved'],
-        'search_drawer_title' => ['ar' => 'ابحث في معرض أصلي', 'en' => 'Search ASLY Showroom'],
         'close' => ['ar' => 'إغلاق', 'en' => 'Close'],
+
+        // FAQ Accordion
+        'faq_eyebrow' => ['ar' => '07 // أسئلة متكررة • GOOD TO KNOW', 'en' => '07 // FAQ • GOOD TO KNOW'],
+        'faq_title' => ['ar' => 'كل ما تود معرفته عن أصلي', 'en' => 'Answers To Common Questions'],
+        'faq_q1' => ['ar' => 'كيف أتابع حالة جهازي الموجود في قسم الصيانة؟', 'en' => 'How do I track my device while it is in the repair lab?'],
+        'faq_a1' => [
+            'ar' => 'عند استلام جهازك تحصل على إيصال مطبوع يحمل كود تذكرة ورمز QR خاص بك؛ يمكنك إدخال الكود مباشرة في قسم متابعة الصيانة أعلى الصفحة أو مسح الـ QR بهاتفك لمعرفة المرحلة الحالية ومراسلة المهندس.',
+            'en' => 'When you drop off your device, you receive a printed receipt with a unique ticket code and QR sticker. Enter the code above or scan the QR with your phone to view live stages and message your technician.'
+        ],
+        'faq_q2' => ['ar' => 'كيف يحافظ النظام على خصوصية بياناتي بعد استلام جهاز الصيانة؟', 'en' => 'How is my personal data protected after I pick up my repaired device?'],
+        'faq_a2' => [
+            'ar' => 'فور تسليم الجهاز لك وإغلاق التذكرة، يقوم النظام تلقائياً بحذف كافة البيانات الشخصية وملاحظات وتفاصيل العطل نهائياً من سجل التتبع العام حفاظاً على خصوصيتك ١٠٠٪.',
+            'en' => 'The moment your device is handed back to you, our system automatically wipes your personal details, device serials, and conversation notes from the tracking database.'
+        ],
+        'faq_q3' => ['ar' => 'كيف أستفسر عن توفر جهاز معين أو أحجز موعد فحص؟', 'en' => 'How can I ask about a specific device or book a diagnostic checkup?'],
+        'faq_a3' => [
+            'ar' => 'تواصل معنا بضغطة واحدة عبر واتساب المباشر أو صفحاتنا الرسمية على فيسبوك وإنستجرام وتيك توك الموجودة في قسم المنصات الرسمية، وسيرد عليك فريقنا الهندسي فوراً.',
+            'en' => 'Tap our Direct WhatsApp button or message us on Facebook, Instagram, TikTok, or Telegram in our Social Hub above — our engineering team responds promptly.'
+        ],
 
         // Track Page
         'track_page_title' => ['ar' => 'تتبع حالة الصيانة المباشر', 'en' => 'Live Repair Status Portal'],
-        'track_back_home' => ['ar' => 'العودة للمعرض الرئيسي', 'en' => 'Back to Showroom'],
+        'track_back_home' => ['ar' => 'العودة للصفحة الرئيسية', 'en' => 'Back to Home'],
         'track_wa_support' => ['ar' => 'واتساب الصيانة', 'en' => 'Repair WhatsApp'],
         'track_heading' => ['ar' => 'بوابة التتبع المباشر لأجهزة الصيانة', 'en' => 'Interactive QR Device Repair Tracker'],
         'track_subheading' => [
@@ -282,7 +247,7 @@ function t(string $key): string
         'track_timeline_sub' => ['ar' => 'يمكنك قراءة ملاحظات المهندس على كل مرحلة وإضافة تعليقك أو ردك مباشرة أسفل أي مرحلة.', 'en' => 'Read technician updates on each stage and post your reply or question directly below any stage.'],
         'track_current_badge' => ['ar' => 'المرحلة الحالية', 'en' => 'Current Stage'],
         'track_completed_badge' => ['ar' => 'مكتملة', 'en' => 'Completed'],
-        'track_add_note_btn' => ['ar' => '+ أضف ملاحظة على هذه المرحلة', 'en' => '+ Add Note on Stage'],
+        'track_add_note_btn' => ['ar' => 'أضف ملاحظة على هذه المرحلة', 'en' => 'Add Note on Stage'],
         'track_phone_verify_ph' => ['ar' => 'لتأكيد هويتك: أدخل آخر 4 أرقام من رقم هاتفك المسجل', 'en' => 'Verify ownership: enter the last 4 digits of your registered phone'],
         'track_note_ph' => ['ar' => 'اكتب ملاحظتك أو ردك لمهندس الصيانة...', 'en' => 'Write your note or question for the repair engineer...'],
         'track_send_note' => ['ar' => 'إرسال الملاحظة', 'en' => 'Send Note'],
@@ -317,7 +282,7 @@ function t(string $key): string
         'login_demo_hint' => ['ar' => 'تجربة سريعة للحسابات الافتراضية:', 'en' => 'Quick Demo Sign-In Presets:'],
         'login_demo_admin' => ['ar' => 'دخول كمدير (admin)', 'en' => 'Admin Account (admin)'],
         'login_demo_staff' => ['ar' => 'دخول كموظف مبيعات (staff1)', 'en' => 'Sales Staff (staff1)'],
-        'login_back_store' => ['ar' => 'العودة لمعرض العملاء الخارجي', 'en' => 'Return to Public Storefront'],
+        'login_back_store' => ['ar' => 'العودة للصفحة الرئيسية', 'en' => 'Return to Public Website'],
     ];
 
     $lang = currentLang();

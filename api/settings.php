@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Admin-Only Settings, Brand Identity, Dynamic Contact Channels & SMTP Email Config API
+ * Admin-Only Settings, Brand Identity, Social Media Links, Contact Channels & SMTP Config API
  */
 
 declare(strict_types=1);
@@ -36,10 +36,18 @@ if ($method === 'POST') {
 
     if ($action === 'save_settings') {
         $allowedKeys = [
-            'store_name_ar', 'store_name_en', 'store_tagline', 'founders_line',
-            'primary_whatsapp', 'primary_phone', 'secondary_phone',
-            'store_address', 'working_hours', 'google_maps_url',
-            'invoice_footer_note', 'public_base_url',
+            'store_name_ar', 'store_name_en',
+            'store_tagline', 'store_tagline_en',
+            'founders_line', 'founders_line_en',
+            'about_story_ar', 'about_story_en',
+            'primary_whatsapp', 'primary_phone', 'secondary_phone', 'primary_email',
+            'store_address', 'store_address_en',
+            'working_hours', 'working_hours_en',
+            'google_maps_url',
+            'social_facebook', 'social_instagram', 'social_tiktok',
+            'social_telegram', 'social_youtube', 'social_x',
+            'invoice_footer_note', 'invoice_footer_note_en',
+            'public_base_url',
             'smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_encryption',
             'smtp_username', 'smtp_password', 'smtp_from_email', 'smtp_from_name',
         ];
@@ -54,7 +62,12 @@ if ($method === 'POST') {
                 saveSetting($pdo, $key, $val);
             }
         }
-        jsonResponse(['ok' => true, 'message' => 'تم حفظ إعدادات الهوية والتواصل والبريد بنجاح!']);
+        jsonResponse([
+            'ok' => true,
+            'message' => isEn()
+                ? 'Brand identity, social media links, and SMTP settings saved successfully!'
+                : 'تم حفظ بيانات الهوية وروابط السوشيال ميديا وإعدادات البريد بنجاح!',
+        ]);
     }
 
     if ($action === 'save_channel') {
@@ -67,10 +80,12 @@ if ($method === 'POST') {
         $isActive = isset($input['is_active']) ? ((int)$input['is_active'] ? 1 : 0) : 1;
 
         if ($label === '' || $value === '') {
-            jsonResponse(['ok' => false, 'error' => 'يرجى إدخال عنوان الوسيلة والرقم أو الرابط.'], 400);
+            jsonResponse([
+                'ok' => false,
+                'error' => isEn() ? 'Please enter channel title and number/link.' : 'يرجى إدخال عنوان الوسيلة والرقم أو الرابط.',
+            ], 400);
         }
 
-        // Auto-build smart clickable URL if left blank
         if ($url === '') {
             if ($type === 'phone') {
                 $url = 'tel:' . preg_replace('/\s+/', '', $value);
@@ -90,27 +105,27 @@ if ($method === 'POST') {
                 WHERE id = ?
             ");
             $upd->execute([$type, $label, $value, $url, $sortOrder, $isActive, $id]);
-            jsonResponse(['ok' => true, 'message' => 'تم تعديل وسيلة التواصل بنجاح.']);
+            jsonResponse(['ok' => true, 'message' => isEn() ? 'Contact channel updated.' : 'تم تعديل وسيلة التواصل بنجاح.']);
         } else {
             $ins = $pdo->prepare("
                 INSERT INTO contact_channels (channel_type, label, value, url, sort_order, is_active, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $ins->execute([$type, $label, $value, $url, $sortOrder, $isActive, date('Y-m-d H:i:s')]);
-            jsonResponse(['ok' => true, 'message' => 'تمت إضافة وسيلة التواصل الجديدة وستظهر فوراً في الموقع!']);
+            jsonResponse(['ok' => true, 'message' => isEn() ? 'New contact channel added!' : 'تمت إضافة وسيلة التواصل الجديدة وستظهر فوراً في الموقع!']);
         }
     }
 
     if ($action === 'delete_channel') {
         $id = (int)($input['id'] ?? 0);
         $pdo->prepare("DELETE FROM contact_channels WHERE id = ?")->execute([$id]);
-        jsonResponse(['ok' => true, 'message' => 'تم حذف وسيلة التواصل.']);
+        jsonResponse(['ok' => true, 'message' => isEn() ? 'Channel deleted.' : 'تم حذف وسيلة التواصل.']);
     }
 
     if ($action === 'test_email') {
         $to = trim((string)($input['to_email'] ?? ''));
         if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            jsonResponse(['ok' => false, 'error' => 'يرجى إدخال بريد إلكتروني صحيح للتجربة.'], 400);
+            jsonResponse(['ok' => false, 'error' => isEn() ? 'Please enter a valid email address.' : 'يرجى إدخال بريد إلكتروني صحيح للتجربة.'], 400);
         }
         $demoTicket = [
             'id' => null,
@@ -118,7 +133,7 @@ if ($method === 'POST') {
             'qr_token' => 'demo_token',
             'customer_name' => 'عميل تجريبي - أصلي تك ستور',
             'customer_email' => $to,
-            'device_model' => 'MacBook Pro 16 M3 Max (اختبار البريد)',
+            'device_model' => 'MacBook Pro 16 M3 Max',
             'problem_description' => 'رسالة اختبارية للتأكد من إعدادات إشعارات مراحل الصيانة',
             'estimated_cost' => 1200,
             'deposit_paid' => 300,

@@ -90,6 +90,7 @@ function getMaintenanceStages(): array
     return [
         'received' => [
             'order'    => 1,
+            'icon'     => 'fa-solid fa-clipboard-check',
             'title'    => $en ? 'Device Received at Lab' : 'تم استلام الجهاز',
             'title_ar' => 'تم استلام الجهاز',
             'title_en' => 'Device Received at Lab',
@@ -99,6 +100,7 @@ function getMaintenanceStages(): array
         ],
         'diagnosing' => [
             'order'    => 2,
+            'icon'     => 'fa-solid fa-microscope',
             'title'    => $en ? 'Hardware Diagnostics in Progress' : 'قيد الفحص والتشخيص',
             'title_ar' => 'قيد الفحص والتشخيص',
             'title_en' => 'Hardware Diagnostics in Progress',
@@ -108,6 +110,7 @@ function getMaintenanceStages(): array
         ],
         'waiting_approval' => [
             'order'    => 3,
+            'icon'     => 'fa-solid fa-hourglass-half',
             'title'    => $en ? 'Awaiting Approval / Genuine Parts' : 'بانتظار موافقة العميل / قطع الغيار',
             'title_ar' => 'بانتظار موافقة العميل / قطع الغيار',
             'title_en' => 'Awaiting Approval / Genuine Parts',
@@ -117,6 +120,7 @@ function getMaintenanceStages(): array
         ],
         'repairing' => [
             'order'    => 4,
+            'icon'     => 'fa-solid fa-screwdriver-wrench',
             'title'    => $en ? 'Precision Repair Underway' : 'جاري الإصلاح والصيانة',
             'title_ar' => 'جاري الإصلاح والصيانة',
             'title_en' => 'Precision Repair Underway',
@@ -126,6 +130,7 @@ function getMaintenanceStages(): array
         ],
         'testing' => [
             'order'    => 5,
+            'icon'     => 'fa-solid fa-gauge-high',
             'title'    => $en ? 'Final Stress Testing & QA' : 'الفحص والاختبار النهائي',
             'title_ar' => 'الفحص والاختبار النهائي',
             'title_en' => 'Final Stress Testing & QA',
@@ -135,6 +140,7 @@ function getMaintenanceStages(): array
         ],
         'ready' => [
             'order'    => 6,
+            'icon'     => 'fa-solid fa-circle-check',
             'title'    => $en ? 'Ready for Showroom Pickup' : 'جاهز للاستلام بالمركز',
             'title_ar' => 'جاهز للاستلام بالمركز',
             'title_en' => 'Ready for Showroom Pickup',
@@ -144,6 +150,7 @@ function getMaintenanceStages(): array
         ],
         'delivered' => [
             'order'    => 7,
+            'icon'     => 'fa-solid fa-handshake-simple',
             'title'    => $en ? 'Delivered to Customer' : 'تم التسليم النهائي للعميل',
             'title_ar' => 'تم التسليم النهائي للعميل',
             'title_en' => 'Delivered to Customer',
@@ -243,3 +250,108 @@ function handleProductImageUpload(array $file): ?string
     }
     return 'uploads/products/' . $filename;
 }
+
+function getChannelFontAwesomeIcon(string $type): string
+{
+    return match (strtolower(trim($type))) {
+        'whatsapp'  => 'fa-brands fa-whatsapp',
+        'facebook'  => 'fa-brands fa-facebook-f',
+        'instagram' => 'fa-brands fa-instagram',
+        'tiktok'    => 'fa-brands fa-tiktok',
+        'telegram'  => 'fa-brands fa-telegram',
+        'youtube'   => 'fa-brands fa-youtube',
+        'x', 'twitter' => 'fa-brands fa-x-twitter',
+        'location', 'map', 'maps' => 'fa-solid fa-location-dot',
+        'email'     => 'fa-solid fa-envelope',
+        default     => 'fa-solid fa-phone-volume',
+    };
+}
+
+function getSocialPlatforms(array $settings): array
+{
+    $en = isEn();
+    $waNum = normalizeWhatsappNumber($settings['primary_whatsapp'] ?? '201015981677');
+    $waUrl = $waNum !== '' ? ('https://wa.me/' . $waNum) : '';
+
+    $raw = [
+        [
+            'key'     => 'whatsapp',
+            'name'    => $en ? 'WhatsApp Direct' : 'واتساب المباشر',
+            'sub'     => $en ? 'Instant Engineering & Support Chat' : 'تواصل مباشر مع فريقنا الهندسي',
+            'icon'    => 'fa-brands fa-whatsapp',
+            'accent'  => 'emerald',
+            'url'     => $waUrl,
+            'handle'  => '+' . $waNum,
+        ],
+        [
+            'key'     => 'facebook',
+            'name'    => $en ? 'Facebook' : 'فيسبوك',
+            'sub'     => $en ? 'Official Announcements & Community' : 'الصفحة الرسمية وأحدث الأخبار',
+            'icon'    => 'fa-brands fa-facebook-f',
+            'accent'  => 'aqua',
+            'url'     => trim((string)($settings['social_facebook'] ?? '')),
+            'handle'  => '@aslytechstore',
+        ],
+        [
+            'key'     => 'instagram',
+            'name'    => $en ? 'Instagram' : 'إنستجرام',
+            'sub'     => $en ? 'Studio Lookbook & Lab Reels' : 'جولات المعرض وكواليس معمل الصيانة',
+            'icon'    => 'fa-brands fa-instagram',
+            'accent'  => 'gold',
+            'url'     => trim((string)($settings['social_instagram'] ?? '')),
+            'handle'  => '@aslytechstore',
+        ],
+        [
+            'key'     => 'tiktok',
+            'name'    => $en ? 'TikTok' : 'تيك توك',
+            'sub'     => $en ? 'Hardware Teardowns & Tech Tips' : 'فيديوهات الفحص الهندسي ونصائح الأجهزة',
+            'icon'    => 'fa-brands fa-tiktok',
+            'accent'  => 'slate',
+            'url'     => trim((string)($settings['social_tiktok'] ?? '')),
+            'handle'  => '@aslytechstore',
+        ],
+        [
+            'key'     => 'telegram',
+            'name'    => $en ? 'Telegram' : 'تيليجرام',
+            'sub'     => $en ? 'Instant Updates & Broadcast Channel' : 'قناة التحديثات والتنبيهات السريعة',
+            'icon'    => 'fa-brands fa-telegram',
+            'accent'  => 'aqua',
+            'url'     => trim((string)($settings['social_telegram'] ?? '')),
+            'handle'  => 't.me/aslytechstore',
+        ],
+        [
+            'key'     => 'youtube',
+            'name'    => $en ? 'YouTube' : 'يوتيوب',
+            'sub'     => $en ? 'Deep-Dive Reviews & Lab Sessions' : 'مراجعات تفصيلية وتوثيق الصيانة الدقيقة',
+            'icon'    => 'fa-brands fa-youtube',
+            'accent'  => 'gold',
+            'url'     => trim((string)($settings['social_youtube'] ?? '')),
+            'handle'  => 'ASLY Tech Studio',
+        ],
+        [
+            'key'     => 'x',
+            'name'    => $en ? 'X (Twitter)' : 'منصة إكس',
+            'sub'     => $en ? 'Quick Tech Insights & Support' : 'تحديثات سريعة ودعم فوري',
+            'icon'    => 'fa-brands fa-x-twitter',
+            'accent'  => 'slate',
+            'url'     => trim((string)($settings['social_x'] ?? '')),
+            'handle'  => '@aslytechstore',
+        ],
+    ];
+
+    $active = [];
+    foreach ($raw as $item) {
+        if ($item['url'] !== '') {
+            // Extract readable handle from URL if customized by Admin
+            if ($item['key'] !== 'whatsapp' && preg_match('#https?://[^/]+/(@?[A-Za-z0-9._-]+)#', $item['url'], $m)) {
+                $h = trim($m[1], '/');
+                if ($h !== '') {
+                    $item['handle'] = str_starts_with($h, '@') ? $h : ('@' . $h);
+                }
+            }
+            $active[] = $item;
+        }
+    }
+    return $active;
+}
+

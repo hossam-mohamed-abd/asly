@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Bright Daylight Admin & Staff Login Portal (Bilingual EN + AR)
+ * Bright Daylight Admin & Staff Login Portal (Zero Emojis • Font Awesome 6 • Bilingual EN + AR)
  */
 
 declare(strict_types=1);
@@ -55,6 +55,7 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= e(t('login_btn')) ?> | <?= e($storeName) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
+  <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/dashboard.css')) ?>">
   <style>
     .login-shell {
@@ -68,7 +69,7 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
     .login-card {
       width: min(470px, 100%);
       background: #ffffff;
-      border-radius: 28px;
+      border-radius: 36px 14px 36px 14px;
       overflow: hidden;
       border: 1.5px solid #d5ecef;
       box-shadow: 0 24px 60px rgba(20, 180, 184, 0.11);
@@ -102,7 +103,10 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
     <div class="login-card">
       <div class="login-card-top">
         <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
-          <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">🌐 <?= e(t('lang_switch_label')) ?></a>
+          <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">
+            <i class="fa-solid fa-globe"></i>
+            <span><?= e(t('lang_switch_label')) ?></span>
+          </a>
         </div>
         <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
         <div style="font-size:0.9rem;color:#475569;font-weight:700;"><?= e(t('login_title')) ?></div>
@@ -111,7 +115,7 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
       <div class="login-card-body">
         <?php if ($error !== ''): ?>
           <div style="margin-bottom:16px;padding:12px 14px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:700;font-size:0.88rem;">
-            ⚠️ <?= e($error) ?>
+            <i class="fa-solid fa-triangle-exclamation" style="margin-inline-end:6px;"></i><?= e($error) ?>
           </div>
         <?php endif; ?>
 
@@ -119,31 +123,39 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
           <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
           <div class="form-group" style="margin-bottom:16px;">
-            <label for="username"><?= e(t('login_user_lbl')) ?></label>
+            <label for="username"><i class="fa-solid fa-user" style="color:#0d9499;margin-inline-end:5px;"></i><?= e(t('login_user_lbl')) ?></label>
             <input type="text" id="username" name="username" class="form-control" placeholder="<?= e(t('login_user_ph')) ?>" required autofocus style="direction:ltr;">
           </div>
 
           <div class="form-group" style="margin-bottom:22px;">
-            <label for="password"><?= e(t('login_pass_lbl')) ?></label>
+            <label for="password"><i class="fa-solid fa-key" style="color:#0d9499;margin-inline-end:5px;"></i><?= e(t('login_pass_lbl')) ?></label>
             <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required style="direction:ltr;">
           </div>
 
           <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
-            <?= e(t('login_btn')) ?>
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span><?= e(t('login_btn')) ?></span>
           </button>
         </form>
 
         <div class="quick-demo-box">
           <div style="font-weight:800;color:#1e293b;margin-bottom:8px;"><?= e(t('login_demo_hint')) ?></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-gold btn-sm" onclick="fillLogin('admin','admin123')"><?= e(t('login_demo_admin')) ?></button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="fillLogin('staff1','staff123')"><?= e(t('login_demo_staff')) ?></button>
+            <button type="button" class="btn btn-gold btn-sm" onclick="fillLogin('admin','admin123')">
+              <i class="fa-solid fa-user-shield"></i>
+              <span><?= e(t('login_demo_admin')) ?></span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="fillLogin('staff1','staff123')">
+              <i class="fa-solid fa-id-badge"></i>
+              <span><?= e(t('login_demo_staff')) ?></span>
+            </button>
           </div>
         </div>
 
         <div style="text-align:center;margin-top:18px;">
           <a href="<?= e(appUrl('index.php')) ?>" style="font-size:0.86rem;color:#0d9499;font-weight:800;text-decoration:none;">
-            <?= $en ? '← ' : '→ ' ?><?= e(t('login_back_store')) ?>
+            <i class="fa-solid fa-arrow-<?= $en ? 'left' : 'right' ?>"></i>
+            <span><?= e(t('login_back_store')) ?></span>
           </a>
         </div>
       </div>

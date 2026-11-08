@@ -1,195 +1,293 @@
 /**
  * ASLY | أصلي TECH STORE
- * Editorial Lookbook Storefront Interactions:
- * - Category Filtering & Collection Jump Cards
- * - Instant Inline & Modal Search
- * - Dual-Photo Quick-View Product Modal (Zero Public Prices!)
- * - Bright Lookbook Lightbox
+ * Interactive Geometric & Editorial Landing Page Controller (Zero Emojis • Font Awesome 6)
  */
+(function () {
+  'use strict';
 
-(() => {
-  const DATA = window.ASLY_PUBLIC || { products: [] };
-  const products = DATA.products || [];
+  const cfg = window.ASLY_PUBLIC || {};
 
-  // Mobile Menu
-  const btnMob = document.getElementById('btnMobileMenu');
-  const navLinks = document.getElementById('mainNavLinks');
-  btnMob?.addEventListener('click', () => navLinks?.classList.toggle('open'));
-  navLinks?.querySelectorAll('a').forEach((a) => {
-    a.addEventListener('click', () => navLinks.classList.remove('open'));
-  });
-
-  // Category & Search Filtering
-  let activeCat = 'all';
-  let searchQuery = '';
-
-  const filterPills = document.querySelectorAll('#catalogFilterPills .filter-pill');
-  const cards = document.querySelectorAll('#publicProductsGrid .lookbook-product-card');
-  const inlineSearch = document.getElementById('catalogInlineSearch');
-  const emptyNotice = document.getElementById('emptyCatalogNotice');
-
-  function applyCatalogFilter() {
-    let visibleCount = 0;
-    const q = searchQuery.trim().toLowerCase();
-
-    cards.forEach((card) => {
-      const catMatch = activeCat === 'all' || card.dataset.category === activeCat;
-      const textMatch = !q || (card.dataset.search || '').includes(q);
-      const show = catMatch && textMatch;
-      card.style.display = show ? 'flex' : 'none';
-      if (show) visibleCount += 1;
-    });
-
-    if (emptyNotice) {
-      emptyNotice.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
   }
 
-  function selectCategory(cat) {
-    activeCat = cat;
-    filterPills.forEach((pill) => {
-      pill.classList.toggle('active', pill.dataset.cat === cat);
-    });
-    applyCatalogFilter();
+  // 1. Scroll Reveal Observer
+  const revealItems = document.querySelectorAll('.reveal-up');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    revealItems.forEach((el) => io.observe(el));
+  } else {
+    revealItems.forEach((el) => el.classList.add('in-view'));
   }
 
-  filterPills.forEach((pill) => {
-    pill.addEventListener('click', () => selectCategory(pill.dataset.cat));
+  // 2. Subtle Cursor Parallax for Geometric Primitives & Collage Frames
+  const parallaxNodes = document.querySelectorAll('[data-parallax]');
+  if (parallaxNodes.length && window.matchMedia('(pointer: fine)').matches) {
+    window.addEventListener('mousemove', (e) => {
+      const rx = (e.clientX / window.innerWidth - 0.5) * 2;
+      const ry = (e.clientY / window.innerHeight - 0.5) * 2;
+      parallaxNodes.forEach((node) => {
+        const factor = parseFloat(node.getAttribute('data-parallax') || '10');
+        node.style.translate = `${(rx * factor).toFixed(1)}px ${(ry * factor).toFixed(1)}px`;
+      });
+    });
+  }
+
+  // 3. Interactive Domains of Craft Slices
+  const slices = document.querySelectorAll('.craft-slice');
+  slices.forEach((slice) => {
+    slice.addEventListener('mouseenter', () => {
+      slices.forEach((s) => s.classList.remove('active'));
+      slice.classList.add('active');
+    });
+    slice.addEventListener('click', () => {
+      slices.forEach((s) => s.classList.remove('active'));
+      slice.classList.add('active');
+    });
   });
 
-  document.querySelectorAll('[data-jump-cat]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      const cat = el.dataset.jumpCat;
-      if (cat) {
-        selectCategory(cat);
-        document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+  // 4. Smooth FAQ Accordion
+  document.querySelectorAll('.faq-trigger').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const ans = item.querySelector('.faq-answer');
+      const isOpen = item.classList.contains('open');
+
+      document.querySelectorAll('.faq-item').forEach((other) => {
+        other.classList.remove('open');
+        const oa = other.querySelector('.faq-answer');
+        if (oa) oa.style.maxHeight = '0px';
+      });
+
+      if (!isOpen) {
+        item.classList.add('open');
+        ans.style.maxHeight = ans.scrollHeight + 24 + 'px';
       }
     });
   });
 
-  inlineSearch?.addEventListener('input', (e) => {
-    searchQuery = e.target.value || '';
-    applyCatalogFilter();
-  });
+  // 5. Instant Live AJAX Repair Ticket Lookup right inside the Landing Page
+  const trackForm = document.getElementById('inlineTrackForm');
+  const ticketInput = document.getElementById('inlineTicketInput');
+  const resultBox = document.getElementById('inlineTicketResult');
+  const demoBtn = document.getElementById('tryDemoTicketBtn');
 
-  // Quick-View Modal with Dual-Image Gallery
-  const qvModal = document.getElementById('quickViewModal');
-  const qvMainImg = document.getElementById('qvMainImg');
-  const qvThumbs = document.getElementById('qvThumbs');
+  async function inspectTicketInline(rawCode) {
+    const code = (rawCode || '').trim().toUpperCase();
+    if (!code || !resultBox) return;
 
-  function openQuickView(index) {
-    const p = products[index];
-    if (!p || !qvModal) return;
+    resultBox.classList.add('visible');
+    resultBox.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;font-weight:800;color:var(--teal-deep);">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>${esc(cfg.i18n?.checking || 'Checking...')}</span>
+      </div>
+    `;
 
-    document.getElementById('qvCategory').textContent = p.category_label || '';
-    document.getElementById('qvCondition').textContent = p.condition_label || '';
-    document.getElementById('qvTitle').textContent = p.title || '';
-    document.getElementById('qvSpecs').textContent = p.specs || '—';
-    document.getElementById('qvDesc').textContent = p.description || '';
-    document.getElementById('qvWarranty').textContent = p.warranty ? `🛡️ ${p.warranty}` : '';
+    try {
+      const url = `${cfg.apiPublicUrl}?action=track&code=${encodeURIComponent(code)}&lang=${encodeURIComponent(cfg.lang || 'ar')}`;
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      const data = await res.json();
 
-    const waUrl = `https://wa.me/${DATA.waNumber}?text=${encodeURIComponent((DATA.waPrefix || '') + p.title)}`;
-    document.getElementById('qvWaBtn').href = waUrl;
+      if (!data.ok) {
+        resultBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;color:#b91c1c;font-weight:800;">
+            <i class="fa-solid fa-circle-exclamation" style="font-size:1.25rem;"></i>
+            <span>${esc(data.error || 'Ticket not found')}</span>
+          </div>
+        `;
+        return;
+      }
 
-    const imgs = [p.img_primary, p.img_secondary].filter(Boolean);
-    qvMainImg.src = imgs[0] || '';
-    qvMainImg.alt = p.title || '';
+      if (data.delivered_and_wiped) {
+        resultBox.innerHTML = `
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div class="chip-icon" style="background:#dcfce7;color:#059669;">
+              <i class="fa-solid fa-shield-check fa-check-double"></i>
+            </div>
+            <div>
+              <div style="font-weight:900;font-size:1.05rem;color:var(--ink-1);">${esc(cfg.i18n?.wipedTitle)} (${esc(data.ticket_code)})</div>
+              <p style="margin:6px 0 0;font-size:0.9rem;color:var(--ink-2);">${esc(data.message)}</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
 
-    qvThumbs.innerHTML = '';
-    if (imgs.length > 1) {
-      imgs.forEach((src, i) => {
-        const im = document.createElement('img');
-        im.src = src;
-        im.className = i === 0 ? 'active' : '';
-        im.addEventListener('click', () => {
-          qvMainImg.src = src;
-          qvThumbs.querySelectorAll('img').forEach((t) => t.classList.remove('active'));
-          im.classList.add('active');
-        });
-        qvThumbs.appendChild(im);
-      });
+      const t = data.ticket;
+      const stages = data.stages || {};
+      const stageKeys = Object.keys(stages);
+      const curStageObj = stages[t.current_stage] || { order: 1, title: t.current_stage, icon: 'fa-solid fa-screwdriver-wrench' };
+      const pct = Math.min(100, Math.max(14, Math.round(((curStageObj.order || 1) / Math.max(1, stageKeys.length)) * 100)));
+      const notes = Array.isArray(data.notes) ? data.notes : [];
+      const lastNote = notes.length ? notes[notes.length - 1] : null;
+      const fullUrl = data.track_url || `${cfg.trackPageUrl}?code=${encodeURIComponent(t.ticket_code)}&lang=${encodeURIComponent(cfg.lang || 'ar')}`;
+
+      resultBox.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="chip-icon"><i class="${esc(curStageObj.icon || 'fa-solid fa-microscope')}"></i></span>
+            <div>
+              <div style="font-family:var(--font-mono);font-size:0.78rem;font-weight:700;color:var(--teal-deep);">${esc(t.ticket_code)}</div>
+              <div style="font-weight:900;font-size:1.06rem;color:var(--ink-1);">${esc(t.device_model)}</div>
+            </div>
+          </div>
+          <span style="padding:6px 14px;border-radius:999px;background:var(--bg-aqua-soft);border:1px solid var(--teal-border);font-size:0.82rem;font-weight:800;color:var(--teal-deep);">
+            <i class="fa-solid fa-wave-square" style="margin-inline-end:5px;"></i>${esc(curStageObj.title)}
+          </span>
+        </div>
+
+        <div class="inline-stage-bar">
+          <div class="inline-stage-fill" style="width:${pct}%;"></div>
+        </div>
+
+        ${lastNote ? `
+          <div style="background:var(--bg-ivory);border-radius:16px;padding:12px 15px;font-size:0.88rem;color:var(--ink-2);margin-bottom:14px;border:1px solid var(--line-warm);">
+            <strong style="color:var(--ink-1);display:block;margin-bottom:3px;">
+              <i class="fa-solid fa-comment-dots" style="color:var(--gold-deep);margin-inline-end:6px;"></i>${esc(cfg.i18n?.latestNote)}:
+            </strong>
+            ${esc(lastNote.note_text)}
+          </div>
+        ` : ''}
+
+        <a href="${esc(fullUrl)}" class="btn btn-teal btn-sm" style="width:100%;">
+          <i class="fa-solid fa-comments"></i>
+          <span>${esc(cfg.i18n?.openFull)}</span>
+        </a>
+      `;
+    } catch (err) {
+      window.location.href = `${cfg.trackPageUrl}?code=${encodeURIComponent(code)}&lang=${encodeURIComponent(cfg.lang || 'ar')}`;
     }
-
-    qvModal.classList.add('open');
   }
 
-  document.querySelectorAll('.js-open-quickview').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openQuickView(Number(el.dataset.pindex));
+  if (trackForm && ticketInput) {
+    trackForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      inspectTicketInline(ticketInput.value);
     });
-  });
+  }
 
-  document.getElementById('btnCloseQuickView')?.addEventListener('click', () => qvModal?.classList.remove('open'));
-  qvModal?.addEventListener('click', (e) => {
-    if (e.target === qvModal) qvModal.classList.remove('open');
-  });
-
-  // Live Search Modal
-  const searchModal = document.getElementById('searchModal');
-  const modalSearchInput = document.getElementById('modalSearchInput');
-  const modalSearchResults = document.getElementById('modalSearchResults');
-
-  function renderModalSearch(q) {
-    if (!modalSearchResults) return;
-    const term = (q || '').trim().toLowerCase();
-    const matched = products.filter((p) => {
-      if (!term) return true;
-      return `${p.title} ${p.brand} ${p.specs} ${p.category_label}`.toLowerCase().includes(term);
+  if (demoBtn && ticketInput) {
+    demoBtn.addEventListener('click', () => {
+      const code = demoBtn.getAttribute('data-code') || 'MNT-2026-101';
+      ticketInput.value = code;
+      inspectTicketInline(code);
     });
+  }
 
-    if (!matched.length) {
-      modalSearchResults.innerHTML = `<div style="padding:18px;text-align:center;color:var(--ink-muted);">${DATA.emptyText || ''}</div>`;
+  // 6. Camera QR Receipt Scanner Modal
+  const qrModal = document.getElementById('landingQrModal');
+  const openQrBtn = document.getElementById('openLandingQrBtn');
+  const closeQrBtn = document.getElementById('closeLandingQrBtn');
+  const qrFileInput = document.getElementById('landingQrFileInput');
+  const qrStatus = document.getElementById('landingQrStatus');
+  let html5Qr = null;
+
+  function handleDecodedQr(decodedText) {
+    stopLandingQr();
+    if (!decodedText) return;
+    const trimmed = decodedText.trim();
+    if (/^https?:\/\//i.test(trimmed) && trimmed.includes('track.php')) {
+      window.location.href = trimmed;
       return;
     }
+    const match = trimmed.match(/MNT-[A-Z0-9-]+/i);
+    const code = match ? match[0].toUpperCase() : trimmed;
+    if (ticketInput) {
+      ticketInput.value = code;
+      inspectTicketInline(code);
+    } else {
+      window.location.href = `${cfg.trackPageUrl}?code=${encodeURIComponent(code)}`;
+    }
+  }
 
-    modalSearchResults.innerHTML = '';
-    matched.forEach((p) => {
-      const idx = products.indexOf(p);
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:16px;border:1px solid var(--line-soft);background:var(--bg-ivory);cursor:pointer;';
-      row.innerHTML = `
-        <img src="${p.img_primary}" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:12px;background:#fff;">
-        <div style="flex:1;min-width:0;">
-          <strong style="display:block;color:var(--ink-heading);font-size:0.95rem;"></strong>
-          <span style="font-size:0.8rem;color:var(--ink-muted);"></span>
-        </div>
-      `;
-      row.querySelector('strong').textContent = p.title;
-      row.querySelector('span').textContent = `${p.category_label} • ${p.condition_label}`;
-      row.addEventListener('click', () => {
-        searchModal?.classList.remove('open');
-        openQuickView(idx);
-      });
-      modalSearchResults.appendChild(row);
+  async function stopLandingQr() {
+    if (html5Qr) {
+      try {
+        if (html5Qr.isScanning) {
+          await html5Qr.stop();
+        }
+        html5Qr.clear();
+      } catch (_) {}
+      html5Qr = null;
+    }
+    if (qrModal) qrModal.classList.remove('open');
+  }
+
+  if (openQrBtn && qrModal) {
+    openQrBtn.addEventListener('click', async () => {
+      qrModal.classList.add('open');
+      if (qrStatus) qrStatus.textContent = '';
+      if (typeof window.Html5Qrcode === 'undefined') return;
+      try {
+        html5Qr = new window.Html5Qrcode('landingQrReader');
+        await html5Qr.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decoded) => handleDecodedQr(decoded),
+          () => {}
+        );
+      } catch (_) {
+        if (qrStatus) {
+          qrStatus.textContent = cfg.lang === 'en'
+            ? 'Camera unavailable — choose a receipt photo instead.'
+            : 'الكاميرا غير متاحة — يمكنك اختيار صورة الإيصال مباشرة.';
+        }
+      }
     });
   }
 
-  document.getElementById('btnOpenSearch')?.addEventListener('click', () => {
-    searchModal?.classList.add('open');
-    renderModalSearch(modalSearchInput?.value || '');
-    setTimeout(() => modalSearchInput?.focus(), 60);
-  });
+  if (closeQrBtn) {
+    closeQrBtn.addEventListener('click', stopLandingQr);
+  }
+  if (qrModal) {
+    qrModal.addEventListener('click', (e) => {
+      if (e.target === qrModal) stopLandingQr();
+    });
+  }
 
-  modalSearchInput?.addEventListener('input', (e) => renderModalSearch(e.target.value));
-  document.getElementById('btnCloseSearch')?.addEventListener('click', () => searchModal?.classList.remove('open'));
-  searchModal?.addEventListener('click', (e) => {
-    if (e.target === searchModal) searchModal.classList.remove('open');
-  });
-
-  // Lookbook Lightbox
-  const lbModal = document.getElementById('lightboxModal');
-  const lbImg = document.getElementById('lightboxImg');
-  document.querySelectorAll('.js-lightbox-trigger').forEach((fig) => {
-    fig.addEventListener('click', () => {
-      if (lbImg && lbModal) {
-        lbImg.src = fig.dataset.src || '';
-        lbModal.classList.add('open');
+  if (qrFileInput) {
+    qrFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file || typeof window.Html5Qrcode === 'undefined') return;
+      try {
+        if (html5Qr && html5Qr.isScanning) await html5Qr.stop();
+        const fileQr = new window.Html5Qrcode('landingQrReader');
+        const decoded = await fileQr.scanFile(file, true);
+        handleDecodedQr(decoded);
+      } catch (_) {
+        if (qrStatus) {
+          qrStatus.textContent = cfg.lang === 'en'
+            ? 'No valid QR code found in selected image.'
+            : 'لم يتم العثور على رمز QR واضح في الصورة المختارة.';
+        }
       }
     });
-  });
-  document.getElementById('btnCloseLightbox')?.addEventListener('click', () => lbModal?.classList.remove('open'));
-  lbModal?.addEventListener('click', (e) => {
-    if (e.target === lbModal) lbModal.classList.remove('open');
+  }
+
+  // 7. Mobile Navigation Drawer
+  const mobileModal = document.getElementById('mobileNavModal');
+  const openMobBtn = document.getElementById('openMobileDrawerBtn');
+  const closeMobBtn = document.getElementById('closeMobileDrawerBtn');
+  if (openMobBtn && mobileModal) {
+    openMobBtn.addEventListener('click', () => mobileModal.classList.add('open'));
+  }
+  if (closeMobBtn && mobileModal) {
+    closeMobBtn.addEventListener('click', () => mobileModal.classList.remove('open'));
+  }
+  document.querySelectorAll('.mobile-nav-item').forEach((link) => {
+    link.addEventListener('click', () => mobileModal && mobileModal.classList.remove('open'));
   });
 })();

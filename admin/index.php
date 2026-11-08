@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Complete Unified Bright Daylight Admin & Staff Dashboard (Bilingual EN LTR + AR RTL)
+ * Complete Unified Bright Daylight Admin & Staff Dashboard (Zero Emojis • Font Awesome 6 • Bilingual EN/AR)
  */
 
 declare(strict_types=1);
@@ -80,6 +80,7 @@ $jsConfig = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $en ? 'Smart Dashboard' : 'لوحة التحكم الذكية' ?> | <?= e($displayStore) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
+  <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/dashboard.css')) ?>">
 </head>
 <body>
@@ -91,7 +92,8 @@ $jsConfig = [
     <div class="sidebar-brand">
       <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
       <span class="role-pill <?= $isAdmin ? 'role-admin' : 'role-staff' ?>">
-        <?= $isAdmin ? ($en ? '👑 System Admin' : '👑 مدير النظام (Admin)') : ($en ? '💼 Sales Staff' : '💼 موظف مبيعات (Staff)') ?>
+        <i class="fa-solid <?= $isAdmin ? 'fa-user-shield' : 'fa-id-badge' ?>"></i>
+        <?= $isAdmin ? ($en ? 'System Admin' : 'مدير النظام (Admin)') : ($en ? 'Sales Staff' : 'موظف مبيعات (Staff)') ?>
       </span>
     </div>
 
@@ -99,16 +101,16 @@ $jsConfig = [
       <div class="nav-section-label"><?= $en ? 'Daily Operations & Sales' : 'التشغيل اليومي والمبيعات' ?></div>
 
       <button type="button" class="side-btn active" data-tab="overview">
-        <span class="side-btn-left">📊 <?= $isAdmin ? ($en ? 'Daily Sales & Profit' : 'المبيعات اليومية والأرباح') : ($en ? 'Daily Sales Summary' : 'ملخص المبيعات اليومية') ?></span>
+        <span class="side-btn-left"><i class="fa-solid fa-chart-pie"></i> <?= $isAdmin ? ($en ? 'Daily Sales & Profit' : 'المبيعات اليومية والأرباح') : ($en ? 'Daily Sales Summary' : 'ملخص المبيعات اليومية') ?></span>
       </button>
 
       <button type="button" class="side-btn" data-tab="quick-scanner">
-        <span class="side-btn-left">📷 <?= $en ? 'Quick Price Checker' : 'كاشف السعر السريع' ?></span>
+        <span class="side-btn-left"><i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Checker' : 'كاشف السعر السريع' ?></span>
         <span style="font-size:0.7rem;color:var(--db-gold-600);font-weight:800;"><?= $en ? 'Client Safe' : 'أمام العميل' ?></span>
       </button>
 
       <button type="button" class="side-btn" data-tab="pos">
-        <span class="side-btn-left">🛒 <?= $en ? 'POS & Invoicing' : 'نقطة البيع والفواتير' ?></span>
+        <span class="side-btn-left"><i class="fa-solid fa-cash-register"></i> <?= $en ? 'POS & Invoicing' : 'نقطة البيع والفواتير' ?></span>
         <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-teal-700);color:#fff;">0</span>
       </button>
 
@@ -116,12 +118,12 @@ $jsConfig = [
 
       <?php if ($isAdmin): ?>
         <button type="button" class="side-btn" data-tab="add-product">
-          <span class="side-btn-left">➕ <?= $en ? 'Add Product (Scan / QR)' : 'إضافة منتج (اسكان / QR)' ?></span>
+          <span class="side-btn-left"><i class="fa-solid fa-circle-plus"></i> <?= $en ? 'Add Product (Scan / QR)' : 'إضافة منتج (اسكان / QR)' ?></span>
         </button>
       <?php endif; ?>
 
       <button type="button" class="side-btn" data-tab="inventory">
-        <span class="side-btn-left">📦 <?= $en ? 'Inventory Catalog' : 'المخزون والمنتجات' ?></span>
+        <span class="side-btn-left"><i class="fa-solid fa-boxes-stacked"></i> <?= $en ? 'Inventory Catalog' : 'المخزون والمنتجات' ?></span>
         <?php if ($lowStockCount > 0): ?>
           <span class="badge-alert" title="Low stock"><?= $lowStockCount ?></span>
         <?php endif; ?>
@@ -130,7 +132,7 @@ $jsConfig = [
       <div class="nav-section-label"><?= $en ? 'Interactive Repair Lab' : 'قسم الصيانة التفاعلي' ?></div>
 
       <button type="button" class="side-btn" data-tab="maintenance">
-        <span class="side-btn-left">🛠️ <?= $en ? 'QR Repair Tickets' : 'الصيانة وتتبع الـ QR' ?></span>
+        <span class="side-btn-left"><i class="fa-solid fa-screwdriver-wrench"></i> <?= $en ? 'QR Repair Tickets' : 'الصيانة وتتبع الـ QR' ?></span>
         <span id="maintNavBadge" class="badge-alert" style="display:<?= $unreadMaintNotes > 0 ? 'inline-block' : 'none' ?>;">
           <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
         </span>
@@ -140,11 +142,11 @@ $jsConfig = [
         <div class="nav-section-label"><?= $en ? 'Administration & Brand' : 'الإدارة والهوية' ?></div>
 
         <button type="button" class="side-btn" data-tab="staff">
-          <span class="side-btn-left">👥 <?= $en ? 'Staff & Permissions' : 'الموظفون والصلاحيات' ?></span>
+          <span class="side-btn-left"><i class="fa-solid fa-users-gear"></i> <?= $en ? 'Staff & Permissions' : 'الموظفون والصلاحيات' ?></span>
         </button>
 
         <button type="button" class="side-btn" data-tab="settings">
-          <span class="side-btn-left">⚙️ <?= $en ? 'Brand & Contact Channels' : 'الهوية وقنوات التواصل' ?></span>
+          <span class="side-btn-left"><i class="fa-solid fa-sliders"></i> <?= $en ? 'Brand & Social Links' : 'الهوية وروابط السوشيال' ?></span>
         </button>
       <?php endif; ?>
     </nav>
@@ -154,7 +156,9 @@ $jsConfig = [
         <strong style="display:block;color:var(--db-text);"><?= e($user['full_name']) ?></strong>
         <span style="font-size:0.75rem;color:var(--db-muted);">@<?= e($user['username']) ?></span>
       </div>
-      <a href="<?= e(appUrl('admin/logout.php')) ?>" class="btn btn-danger btn-sm"><?= $en ? 'Sign Out' : 'خروج' ?></a>
+      <a href="<?= e(appUrl('admin/logout.php')) ?>" class="btn btn-danger btn-sm">
+        <i class="fa-solid fa-right-from-bracket"></i> <?= $en ? 'Sign Out' : 'خروج' ?>
+      </a>
     </div>
   </aside>
 
@@ -164,7 +168,7 @@ $jsConfig = [
     <!-- Top Header -->
     <header class="topbar-admin">
       <div class="topbar-title-wrap">
-        <button type="button" class="mobile-menu-btn" id="btnMobileSidebar">☰</button>
+        <button type="button" class="mobile-menu-btn" id="btnMobileSidebar"><i class="fa-solid fa-bars"></i></button>
         <div>
           <h2 id="activePageTitle" style="margin:0;font-size:1.2rem;color:var(--db-text);">
             <?= $isAdmin ? ($en ? 'Daily Sales & Net Profit Overview' : 'لوحة المبيعات اليومية والأرباح') : ($en ? 'Daily Sales & Operations' : 'ملخص المبيعات والتشغيل اليومي') ?>
@@ -174,10 +178,18 @@ $jsConfig = [
       </div>
 
       <div class="quick-bar-btns">
-        <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">📷 <?= $en ? 'Price Scanner' : 'فحص سعر بالكاميرا' ?></button>
-        <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">🧾 <?= $en ? 'New Sale Invoice' : 'فاتورة بيع جديدة' ?></button>
-        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">🌐 <?= e(t('lang_switch_label')) ?></a>
-        <a href="<?= e(appUrl('index.php')) ?>" target="_blank" class="btn btn-ghost btn-sm">🛍️ <?= $en ? 'Public Storefront' : 'اللاندينج بيدج' ?></a>
+        <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">
+          <i class="fa-solid fa-camera"></i> <?= $en ? 'Price Scanner' : 'فحص سعر بالكاميرا' ?>
+        </button>
+        <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">
+          <i class="fa-solid fa-file-invoice-dollar"></i> <?= $en ? 'New Sale Invoice' : 'فاتورة بيع جديدة' ?>
+        </button>
+        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">
+          <i class="fa-solid fa-globe"></i> <?= e(t('lang_switch_label')) ?>
+        </a>
+        <a href="<?= e(appUrl('index.php')) ?>" target="_blank" class="btn btn-ghost btn-sm">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> <?= $en ? 'Public Website' : 'الموقع الخارجي' ?>
+        </a>
       </div>
     </header>
 
@@ -190,7 +202,7 @@ $jsConfig = [
         <div class="card" style="padding:16px 22px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <strong><?= $en ? 'Report Period:' : 'عرض حسابات ومبيعات:' ?></strong>
+              <strong><i class="fa-regular fa-calendar-days" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Report Period:' : 'عرض حسابات ومبيعات:' ?></strong>
               <button type="button" class="btn btn-teal btn-sm js-date-preset" data-preset="today"><?= $en ? 'Today' : 'اليوم' ?></button>
               <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="yesterday"><?= $en ? 'Yesterday' : 'أمس' ?></button>
               <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="month"><?= $en ? 'This Month' : 'هذا الشهر' ?></button>
@@ -200,7 +212,7 @@ $jsConfig = [
               <input type="date" id="repDateFrom" class="form-control" style="width:auto;padding:6px 10px;" value="<?= date('Y-m-d') ?>">
               <label style="font-size:0.82rem;font-weight:700;"><?= $en ? 'To:' : 'إلى:' ?></label>
               <input type="date" id="repDateTo" class="form-control" style="width:auto;padding:6px 10px;" value="<?= date('Y-m-d') ?>">
-              <button type="button" class="btn btn-gold btn-sm" id="btnLoadReport"><?= $en ? 'Refresh' : 'تحديث الجرد' ?></button>
+              <button type="button" class="btn btn-gold btn-sm" id="btnLoadReport"><i class="fa-solid fa-rotate"></i> <?= $en ? 'Refresh' : 'تحديث الجرد' ?></button>
             </div>
           </div>
         </div>
@@ -210,8 +222,8 @@ $jsConfig = [
         <!-- Daily Sold Invoices Table -->
         <div class="card">
           <div class="card-header">
-            <h3>🧾 <?= $en ? 'Sales Invoices & Sold Items' : 'سجل الفواتير والقطع المباعة خلال الفترة المحددة' ?></h3>
-            <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">+ <?= $en ? 'New Invoice' : 'إصدار فاتورة جديدة' ?></button>
+            <h3><i class="fa-solid fa-receipt" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Sales Invoices & Sold Items' : 'سجل الفواتير والقطع المباعة خلال الفترة المحددة' ?></h3>
+            <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')"><i class="fa-solid fa-plus"></i> <?= $en ? 'New Invoice' : 'إصدار فاتورة جديدة' ?></button>
           </div>
           <div class="table-responsive">
             <table class="data-table">
@@ -241,10 +253,10 @@ $jsConfig = [
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>🛠️ <?= $en ? 'Delivered Repair Revenues (Post-Privacy Wipe Ledger)' : 'إيرادات أجهزة الصيانة المسلمة (بعد الحذف التلقائي لبيانات الأجهزة)' ?></h3>
+                <h3><i class="fa-solid fa-screwdriver-wrench" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Delivered Repair Revenues (Post-Privacy Wipe Ledger)' : 'إيرادات أجهزة الصيانة المسلمة (بعد الحذف التلقائي لبيانات الأجهزة)' ?></h3>
                 <span style="font-size:0.8rem;color:var(--db-muted);"><?= $en ? 'Only collected amounts are retained for daily accounting after device & personal customer data are wiped upon handover.' : 'يتم الاحتفاظ بالمبالغ المحصلة فقط لحساب إيراد وأرباح اليوم بعد مسح بيانات الجهاز والعميل فور التسليم.' ?></span>
               </div>
-              <span style="padding:5px 12px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.8rem;font-weight:800;"><?= $en ? 'Privacy Wipe Active ✓' : 'حماية خصوصية مفعّلة ✓' ?></span>
+              <span style="padding:5px 12px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.8rem;font-weight:800;"><i class="fa-solid fa-user-lock"></i> <?= $en ? 'Privacy Wipe Active' : 'حماية خصوصية مفعّلة' ?></span>
             </div>
             <div class="table-responsive">
               <table class="data-table">
@@ -274,7 +286,7 @@ $jsConfig = [
         <div class="scanner-grid">
 
           <div class="camera-viewport-box">
-            <h3 style="margin:0 0 6px;color:var(--db-teal-800);">📷 <?= $en ? 'Scan 1D Barcode or 2D QR Code' : 'اسكان الباركود المطاول أو رمز الـ QR' ?></h3>
+            <h3 style="margin:0 0 6px;color:var(--db-teal-800);"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan 1D Barcode or 2D QR Code' : 'اسكان الباركود المطاول أو رمز الـ QR' ?></h3>
             <p style="margin:0 0 14px;font-size:0.84rem;color:var(--db-muted);"><?= $en ? 'Point your camera at the elongated box barcode or QR sticker to display customer selling price immediately.' : 'وجّه الكاميرا نحو الباركود الطولي أو الـ QR الموجود على الجهاز لعرض سعر البيع فوراً' ?></p>
 
             <div id="quickCameraReader" class="reader-mount">
@@ -282,23 +294,23 @@ $jsConfig = [
             </div>
 
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
-              <button type="button" class="btn btn-teal btn-sm" id="btnStartQuickCam">▶ <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
-              <button type="button" class="btn btn-danger btn-sm" id="btnStopQuickCam" style="display:none;">⏹ <?= $en ? 'Stop Camera' : 'إيقاف الكاميرا' ?></button>
+              <button type="button" class="btn btn-teal btn-sm" id="btnStartQuickCam"><i class="fa-solid fa-play"></i> <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnStopQuickCam" style="display:none;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop Camera' : 'إيقاف الكاميرا' ?></button>
               <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
-                🖼️ <?= $en ? 'Scan Barcode Image' : 'مسح من صورة باركود' ?>
+                <i class="fa-solid fa-image"></i> <?= $en ? 'Scan Barcode Image' : 'مسح من صورة باركود' ?>
                 <input type="file" id="quickScanFile" accept="image/*" style="display:none;">
               </label>
             </div>
 
             <form id="quickManualForm" style="display:flex;gap:8px;">
               <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Or scan / type barcode here (e.g. ASLY-LAP-1001)...' : 'أو امسح بمسدس الباركود / اكتب الكود هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
-              <button type="submit" class="btn btn-gold"><?= $en ? 'Lookup' : 'فحص' ?></button>
+              <button type="submit" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> <?= $en ? 'Lookup' : 'فحص' ?></button>
             </form>
           </div>
 
           <div id="quickScanResult">
             <div class="card" style="text-align:center;padding:48px 24px;">
-              <div style="font-size:3rem;margin-bottom:10px;">🔍</div>
+              <div style="font-size:2.6rem;color:var(--db-teal-700);margin-bottom:12px;"><i class="fa-solid fa-qrcode"></i></div>
               <h3 style="margin:0 0 8px;color:var(--db-text);"><?= $en ? 'Ready to Scan Product Code' : 'في انتظار مسح كود القطعة' ?></h3>
               <p style="margin:0;color:var(--db-muted);font-size:0.9rem;">
                 <?= $en
@@ -319,13 +331,13 @@ $jsConfig = [
 
           <div class="card">
             <div class="card-header">
-              <h3>📦 <?= $en ? 'Select Products or Scan into Invoice' : 'اختر المنتجات أو امسح الكود للإضافة للفاتورة' ?></h3>
-              <button type="button" class="btn btn-teal btn-sm" id="btnPosToggleCam">📷 <?= $en ? 'Scan with Camera' : 'مسح بالكاميرا للفاتورة' ?></button>
+              <h3><i class="fa-solid fa-boxes-stacked" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Select Products or Scan into Invoice' : 'اختر المنتجات أو امسح الكود للإضافة للفاتورة' ?></h3>
+              <button type="button" class="btn btn-teal btn-sm" id="btnPosToggleCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan with Camera' : 'مسح بالكاميرا للفاتورة' ?></button>
             </div>
 
             <div id="posCameraWrap" style="display:none;margin-bottom:16px;" class="camera-viewport-box">
               <div id="posCameraReader" class="reader-mount" style="min-height:210px;"></div>
-              <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam"><?= $en ? 'Close Camera' : 'إغلاق الكاميرا' ?></button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Close Camera' : 'إغلاق الكاميرا' ?></button>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
@@ -344,8 +356,8 @@ $jsConfig = [
 
           <div class="card" style="border:1.5px solid var(--db-teal-100);">
             <div class="card-header">
-              <h3>🧾 <?= $en ? 'Active Sales Invoice' : 'فاتورة البيع الحالية' ?></h3>
-              <button type="button" class="btn btn-danger btn-sm" id="btnClearCart"><?= $en ? 'Clear Cart' : 'إفراغ السلة' ?></button>
+              <h3><i class="fa-solid fa-file-invoice-dollar" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Active Sales Invoice' : 'فاتورة البيع الحالية' ?></h3>
+              <button type="button" class="btn btn-danger btn-sm" id="btnClearCart"><i class="fa-solid fa-trash-can"></i> <?= $en ? 'Clear Cart' : 'إفراغ السلة' ?></button>
             </div>
 
             <div class="form-grid" style="margin-bottom:14px;">
@@ -383,7 +395,7 @@ $jsConfig = [
             </div>
 
             <button type="button" class="btn btn-teal" id="btnCompleteSale" style="width:100%;padding:14px;font-size:0.98rem;">
-              ✅ <?= $en ? 'Complete Sale & Generate Invoice (PNG + WhatsApp + Print)' : 'إتمام البيع وإصدار الفاتورة (صورة + واتساب + طباعة)' ?>
+              <i class="fa-solid fa-circle-check"></i> <?= $en ? 'Complete Sale & Generate Invoice (PNG + WhatsApp + Print)' : 'إتمام البيع وإصدار الفاتورة (صورة + واتساب + طباعة)' ?>
             </button>
           </div>
 
@@ -392,14 +404,14 @@ $jsConfig = [
 
       <?php if ($isAdmin): ?>
       <!-- ========================================================
-           TAB 4: ADD / EDIT PRODUCT WITH SCANNER, AUTO-QR & DUAL PHOTOS
+           TAB 4: ADD / EDIT PRODUCT WITH SCANNER & AUTO-QR
            ======================================================== -->
       <section class="tab-panel" id="tab-add-product">
         <div class="scanner-grid">
 
           <div>
             <div class="camera-viewport-box" style="margin-bottom:20px;">
-              <h3 style="margin:0 0 6px;color:var(--db-teal-800);">1️⃣ <?= $en ? 'Scan Box Barcode OR Generate Auto QR' : 'مسح كود العلبة أو توليد رمز QR جديد' ?></h3>
+              <h3 style="margin:0 0 6px;color:var(--db-teal-800);"><i class="fa-solid fa-qrcode"></i> <?= $en ? '1. Scan Box Barcode OR Generate Auto QR' : '1. مسح كود العلبة أو توليد رمز QR جديد' ?></h3>
               <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Scan the original 1D barcode on a retail box, or click "Generate Auto QR" for open-box devices and accessories.' : 'يمكنك مسح الباركود المطاول الموجود على العلبة بالكاميرا، أو الضغط على «توليد QR تلقائي» للأجهزة المستعملة والإكسسوارات بدون علبة.' ?></p>
 
               <div id="addProdCameraReader" class="reader-mount" style="min-height:220px;">
@@ -407,16 +419,16 @@ $jsConfig = [
               </div>
 
               <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-                <button type="button" class="btn btn-teal btn-sm" id="btnStartAddCam">📷 <?= $en ? 'Scan Box Barcode' : 'مسح باركود العلبة بالكاميرا' ?></button>
-                <button type="button" class="btn btn-danger btn-sm" id="btnStopAddCam" style="display:none;">⏹ <?= $en ? 'Stop' : 'إيقاف' ?></button>
-                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr">✨ <?= $en ? 'Generate Auto QR Code' : 'توليد QR تلقائي للمنتج' ?></button>
+                <button type="button" class="btn btn-teal btn-sm" id="btnStartAddCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan Box Barcode' : 'مسح باركود العلبة بالكاميرا' ?></button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnStopAddCam" style="display:none;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop' : 'إيقاف' ?></button>
+                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Generate Auto QR Code' : 'توليد QR تلقائي للمنتج' ?></button>
               </div>
             </div>
 
             <div class="card" style="text-align:center;">
               <div class="card-header">
-                <h3>🏷️ <?= $en ? 'Printable Sticker Preview' : 'معاينة استيكر الكود الجاهز للطباعة واللصق' ?></h3>
-                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker">🖨️ <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
+                <h3><i class="fa-solid fa-tag" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Printable Sticker Preview' : 'معاينة استيكر الكود الجاهز للطباعة واللصق' ?></h3>
+                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
               </div>
               <div class="sticker-preview-box" id="liveStickerBox">
                 <strong style="font-size:0.84rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
@@ -430,8 +442,8 @@ $jsConfig = [
 
           <div class="card">
             <div class="card-header">
-              <h3 id="productFormHeading">➕ <?= $en ? 'Register Product & 3-Tier Pricing' : 'تسجيل بيانات المنتج والأسعار الثلاثة' ?></h3>
-              <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm"><?= $en ? 'Reset Form' : 'تفريغ النموذج' ?></button>
+              <h3 id="productFormHeading"><i class="fa-solid fa-plus-circle" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Register Product & 3-Tier Pricing' : 'تسجيل بيانات المنتج والأسعار الثلاثة' ?></h3>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm"><i class="fa-solid fa-rotate-left"></i> <?= $en ? 'Reset Form' : 'تفريغ النموذج' ?></button>
             </div>
 
             <div id="existingProdAlert" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:14px;background:var(--db-gold-50);border:1.5px solid var(--db-gold-500);color:var(--db-text);font-weight:700;font-size:0.88rem;"></div>
@@ -491,7 +503,7 @@ $jsConfig = [
               <!-- Bright 3-Tier Pricing Highlight Box -->
               <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:16px;">
                 <div style="font-weight:800;color:var(--db-teal-800);margin-bottom:10px;font-size:0.92rem;">
-                  💰 <?= $en ? 'Smart 3-Tier Pricing System (Role-Protected)' : 'نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)' ?>
+                  <i class="fa-solid fa-coins" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Smart 3-Tier Pricing System (Role-Protected)' : 'نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)' ?>
                 </div>
                 <div class="form-grid">
                   <div class="form-group">
@@ -536,41 +548,19 @@ $jsConfig = [
                 </div>
               </div>
 
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? 'Description (Arabic)' : 'وصف المنتج (عربي)' ?></label>
-                  <textarea name="description" id="prodDescription" rows="2" class="form-control"></textarea>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Description (English — Optional)' : 'وصف المنتج بالإنجليزية (اختياري)' ?></label>
-                  <textarea name="description_en" id="prodDescriptionEn" rows="2" class="form-control" style="direction:ltr;"></textarea>
-                </div>
-              </div>
-
               <div class="form-grid" style="margin-bottom:16px;">
                 <div class="form-group">
-                  <label>📸 <?= $en ? 'Primary Studio Image' : 'الصورة الأساسية (لقطة الاستوديو)' ?></label>
+                  <label><i class="fa-solid fa-image" style="color:var(--db-teal-700);margin-inline-end:5px;"></i><?= $en ? 'Product Image (Internal POS & Scanner)' : 'صورة المنتج (تظهر بالاسكان ونقطة البيع)' ?></label>
                   <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
                 </div>
                 <div class="form-group">
-                  <label>✨ <?= $en ? 'Hover Lifestyle Image (Lookbook Swap)' : 'الصورة الثانية عند التمرير (لقطة لايف ستايل)' ?></label>
-                  <input type="file" name="secondary_image" id="prodSecondaryImageInput" accept="image/*" class="form-control">
+                  <label><?= $en ? 'Internal Notes / Description' : 'ملاحظات أو وصف المنتج' ?></label>
+                  <input type="text" name="description" id="prodDescription" class="form-control">
                 </div>
               </div>
 
-              <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:0.88rem;">
-                  <input type="checkbox" name="show_on_landing" id="prodShowLanding" value="1" checked>
-                  <?= $en ? 'Show on Public Lookbook Storefront (Zero Price)' : 'عرض المنتج في اللاندينج بيدج للزوار (بدون سعر)' ?>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:0.88rem;">
-                  <input type="checkbox" name="is_featured" id="prodFeatured" value="1">
-                  <?= $en ? 'Mark as Editor’s Pick (Featured)' : 'تمييز المنتج في مقدمة المعرض (Featured)' ?>
-                </label>
-              </div>
-
               <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
-                💾 <?= $en ? 'Save Product & Update Code' : 'حفظ المنتج وتحديث المخزن والكود' ?>
+                <i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Product & Update Code' : 'حفظ المنتج وتحديث المخزن والكود' ?>
               </button>
             </form>
           </div>
@@ -585,7 +575,7 @@ $jsConfig = [
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
           <div class="card-header">
-            <h3>📦 <?= $en ? 'Inventory & Stock Catalog' : 'سجل المخزون والأجهزة والإكسسوارات' ?></h3>
+            <h3><i class="fa-solid fa-boxes-stacked" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Inventory & Stock Catalog' : 'سجل المخزون والأجهزة والإكسسوارات' ?></h3>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
               <input type="text" id="invSearch" class="form-control" placeholder="<?= $en ? 'Search name, barcode, brand...' : 'بحث بالاسم أو الكود أو الماركة...' ?>" style="width:240px;">
               <select id="invCategory" class="form-control" style="width:auto;">
@@ -596,7 +586,7 @@ $jsConfig = [
                 <option value="wearables"><?= $en ? 'Wearables' : 'ساعات ذكية' ?></option>
               </select>
               <?php if ($isAdmin): ?>
-                <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('add-product')">+ <?= $en ? 'Add Product' : 'إضافة منتج جديد' ?></button>
+                <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('add-product')"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add Product' : 'إضافة منتج جديد' ?></button>
               <?php endif; ?>
             </div>
           </div>
@@ -614,9 +604,6 @@ $jsConfig = [
                   <?php endif; ?>
                   <th><?= $en ? 'Sell Price' : 'سعر البيع' ?></th>
                   <th><?= $en ? 'Min Floor Price' : 'أقل سعر مسموح' ?></th>
-                  <?php if ($isAdmin): ?>
-                    <th><?= $en ? 'Storefront' : 'اللاندينج' ?></th>
-                  <?php endif; ?>
                   <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
                 </tr>
               </thead>
@@ -633,10 +620,10 @@ $jsConfig = [
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>🛠️ <?= $en ? 'Active QR Repair Tickets & Stage Management' : 'إدارة أجهزة الصيانة النشطة وتتبع المراحل بالـ QR' ?></h3>
+              <h3><i class="fa-solid fa-screwdriver-wrench" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Active QR Repair Tickets & Stage Management' : 'إدارة أجهزة الصيانة النشطة وتتبع المراحل بالـ QR' ?></h3>
               <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Unique customer QR receipt per device, automatic stage email notifications, and full personal data wipe upon delivery.' : 'كل جهاز يُولّد له QR خاص للعميل، مع إشعار بريد إلكتروني بكل مرحلة، وحذف كامل للبيانات فور التسليم مع حفظ الإيراد فقط.' ?></span>
             </div>
-            <button type="button" class="btn btn-teal" id="btnOpenNewMaint">+ <?= $en ? 'Receive Repair Device' : 'استلام جهاز صيانة جديد' ?></button>
+            <button type="button" class="btn btn-teal" id="btnOpenNewMaint"><i class="fa-solid fa-plus"></i> <?= $en ? 'Receive Repair Device' : 'استلام جهاز صيانة جديد' ?></button>
           </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
@@ -674,17 +661,17 @@ $jsConfig = [
            ======================================================== -->
       <section class="tab-panel" id="tab-staff">
         <div class="card" style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));border-color:var(--db-gold-500);">
-          <h3 style="margin:0 0 8px;color:var(--db-teal-800);">🛡️ <?= $en ? 'Role Separation & Price Floor Protection' : 'نظام حماية الأسعار والصلاحيات بين المدير والموظفين' ?></h3>
+          <h3 style="margin:0 0 8px;color:var(--db-teal-800);"><i class="fa-solid fa-shield-halved"></i> <?= $en ? 'Role Separation & Price Floor Protection' : 'نظام حماية الأسعار والصلاحيات بين المدير والموظفين' ?></h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;font-size:0.86rem;color:var(--db-text);">
-            <div><strong>👑 Admin:</strong> <?= $en ? 'Full access to true purchase cost, inventory capital, net invoice profit, delivered maintenance revenues, and store settings.' : 'يتحكم في كل شيء، يرى سعر الشراء الحقيقي، رأس مال المخزن، صافي أرباح كل فاتورة، إيرادات الصيانة اليومية، وإعدادات الهوية والتواصل.' ?></div>
-            <div><strong>💼 Staff:</strong> <?= $en ? 'Sees only Selling Price & Minimum Floor Price, issues invoices, decrements stock, and is strictly blocked from selling below Minimum Floor Price!' : 'يفحص الأسعار بالكاميرا، يرى فقط (سعر البيع) و(أقل سعر بيع)، يُصدر فواتير البيع ويخصم المخزون، ويُمنع برمجياً من البيع بأقل من الحد الأدنى المسموح!' ?></div>
+            <div><strong><i class="fa-solid fa-user-shield" style="color:var(--db-gold-600);"></i> Admin:</strong> <?= $en ? 'Full access to true purchase cost, inventory capital, net invoice profit, delivered maintenance revenues, and social/brand settings.' : 'يتحكم في كل شيء، يرى سعر الشراء الحقيقي، رأس مال المخزن، صافي أرباح كل فاتورة، إيرادات الصيانة اليومية، وروابط السوشيال ميديا.' ?></div>
+            <div><strong><i class="fa-solid fa-id-badge" style="color:var(--db-teal-700);"></i> Staff:</strong> <?= $en ? 'Sees only Selling Price & Minimum Floor Price, issues invoices, decrements stock, and is strictly blocked from selling below Minimum Floor Price!' : 'يفحص الأسعار بالكاميرا، يرى فقط (سعر البيع) و(أقل سعر بيع)، يُصدر فواتير البيع ويخصم المخزون، ويُمنع برمجياً من البيع بأقل من الحد الأدنى المسموح!' ?></div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <h3>👥 <?= $en ? 'Admin & Sales Staff Accounts' : 'حسابات المديرين وموظفي المبيعات' ?></h3>
-            <button type="button" class="btn btn-teal btn-sm" id="btnAddUserModal">+ <?= $en ? 'Add Account' : 'إضافة موظف / مدير جديد' ?></button>
+            <h3><i class="fa-solid fa-users" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Admin & Sales Staff Accounts' : 'حسابات المديرين وموظفي المبيعات' ?></h3>
+            <button type="button" class="btn btn-teal btn-sm" id="btnAddUserModal"><i class="fa-solid fa-user-plus"></i> <?= $en ? 'Add Account' : 'إضافة موظف / مدير جديد' ?></button>
           </div>
           <div class="table-responsive">
             <table class="data-table">
@@ -706,70 +693,66 @@ $jsConfig = [
       </section>
 
       <!-- ========================================================
-           TAB 8: BRAND IDENTITY, CONTACT CHANNELS & SMTP SETTINGS
+           TAB 8: BRAND IDENTITY, SOCIAL MEDIA LINKS & SMTP SETTINGS
            ======================================================== -->
       <section class="tab-panel" id="tab-settings">
 
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3>🎨 <?= $en ? 'Official Luminous Brand Identity Kit — ASLY TECH STORE' : 'حزمة الهوية البصرية المحدثة (الفاتحة) — ASLY | أصلي TECH STORE' ?></h3>
-              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'High-resolution lighter turquoise-teal & champagne-gold brand marks for web, invoices, and print.' : 'الشعار المضيء الجديد بدرجات التيفاني الفاتح والذهبي الهادي للموقع والفواتير والمطبوعات.' ?></span>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;align-items:stretch;">
-            <div style="background:var(--db-bg);padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
-              <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="Transparent Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
-              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Transparent PNG Logo' : 'الشعار الرسمي بخلفية شفافة (PNG)' ?></div>
-              <a href="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" download="ASLY-Logo-Transparent.png" class="btn btn-teal btn-sm">Download PNG</a>
-            </div>
-            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
-              <img src="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" alt="Vector Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
-              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Scalable Vector Logo (SVG)' : 'الشعار المتجه للطباعة (SVG)' ?></div>
-              <a href="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" download="ASLY-Logo.svg" class="btn btn-gold btn-sm">Download SVG</a>
-            </div>
-            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
-              <img src="<?= e(appUrl('assets/brand/favicon.svg')) ?>" alt="Icon" style="height:66px;margin:0 auto 12px;object-fit:contain;">
-              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Brand Monogram Icon' : 'أيقونة العلامة (Favicon SVG)' ?></div>
-              <a href="<?= e(appUrl('assets/brand/favicon.svg')) ?>" download="ASLY-Icon.svg" class="btn btn-ghost btn-sm">Download Icon</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dynamic Contact Channels Manager -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h3>📞 <?= $en ? 'Dynamic Contact & Social Channels (Live on Storefront)' : 'إدارة أرقام الهواتف والواتساب ومنصات التواصل (تظهر بالموقع الخارجي)' ?></h3>
-              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Add or edit phone lines, WhatsApp, Facebook, Instagram, TikTok, or Map links.' : 'أضف أو عدّل أي رقم هاتف، واتساب، فيسبوك، إنستجرام، تيك توك، أو لوكيشن ليظهر فوراً للعملاء.' ?></span>
-            </div>
-            <button type="button" class="btn btn-teal btn-sm" id="btnAddChannelModal">+ <?= $en ? 'Add Channel' : 'إضافة وسيلة تواصل' ?></button>
-          </div>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th><?= $en ? 'Type' : 'النوع' ?></th>
-                  <th><?= $en ? 'Public Label' : 'العنوان الظاهر للعميل' ?></th>
-                  <th><?= $en ? 'Value / Number' : 'الرقم / القيمة' ?></th>
-                  <th><?= $en ? 'Direct URL' : 'الرابط التلقائي' ?></th>
-                  <th><?= $en ? 'Order' : 'الترتيب' ?></th>
-                  <th><?= $en ? 'Status' : 'الحالة' ?></th>
-                  <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
-                </tr>
-              </thead>
-              <tbody id="channelsTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Store Info & SMTP Email Settings Form -->
+        <!-- Brand Story, Official Social Media URLs & SMTP Settings Form -->
         <form id="settingsSaveForm" class="card">
           <div class="card-header">
-            <h3>⚙️ <?= $en ? 'Store Identity, Bilingual Copy, QR Base URL & SMTP Email' : 'إعدادات بيانات المركز (عربي + إنجليزي)، رابط الـ QR، والبريد الإلكتروني (SMTP)' ?></h3>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnViewEmailLogs">📬 <?= $en ? 'Sent Email Outbox' : 'سجل رسائل البريد المرسلة' ?></button>
+            <div>
+              <h3><i class="fa-solid fa-share-nodes" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Official Social Media Links, Brand Identity & SMTP' : 'روابط منصات السوشيال ميديا، نبذة من نحن، وإعدادات البريد' ?></h3>
+              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Update any social media link below and it updates live on the public Landing Page immediately (leave blank to hide any platform).' : 'عدّل أي رابط سوشيال ميديا أدناه ليتم تحديثه فوراً في الصفحة الرئيسية للزوار (اترك الحقل فارغاً لإخفاء أي منصة).' ?></span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnViewEmailLogs"><i class="fa-solid fa-inbox"></i> <?= $en ? 'Sent Email Outbox' : 'سجل البريد المرسل' ?></button>
           </div>
 
+          <!-- Dedicated Official Social Media Links Box -->
+          <div style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));padding:20px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:22px;">
+            <div style="font-weight:900;color:var(--db-teal-800);margin-bottom:14px;font-size:0.98rem;">
+              <i class="fa-solid fa-hashtag"></i> <?= $en ? 'Social Media Links (Live on Public Website)' : 'روابط حسابات السوشيال ميديا الرسمية (تظهر مباشرة باللاندينج بيدج)' ?>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label><i class="fa-brands fa-whatsapp" style="color:#059669;margin-inline-end:5px;"></i><?= $en ? 'Official WhatsApp Number (with 20)' : 'رقم واتساب الرسمي (بكود الدولة 20)' ?></label>
+                <input type="text" name="primary_whatsapp" id="set_primary_whatsapp" class="form-control" placeholder="201015981677" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-facebook-f" style="color:#0d9499;margin-inline-end:5px;"></i>Facebook URL</label>
+                <input type="url" name="social_facebook" id="set_social_facebook" class="form-control" placeholder="https://facebook.com/..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-instagram" style="color:#c49029;margin-inline-end:5px;"></i>Instagram URL</label>
+                <input type="url" name="social_instagram" id="set_social_instagram" class="form-control" placeholder="https://instagram.com/..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-tiktok" style="color:#1e293b;margin-inline-end:5px;"></i>TikTok URL</label>
+                <input type="url" name="social_tiktok" id="set_social_tiktok" class="form-control" placeholder="https://tiktok.com/@..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-telegram" style="color:#0d9499;margin-inline-end:5px;"></i>Telegram URL</label>
+                <input type="url" name="social_telegram" id="set_social_telegram" class="form-control" placeholder="https://t.me/..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-youtube" style="color:#dc2626;margin-inline-end:5px;"></i>YouTube URL</label>
+                <input type="url" name="social_youtube" id="set_social_youtube" class="form-control" placeholder="https://youtube.com/@..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-brands fa-x-twitter" style="color:#1e293b;margin-inline-end:5px;"></i>X (Twitter) URL</label>
+                <input type="url" name="social_x" id="set_social_x" class="form-control" placeholder="https://x.com/..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-location-dot" style="color:#c49029;margin-inline-end:5px;"></i><?= $en ? 'Google Maps URL' : 'رابط اللوكيشن على خرائط جوجل' ?></label>
+                <input type="url" name="google_maps_url" id="set_google_maps_url" class="form-control" placeholder="https://maps.google.com/..." style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label><i class="fa-solid fa-envelope" style="color:#0d9499;margin-inline-end:5px;"></i><?= $en ? 'Official Public Email' : 'البريد الإلكتروني الرسمي للتواصل' ?></label>
+                <input type="email" name="primary_email" id="set_primary_email" class="form-control" placeholder="contact@aslystore.com" style="direction:ltr;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Store Identity & Story ("Who We Are") -->
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
               <label><?= $en ? 'Store Name (Arabic)' : 'اسم المركز بالعربية' ?></label>
@@ -779,9 +762,38 @@ $jsConfig = [
               <label><?= $en ? 'Store Name (English)' : 'اسم المركز بالإنجليزية' ?></label>
               <input type="text" name="store_name_en" id="set_store_name_en" class="form-control" style="direction:ltr;">
             </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label><?= $en ? 'Primary WhatsApp (with country code 20)' : 'رقم واتساب الاستفسارات الرئيسي (بكود الدولة 20)' ?></label>
-              <input type="text" name="primary_whatsapp" id="set_primary_whatsapp" class="form-control" placeholder="201015981677" style="direction:ltr;">
+              <label><?= $en ? 'Who We Are Story (Arabic)' : 'نص «من نحن» بالصفحة الرئيسية (عربي)' ?></label>
+              <textarea name="about_story_ar" id="set_about_story_ar" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label><?= $en ? 'Who We Are Story (English)' : 'نص «من نحن» بالصفحة الرئيسية (إنجليزي)' ?></label>
+              <textarea name="about_story_en" id="set_about_story_en" rows="3" class="form-control" style="direction:ltr;"></textarea>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px;">
+            <div class="form-group">
+              <label><?= $en ? 'Store Tagline (Arabic)' : 'الوصف المختصر (عربي)' ?></label>
+              <input type="text" name="store_tagline" id="set_store_tagline" class="form-control">
+            </div>
+            <div class="form-group">
+              <label><?= $en ? 'Store Tagline (English)' : 'الوصف المختصر (إنجليزي)' ?></label>
+              <input type="text" name="store_tagline_en" id="set_store_tagline_en" class="form-control" style="direction:ltr;">
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px;">
+            <div class="form-group">
+              <label><?= $en ? 'Management Line (Arabic)' : 'سطر الإدارة والإشراف (عربي)' ?></label>
+              <input type="text" name="founders_line" id="set_founders_line" class="form-control">
+            </div>
+            <div class="form-group">
+              <label><?= $en ? 'Management Line (English)' : 'سطر الإدارة والإشراف (إنجليزي)' ?></label>
+              <input type="text" name="founders_line_en" id="set_founders_line_en" class="form-control" style="direction:ltr;">
             </div>
           </div>
 
@@ -793,10 +805,6 @@ $jsConfig = [
             <div class="form-group">
               <label><?= $en ? 'Invoice Phone 2' : 'هاتف الفواتير 2' ?></label>
               <input type="text" name="secondary_phone" id="set_secondary_phone" class="form-control" style="direction:ltr;">
-            </div>
-            <div class="form-group">
-              <label><?= $en ? 'Google Maps Link (Optional)' : 'رابط خرائط جوجل (اختياري)' ?></label>
-              <input type="url" name="google_maps_url" id="set_google_maps_url" class="form-control" placeholder="https://maps.google.com/..." style="direction:ltr;">
             </div>
           </div>
 
@@ -822,28 +830,6 @@ $jsConfig = [
             </div>
           </div>
 
-          <div class="form-grid" style="margin-bottom:18px;">
-            <div class="form-group">
-              <label><?= $en ? 'Management Line (Arabic)' : 'سطر الإدارة والإشراف (عربي)' ?></label>
-              <input type="text" name="founders_line" id="set_founders_line" class="form-control">
-            </div>
-            <div class="form-group">
-              <label><?= $en ? 'Management Line (English)' : 'سطر الإدارة والإشراف (إنجليزي)' ?></label>
-              <input type="text" name="founders_line_en" id="set_founders_line_en" class="form-control" style="direction:ltr;">
-            </div>
-          </div>
-
-          <div class="form-grid" style="margin-bottom:18px;">
-            <div class="form-group">
-              <label><?= $en ? 'Store Tagline (Arabic)' : 'وصف المركز (عربي)' ?></label>
-              <input type="text" name="store_tagline" id="set_store_tagline" class="form-control">
-            </div>
-            <div class="form-group">
-              <label><?= $en ? 'Store Tagline (English)' : 'وصف المركز (إنجليزي)' ?></label>
-              <input type="text" name="store_tagline_en" id="set_store_tagline_en" class="form-control" style="direction:ltr;">
-            </div>
-          </div>
-
           <div class="form-grid" style="margin-bottom:22px;">
             <div class="form-group">
               <label><?= $en ? 'Public Base URL for QR Links (Leave empty for auto-detect or enter LAN IP on XAMPP)' : 'الرابط الأساسي لتوليد أكواد QR الصيانة والفواتير (اتركه فارغاً للتعرف التلقائي أو ضع IP الشبكة)' ?></label>
@@ -859,7 +845,7 @@ $jsConfig = [
           <div style="background:var(--db-teal-50);padding:20px;border-radius:18px;border:1px solid var(--db-teal-100);margin-bottom:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
               <div>
-                <strong style="color:var(--db-teal-800);font-size:0.98rem;">📧 <?= $en ? 'Automatic Repair Stage Email Notifications (SMTP)' : 'إعدادات إشعارات البريد الإلكتروني التلقائية لمراحل الصيانة (SMTP)' ?></strong>
+                <strong style="color:var(--db-teal-800);font-size:0.98rem;"><i class="fa-solid fa-envelope-circle-check"></i> <?= $en ? 'Automatic Repair Stage Email Notifications (SMTP)' : 'إعدادات إشعارات البريد الإلكتروني التلقائية لمراحل الصيانة (SMTP)' ?></strong>
                 <div style="font-size:0.8rem;color:var(--db-muted);"><?= $en ? 'Automatically emails registered customers whenever their repair moves to a new stage.' : 'عند تسجيل إيميل العميل بتذكرة الصيانة، يصله بريد بتفاصيل كل مرحلة جديدة تلقائياً.' ?></div>
               </div>
               <select name="smtp_enabled" id="set_smtp_enabled" class="form-control" style="width:auto;font-weight:800;">
@@ -901,12 +887,67 @@ $jsConfig = [
 
             <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;">
               <input type="email" id="testEmailRecipient" class="form-control" placeholder="test@example.com" style="max-width:280px;direction:ltr;">
-              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail">📨 <?= $en ? 'Send Test Stage Email' : 'إرسال بريد تجريبي الآن' ?></button>
+              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail"><i class="fa-solid fa-paper-plane"></i> <?= $en ? 'Send Test Stage Email' : 'إرسال بريد تجريبي الآن' ?></button>
             </div>
           </div>
 
-          <button type="submit" class="btn btn-teal" style="padding:13px 32px;font-size:1rem;">💾 <?= $en ? 'Save All Settings' : 'حفظ جميع الإعدادات' ?></button>
+          <button type="submit" class="btn btn-teal" style="padding:13px 32px;font-size:1rem;">
+            <i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Social Links & Settings' : 'حفظ روابط السوشيال ميديا والإعدادات' ?>
+          </button>
         </form>
+
+        <!-- Dynamic Extra Contact Lines Manager -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3><i class="fa-solid fa-phone-volume" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Direct Contact Lines & Custom Channels' : 'أرقام التواصل المباشر والقنوات الإضافية' ?></h3>
+              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Add or edit direct phone numbers, WhatsApp lines, or extra links shown in the Contact section.' : 'أضف أو عدّل أرقام الهواتف أو خطوط الواتساب الإضافية الظاهرة في قسم تواصل معنا.' ?></span>
+            </div>
+            <button type="button" class="btn btn-teal btn-sm" id="btnAddChannelModal"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add Line' : 'إضافة خط تواصل' ?></button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th><?= $en ? 'Type' : 'النوع' ?></th>
+                  <th><?= $en ? 'Public Label' : 'العنوان الظاهر للعميل' ?></th>
+                  <th><?= $en ? 'Value / Number' : 'الرقم / القيمة' ?></th>
+                  <th><?= $en ? 'Direct URL' : 'الرابط التلقائي' ?></th>
+                  <th><?= $en ? 'Order' : 'الترتيب' ?></th>
+                  <th><?= $en ? 'Status' : 'الحالة' ?></th>
+                  <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
+                </tr>
+              </thead>
+              <tbody id="channelsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Brand Kit Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3><i class="fa-solid fa-palette" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Official Luminous Brand Identity Kit — ASLY TECH STORE' : 'حزمة الهوية البصرية المحدثة (الفاتحة) — ASLY | أصلي TECH STORE' ?></h3>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;align-items:stretch;">
+            <div style="background:var(--db-bg);padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="Transparent Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Transparent PNG Logo' : 'الشعار الرسمي بخلفية شفافة (PNG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" download="ASLY-Logo-Transparent.png" class="btn btn-teal btn-sm"><i class="fa-solid fa-download"></i> PNG</a>
+            </div>
+            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" alt="Vector Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Scalable Vector Logo (SVG)' : 'الشعار المتجه للطباعة (SVG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" download="ASLY-Logo.svg" class="btn btn-gold btn-sm"><i class="fa-solid fa-download"></i> SVG</a>
+            </div>
+            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/favicon.svg')) ?>" alt="Icon" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Brand Monogram Icon' : 'أيقونة العلامة (Favicon SVG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/favicon.svg')) ?>" download="ASLY-Icon.svg" class="btn btn-ghost btn-sm"><i class="fa-solid fa-download"></i> Icon</a>
+            </div>
+          </div>
+        </div>
 
       </section>
       <?php endif; ?>
@@ -916,21 +957,21 @@ $jsConfig = [
 </div>
 
 <!-- ============================================================
-     BRIGHT DAYLIGHT MODALS
+     BRIGHT DAYLIGHT MODALS (ZERO EMOJIS • FONT AWESOME 6)
      ============================================================ -->
 
 <!-- 1. Invoice Preview, PNG Export, WhatsApp Share & Print Modal -->
 <div class="db-modal-backdrop" id="invoiceModal">
   <div class="db-modal" style="width:min(820px,100%);">
     <div class="db-modal-head">
-      <strong>🧾 <?= $en ? 'Official Sales Invoice — Download PNG, Share on WhatsApp, or Print' : 'فاتورة مبيعات رسمية — جاهزة للتحميل كصورة أو الإرسال واتساب أو الطباعة' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('invoiceModal')">✕</button>
+      <strong><i class="fa-solid fa-file-invoice" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Official Sales Invoice — Download PNG, Share on WhatsApp, or Print' : 'فاتورة مبيعات رسمية — جاهزة للتحميل كصورة أو الإرسال واتساب أو الطباعة' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('invoiceModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body">
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;">
-        <button type="button" class="btn btn-teal" id="btnModalInvoicePng">📥 <?= $en ? 'Download PNG Image' : 'تحميل الفاتورة كصورة (PNG)' ?></button>
-        <button type="button" class="btn btn-emerald" id="btnModalInvoiceWhatsapp">💬 <?= $en ? 'Send via WhatsApp' : 'إرسال الفاتورة للعميل عبر واتساب' ?></button>
-        <button type="button" class="btn btn-gold" id="btnModalInvoicePrint">🖨️ <?= $en ? 'Print Invoice' : 'طباعة الفاتورة' ?></button>
+        <button type="button" class="btn btn-teal" id="btnModalInvoicePng"><i class="fa-solid fa-download"></i> <?= $en ? 'Download PNG Image' : 'تحميل الفاتورة كصورة (PNG)' ?></button>
+        <button type="button" class="btn btn-emerald" id="btnModalInvoiceWhatsapp"><i class="fa-brands fa-whatsapp"></i> <?= $en ? 'Send via WhatsApp' : 'إرسال الفاتورة للعميل عبر واتساب' ?></button>
+        <button type="button" class="btn btn-gold" id="btnModalInvoicePrint"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Invoice' : 'طباعة الفاتورة' ?></button>
       </div>
 
       <div id="modalInvoiceCapture" style="background:#ffffff;border:1.5px solid #d5f2f4;border-radius:18px;overflow:hidden;"></div>
@@ -942,12 +983,12 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="newMaintModal">
   <div class="db-modal">
     <div class="db-modal-head">
-      <strong>🛠️ <?= $en ? 'Receive Repair Device & Generate Customer QR Receipt' : 'استلام وتسجيل جهاز صيانة جديد + توليد كود QR للعميل' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('newMaintModal')">✕</button>
+      <strong><i class="fa-solid fa-screwdriver-wrench" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Receive Repair Device & Generate Customer QR Receipt' : 'استلام وتسجيل جهاز صيانة جديد + توليد كود QR للعميل' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('newMaintModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body">
       <form id="newMaintForm">
-        <h4 style="margin:0 0 10px;color:var(--db-teal-800);">👤 <?= $en ? '1. Customer Contact Details' : 'أولاً: بيانات العميل والتواصل' ?></h4>
+        <h4 style="margin:0 0 10px;color:var(--db-teal-800);"><i class="fa-solid fa-user"></i> <?= $en ? '1. Customer Contact Details' : 'أولاً: بيانات العميل والتواصل' ?></h4>
         <div class="form-grid" style="margin-bottom:14px;">
           <div class="form-group">
             <label><?= $en ? 'Customer Full Name *' : 'اسم العميل الثلاثي *' ?></label>
@@ -974,7 +1015,7 @@ $jsConfig = [
           </div>
         </div>
 
-        <h4 style="margin:0 0 10px;color:var(--db-teal-800);padding-top:10px;border-top:1px solid var(--db-border);">💻 <?= $en ? '2. Device Specs, Issue & Estimate' : 'ثانياً: مواصفات الجهاز والعطل والتكلفة' ?></h4>
+        <h4 style="margin:0 0 10px;color:var(--db-teal-800);padding-top:10px;border-top:1px solid var(--db-border);"><i class="fa-solid fa-laptop-medical"></i> <?= $en ? '2. Device Specs, Issue & Estimate' : 'ثانياً: مواصفات الجهاز والعطل والتكلفة' ?></h4>
         <div class="form-grid" style="margin-bottom:14px;">
           <div class="form-group">
             <label><?= $en ? 'Device Type *' : 'نوع الجهاز *' ?></label>
@@ -1038,7 +1079,7 @@ $jsConfig = [
         </div>
 
         <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
-          ✅ <?= $en ? 'Register Ticket & Generate Customer QR' : 'تسجيل الجهاز وتوليد إيصال الـ QR للعميل' ?>
+          <i class="fa-solid fa-qrcode"></i> <?= $en ? 'Register Ticket & Generate Customer QR' : 'تسجيل الجهاز وتوليد إيصال الـ QR للعميل' ?>
         </button>
       </form>
     </div>
@@ -1050,7 +1091,7 @@ $jsConfig = [
   <div class="db-modal" style="width:min(920px,100%);">
     <div class="db-modal-head">
       <strong id="mdModalTitle"><?= $en ? 'Repair Ticket Profile' : 'ملف تذكرة الصيانة' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('maintDetailModal')">✕</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('maintDetailModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body" id="maintDetailBody"></div>
   </div>
@@ -1060,8 +1101,8 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="stickerModal">
   <div class="db-modal" style="width:min(440px,100%);">
     <div class="db-modal-head">
-      <strong>🏷️ <?= $en ? 'Print Product QR / Barcode Sticker' : 'طباعة استيكر QR / باركود للمنتج' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('stickerModal')">✕</button>
+      <strong><i class="fa-solid fa-tag" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Print Product QR / Barcode Sticker' : 'طباعة استيكر QR / باركود للمنتج' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('stickerModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body" style="text-align:center;">
       <div id="modalStickerArea" class="sticker-preview-box" style="margin-bottom:18px;">
@@ -1072,7 +1113,7 @@ $jsConfig = [
         <div id="modalStickerCode" style="font-family:monospace;font-weight:900;font-size:0.88rem;"></div>
       </div>
       <div>
-        <button type="button" class="btn btn-teal" id="btnPrintModalSticker" style="width:100%;">🖨️ <?= $en ? 'Print Sticker Now' : 'طباعة الاستيكر الآن' ?></button>
+        <button type="button" class="btn btn-teal" id="btnPrintModalSticker" style="width:100%;"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker Now' : 'طباعة الاستيكر الآن' ?></button>
       </div>
     </div>
   </div>
@@ -1084,7 +1125,7 @@ $jsConfig = [
   <div class="db-modal" style="width:min(500px,100%);">
     <div class="db-modal-head">
       <strong id="userModalTitle"><?= $en ? 'Manage Staff / Admin Account' : 'إدارة حساب موظف / مدير' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('userModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body">
       <form id="userSaveForm">
@@ -1117,7 +1158,7 @@ $jsConfig = [
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-weight:700;">
           <input type="checkbox" name="is_active" id="uFormActive" value="1" checked> <?= $en ? 'Account Active' : 'الحساب نشط ومسموح له بالدخول' ?>
         </label>
-        <button type="submit" class="btn btn-teal" style="width:100%;"><?= $en ? 'Save Account' : 'حفظ الحساب' ?></button>
+        <button type="submit" class="btn btn-teal" style="width:100%;"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Account' : 'حفظ الحساب' ?></button>
       </form>
     </div>
   </div>
@@ -1127,8 +1168,8 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="channelModal">
   <div class="db-modal" style="width:min(520px,100%);">
     <div class="db-modal-head">
-      <strong>📞 <?= $en ? 'Add / Edit Storefront Contact Channel' : 'إضافة / تعديل وسيلة تواصل بالموقع' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('channelModal')">✕</button>
+      <strong><i class="fa-solid fa-phone-volume" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Add / Edit Direct Contact Channel' : 'إضافة / تعديل خط تواصل بالموقع' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('channelModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body">
       <form id="channelSaveForm">
@@ -1143,6 +1184,7 @@ $jsConfig = [
               <option value="instagram">Instagram • إنستجرام</option>
               <option value="tiktok">TikTok • تيك توك</option>
               <option value="telegram">Telegram • تيليجرام</option>
+              <option value="youtube">YouTube • يوتيوب</option>
               <option value="email">Email • بريد إلكتروني</option>
               <option value="location">Location • موقع</option>
             </select>
@@ -1165,9 +1207,9 @@ $jsConfig = [
           <input type="text" name="url" id="chFormUrl" class="form-control" style="direction:ltr;">
         </div>
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-weight:700;">
-          <input type="checkbox" name="is_active" id="chFormActive" value="1" checked> <?= $en ? 'Visible on Public Storefront' : 'إظهار في الصفحة الرئيسية للعملاء' ?>
+          <input type="checkbox" name="is_active" id="chFormActive" value="1" checked> <?= $en ? 'Visible on Public Website' : 'إظهار في الصفحة الرئيسية للعملاء' ?>
         </label>
-        <button type="submit" class="btn btn-teal" style="width:100%;"><?= $en ? 'Save Channel' : 'حفظ وسيلة التواصل' ?></button>
+        <button type="submit" class="btn btn-teal" style="width:100%;"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Channel' : 'حفظ وسيلة التواصل' ?></button>
       </form>
     </div>
   </div>
@@ -1177,8 +1219,8 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="emailLogsModal">
   <div class="db-modal" style="width:min(860px,100%);">
     <div class="db-modal-head">
-      <strong>📬 <?= $en ? 'Sent Customer Email Notifications Log' : 'سجل إشعارات البريد الإلكتروني المرسلة للعملاء' ?></strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('emailLogsModal')">✕</button>
+      <strong><i class="fa-solid fa-inbox" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Sent Customer Email Notifications Log' : 'سجل إشعارات البريد الإلكتروني المرسلة للعملاء' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('emailLogsModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body" id="emailLogsBody"></div>
   </div>

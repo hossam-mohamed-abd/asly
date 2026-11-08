@@ -35,6 +35,7 @@ class Database
                 self::initializeSqliteSchema(self::$pdo);
             } else {
                 self::ensureProductColumnsSqlite(self::$pdo);
+                self::ensureDefaultSettings(self::$pdo);
             }
             return self::$pdo;
         }
@@ -56,6 +57,7 @@ class Database
                 self::importMysqlDump(self::$pdo);
             } else {
                 self::ensureProductColumnsMysql(self::$pdo);
+                self::ensureDefaultSettings(self::$pdo);
             }
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
@@ -108,6 +110,32 @@ class Database
         foreach ($alterations as $col => $sql) {
             if (!isset($cols[$col])) {
                 $pdo->exec($sql);
+            }
+        }
+    }
+
+    private static function ensureDefaultSettings(PDO $pdo): void
+    {
+        $defaults = [
+            'primary_email'    => 'contact@aslystore.com',
+            'google_maps_url'  => 'https://maps.google.com/?q=Sohag,Egypt',
+            'social_facebook'  => 'https://facebook.com/aslytechstore',
+            'social_instagram' => 'https://instagram.com/aslytechstore',
+            'social_tiktok'    => 'https://tiktok.com/@aslytechstore',
+            'social_telegram'  => 'https://t.me/aslytechstore',
+            'social_youtube'   => 'https://youtube.com/@aslytechstore',
+            'social_x'         => 'https://x.com/aslytechstore',
+            'about_story_ar'   => 'أصلي تك ستور ليس مجرد معرض تقني تقليدي؛ بل استوديو هندسي ومعمل فحص وصيانة دقيقة تأسس ليضع معياراً حقيقياً للثقة والأصالة. كل جهاز يمر عبر بروتوكول فحص متعدد النقاط، وكل عملية صيانة موثقة لحظة بلحظة عبر نظام تتبع QR شفاف يحمي خصوصيتك وبياناتك.',
+            'about_story_en'   => 'ASLY TECH STORE is not an ordinary retail counter — it is an engineering-first technology studio and precision diagnostic lab built to set an uncompromising standard for hardware authenticity. Every device undergoes multi-point verification, and every repair is documented in real time via transparent QR telemetry.',
+        ];
+        $existing = [];
+        foreach ($pdo->query("SELECT setting_key FROM settings")->fetchAll() as $row) {
+            $existing[$row['setting_key']] = true;
+        }
+        $ins = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)");
+        foreach ($defaults as $k => $v) {
+            if (!isset($existing[$k])) {
+                $ins->execute([$k, $v]);
             }
         }
     }

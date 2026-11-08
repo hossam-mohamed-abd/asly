@@ -118,7 +118,7 @@ class AslyMailer
       %s
     </div>
     <div style="background:#FAF9F6;padding:16px 24px;text-align:center;font-size:12px;color:#64748B;border-top:1px solid #E8EEF0;">
-      %s (%s) — 📞 %s | %s
+      %s (%s) — Tel: %s | %s
     </div>
   </div>
 </body>

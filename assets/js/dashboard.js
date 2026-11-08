@@ -414,7 +414,7 @@
       if (data.is_maintenance_ticket && data.ticket) {
         resWrap.innerHTML = `
           <div class="price-reveal-card">
-            <span class="role-pill role-admin" style="margin-bottom:10px;">🛠️ ${tr('تذكرة صيانة ممسوحة', 'Scanned Repair Ticket')}</span>
+            <span class="role-pill role-admin" style="margin-bottom:10px;"><i class="fa-solid fa-screwdriver-wrench"></i> ${tr('تذكرة صيانة ممسوحة', 'Scanned Repair Ticket')}</span>
             <h3 style="margin:6px 0;">${esc(data.ticket.device_model)} (${esc(data.ticket.ticket_code)})</h3>
             <p>${tr('العميل:', 'Customer:')} <strong>${esc(data.ticket.customer_name)}</strong></p>
             <button type="button" class="btn btn-teal" onclick="switchTab('maintenance'); setTimeout(()=>openMaintTicket(${data.ticket.id}), 250);">${tr('فتح ملف الصيانة الآن', 'Open Ticket Now')}</button>
@@ -428,7 +428,7 @@
           <div class="card" style="border-color:#fca5a5;text-align:center;padding:34px;">
             <h3 style="color:#b91c1c;margin:0 0 8px;">${tr('لم يتم العثور على منتج بالكود:', 'No product found for code:')} <span style="direction:ltr;">${esc(data.scanned_code)}</span></h3>
             <p style="color:var(--db-muted);margin:0 0 16px;">${tr('هذا الكود غير مسجل بالمخزن حتى الآن.', 'This code is not registered in inventory yet.')}</p>
-            ${IS_ADMIN ? `<button type="button" class="btn btn-teal" onclick="prefillNewProductCode('${esc(data.scanned_code)}')">➕ ${tr('تسجيل كمنتج جديد بهذا الكود', 'Register New Product with Code')}</button>` : ''}
+            ${IS_ADMIN ? `<button type="button" class="btn btn-teal" onclick="prefillNewProductCode('${esc(data.scanned_code)}')"><i class="fa-solid fa-plus"></i> ${tr('تسجيل كمنتج جديد بهذا الكود', 'Register New Product with Code')}</button>` : ''}
           </div>
         `;
         return;
@@ -439,7 +439,8 @@
       const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
       const prodTitle = p.display_name || p.name;
       const prodSpecs = p.display_specs || p.specs || '';
-      const decoyBtnLabel = tr('👁️ اعرض سعر الشراء', '👁️ Show Purchase Price');
+      const decoyBtnHtml = `<i class="fa-solid fa-eye"></i> ${tr('اعرض سعر الشراء', 'Show Purchase Price')}`;
+      const hideBtnHtml = `<i class="fa-solid fa-eye-slash"></i> ${tr('إخفاء السعر', 'Hide Price')}`;
 
       resWrap.innerHTML = `
         <div class="price-reveal-card">
@@ -465,11 +466,11 @@
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
             <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">
-              ${decoyBtnLabel}
+              ${decoyBtnHtml}
             </button>
             ${p.quantity > 0 ? `
               <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">
-                🛒 ${tr('بيع هذه القطعة وإصدار فاتورة', 'Sell Item & Issue Invoice')}
+                <i class="fa-solid fa-cart-plus"></i> ${tr('بيع هذه القطعة وإصدار فاتورة', 'Sell Item & Issue Invoice')}
               </button>
             ` : ''}
           </div>
@@ -486,7 +487,7 @@
         const box = document.getElementById('decoyCostBox');
         if (!box) return;
         const open = box.classList.toggle('visible');
-        ev.currentTarget.textContent = open ? tr('🙈 إخفاء السعر', '🙈 Hide Price') : decoyBtnLabel;
+        ev.currentTarget.innerHTML = open ? hideBtnHtml : decoyBtnHtml;
       });
 
       document.getElementById('btnQuickSellNow')?.addEventListener('click', () => {
@@ -667,7 +668,7 @@
             </div>
           </div>
 
-          ${belowMin ? `<div style="color:#dc2626;font-size:0.78rem;font-weight:800;margin-bottom:6px;">⛔ ${tr('غير مسموح بالبيع بأقل من الحد الأدنى', 'Cannot sell below minimum floor price')} (${fmtMoney(item.min_sell_price)})!</div>` : ''}
+          ${belowMin ? `<div style="color:#dc2626;font-size:0.78rem;font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-ban"></i> ${tr('غير مسموح بالبيع بأقل من الحد الأدنى', 'Cannot sell below minimum floor price')} (${fmtMoney(item.min_sell_price)})!</div>` : ''}
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <input type="text" placeholder="${tr('السيريال / IMEI (اختياري)', 'Serial / IMEI (optional)')}" value="${esc(item.serial_imei)}" data-sn="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">
@@ -883,7 +884,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:2px solid #d5f2f4;">
           <div style="max-width:410px;font-size:12px;color:#64748b;">
             ${invoice.notes ? `<div style="margin-bottom:4px;color:#1e293b;"><strong>${tr('ملاحظات:', 'Notes:')}</strong> ${esc(invoice.notes)}</div>` : ''}
-            <div>🛡️ ${esc(st.footerNote || '')}</div>
+            <div><i class="fa-solid fa-shield-halved" style="color:#0d9499;margin-inline-end:4px;"></i>${esc(st.footerNote || '')}</div>
           </div>
           <div style="background:linear-gradient(135deg,#effafa,#fffbf0);padding:12px 22px;border-radius:14px;border:1.5px solid #e4b453;text-align:center;">
             <div style="font-size:11px;color:#c58b24;font-weight:800;">${tr('الإجمالي المدفوع', 'Total Paid')}</div>
@@ -893,7 +894,7 @@
 
         <div style="margin-top:16px;padding-top:10px;border-top:1px dashed #d5f2f4;display:flex;justify-content:space-between;font-size:12px;color:#64748b;">
           <span><strong style="color:#1e293b;">${esc(st.nameAr)} | ${esc(st.nameEn)}</strong></span>
-          <span style="direction:ltr;font-weight:800;color:#0d9499;">📞 ${esc(st.primaryPhone)}${st.secondaryPhone ? ' | ' + esc(st.secondaryPhone) : ''}</span>
+          <span style="direction:ltr;font-weight:800;color:#0d9499;"><i class="fa-solid fa-phone" style="margin-inline-end:4px;"></i>${esc(st.primaryPhone)}${st.secondaryPhone ? ' | ' + esc(st.secondaryPhone) : ''}</span>
         </div>
       </div>
     `;
@@ -918,7 +919,7 @@
   document.getElementById('btnModalInvoicePng')?.addEventListener('click', async (e) => {
     if (!activeInvoiceData) return;
     const btn = e.currentTarget;
-    const orig = btn.textContent;
+    const orig = btn.innerHTML;
     btn.disabled = true;
     btn.textContent = '...';
     try {
@@ -930,7 +931,7 @@
       showToast(tr('تم تحميل صورة الفاتورة عالية الدقة بنجاح!', 'Invoice PNG image downloaded!'));
     } finally {
       btn.disabled = false;
-      btn.textContent = orig;
+      btn.innerHTML = orig;
     }
   });
 
@@ -938,7 +939,7 @@
     if (!activeInvoiceData) return;
     const { invoice, items } = activeInvoiceData;
     const btn = e.currentTarget;
-    const orig = btn.textContent;
+    const orig = btn.innerHTML;
     btn.disabled = true;
     btn.textContent = '...';
 
@@ -947,10 +948,10 @@
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
       const file = new File([blob], `${invoice.invoice_number}.png`, { type: 'image/png' });
 
-      const lines = (items || []).map((i) => `• ${i.product_name} (×${i.quantity}) — ${fmtMoney(i.subtotal)}`).join('\n');
+      const lines = (items || []).map((i) => `- ${i.product_name} (x${i.quantity}) — ${fmtMoney(i.subtotal)}`).join('\n');
       const textMsg = EN
-        ? `Hello ${invoice.customer_name} 👋\nThank you for choosing *${CFG.store.nameEn}*\n\n🧾 *Invoice:* ${invoice.invoice_number}\n${lines}\n💰 *Total Paid:* ${fmtMoney(invoice.total_amount)}\n\n🔗 Digital Invoice (PNG & Print):\n${invoice.public_url}`
-        : `مرحباً أستاذ/ ${invoice.customer_name} 👋\nشكراً لتشريفكم *${CFG.store.nameAr} (${CFG.store.nameEn})*\n\n🧾 *فاتورة رقم:* ${invoice.invoice_number}\n${lines}\n💰 *الإجمالي المدفوع:* ${fmtMoney(invoice.total_amount)}\n\n🔗 رابط الفاتورة الرقمية للتحميل كصورة أو الطباعة:\n${invoice.public_url}`;
+        ? `Hello ${invoice.customer_name},\nThank you for choosing *${CFG.store.nameEn}*\n\n*Invoice:* ${invoice.invoice_number}\n${lines}\n*Total Paid:* ${fmtMoney(invoice.total_amount)}\n\nDigital Invoice (PNG & Print):\n${invoice.public_url}`
+        : `مرحباً أستاذ/ ${invoice.customer_name}\nشكراً لتشريفكم *${CFG.store.nameAr} (${CFG.store.nameEn})*\n\n*فاتورة رقم:* ${invoice.invoice_number}\n${lines}\n*الإجمالي المدفوع:* ${fmtMoney(invoice.total_amount)}\n\nرابط الفاتورة الرقمية للتحميل كصورة أو الطباعة:\n${invoice.public_url}`;
 
       if (navigator.canShare && navigator.canShare({ files: [file] }) && !invoice.customer_phone) {
         await navigator.share({ title: `Invoice ${invoice.invoice_number}`, text: textMsg, files: [file] });
@@ -1010,8 +1011,8 @@
       const pNormal = sell - buy;
       const pMin = minSell - buy;
       hint.innerHTML = tr(
-        `📊 ربح البيع الأساسي: <strong>${fmtMoney(pNormal)}</strong> | صافي الربح عند أقل سعر مسموح: <strong>${fmtMoney(pMin)}</strong>`,
-        `📊 List Profit: <strong>${fmtMoney(pNormal)}</strong> | Profit at Floor Price: <strong>${fmtMoney(pMin)}</strong>`
+        `<i class="fa-solid fa-chart-line"></i> ربح البيع الأساسي: <strong>${fmtMoney(pNormal)}</strong> | صافي الربح عند أقل سعر مسموح: <strong>${fmtMoney(pMin)}</strong>`,
+        `<i class="fa-solid fa-chart-line"></i> List Profit: <strong>${fmtMoney(pNormal)}</strong> | Profit at Floor Price: <strong>${fmtMoney(pMin)}</strong>`
       );
     } else {
       hint.textContent = '';
@@ -1050,7 +1051,7 @@
           const alertEl = document.getElementById('existingProdAlert');
           if (check.found && check.product) {
             alertEl.style.display = 'block';
-            alertEl.innerHTML = `🔔 ${tr('هذا الكود مسجل مسبقاً للمنتج:', 'Already registered to:')} <strong>${esc(check.product.name)}</strong> (${check.product.quantity})
+            alertEl.innerHTML = `<i class="fa-solid fa-bell"></i> ${tr('هذا الكود مسجل مسبقاً للمنتج:', 'Already registered to:')} <strong>${esc(check.product.name)}</strong> (${check.product.quantity})
               <button type="button" class="btn btn-teal btn-sm" style="margin-inline-start:8px;" id="btnLoadScannedProd">${tr('تعديل / زيادة الكمية', 'Load to Edit')}</button>`;
             document.getElementById('btnLoadScannedProd')?.addEventListener('click', () => populateProductForm(check.product));
           } else {
@@ -1079,7 +1080,7 @@
     function resetProductForm() {
       document.getElementById('productSaveForm').reset();
       document.getElementById('prodId').value = '0';
-      document.getElementById('productFormHeading').textContent = tr('➕ تسجيل بيانات المنتج والأسعار الثلاثة', '➕ Register Product & 3-Tier Pricing');
+      document.getElementById('productFormHeading').innerHTML = `<i class="fa-solid fa-plus-circle"></i> ${tr('تسجيل بيانات المنتج والأسعار الثلاثة', 'Register Product & 3-Tier Pricing')}`;
       document.getElementById('existingProdAlert').style.display = 'none';
       document.getElementById('liveProfitHint').textContent = '';
       updateLiveStickerPreview();
@@ -1104,9 +1105,9 @@
       if (document.getElementById('prodSpecsEn')) document.getElementById('prodSpecsEn').value = p.specs_en || '';
       document.getElementById('prodDescription').value = p.description || '';
       if (document.getElementById('prodDescriptionEn')) document.getElementById('prodDescriptionEn').value = p.description_en || '';
-      document.getElementById('prodShowLanding').checked = Number(p.show_on_landing) === 1;
-      document.getElementById('prodFeatured').checked = Number(p.is_featured) === 1;
-      document.getElementById('productFormHeading').textContent = `✏️ ${tr('تعديل بيانات المنتج:', 'Edit Product:')} ${p.display_name || p.name}`;
+      if (document.getElementById('prodShowLanding')) document.getElementById('prodShowLanding').checked = Number(p.show_on_landing) === 1;
+      if (document.getElementById('prodFeatured')) document.getElementById('prodFeatured').checked = Number(p.is_featured) === 1;
+      document.getElementById('productFormHeading').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${tr('تعديل بيانات المنتج:', 'Edit Product:')} ${esc(p.display_name || p.name)}`;
       document.getElementById('existingProdAlert').style.display = 'none';
       updateLiveStickerPreview();
       updateLiveProfitHint();
@@ -1119,8 +1120,8 @@
       const form = e.currentTarget;
       const fd = new FormData(form);
       fd.set('action', 'save');
-      fd.set('show_on_landing', document.getElementById('prodShowLanding').checked ? '1' : '0');
-      fd.set('is_featured', document.getElementById('prodFeatured').checked ? '1' : '0');
+      fd.set('show_on_landing', document.getElementById('prodShowLanding')?.checked ? '1' : '0');
+      fd.set('is_featured', document.getElementById('prodFeatured')?.checked ? '1' : '0');
 
       try {
         const res = await apiFetch('api/products.php', { method: 'POST', body: fd });
@@ -1170,21 +1171,16 @@
             <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>
             <td>
               <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? '#fef2f2' : '#ecfdf5'};color:${low ? '#dc2626' : '#059669'};">
-                ${p.quantity} ${low ? '⚠️' : ''}
+                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ''}
               </span>
             </td>
             ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ''}
             <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>
             <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>
-            ${IS_ADMIN ? `
-              <td>
-                <input type="checkbox" ${p.show_on_landing ? 'checked' : ''} onchange="toggleLandingVis(${p.id}, this.checked)">
-              </td>
-            ` : ''}
             <td>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})">🏷️ ${tr('الكود', 'Sticker')}</button>
-                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})">🛒 ${tr('بيع', 'Sell')}</button>` : ''}
+                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr('الكود', 'Sticker')}</button>
+                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr('بيع', 'Sell')}</button>` : ''}
                 ${IS_ADMIN ? `
                   <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr('تعديل', 'Edit')}</button>
                   <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr('حذف', 'Delete')}</button>
@@ -1288,9 +1284,9 @@
             <td>
               <strong>${esc(t.customer_name)}</strong>
               <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap;">
-                <a href="tel:${esc(t.customer_phone)}" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.75rem;">📞 ${esc(t.customer_phone)}</a>
-                ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="btn btn-emerald btn-sm" style="padding:3px 8px;font-size:0.75rem;">WhatsApp</a>` : ''}
-                ${t.customer_email ? `<span title="${esc(t.customer_email)}" style="font-size:0.74rem;color:#059669;font-weight:700;">📧 Email</span>` : ''}
+                <a href="tel:${esc(t.customer_phone)}" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.75rem;"><i class="fa-solid fa-phone"></i> ${esc(t.customer_phone)}</a>
+                ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="btn btn-emerald btn-sm" style="padding:3px 8px;font-size:0.75rem;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>` : ''}
+                ${t.customer_email ? `<span title="${esc(t.customer_email)}" style="font-size:0.74rem;color:#059669;font-weight:700;"><i class="fa-solid fa-envelope"></i> Email</span>` : ''}
               </div>
             </td>
             <td>
@@ -1308,7 +1304,7 @@
             </td>
             <td>
               ${t.unread_customer_notes > 0
-                ? `<span class="badge-alert">💬 ${t.unread_customer_notes} ${tr('ملاحظة!', 'new!')}</span>`
+                ? `<span class="badge-alert"><i class="fa-solid fa-comment-dots"></i> ${t.unread_customer_notes} ${tr('ملاحظة!', 'new!')}</span>`
                 : `<span style="font-size:0.78rem;color:var(--db-muted);">—</span>`}
             </td>
             <td>
@@ -1352,10 +1348,10 @@
       const notes = res.notes || [];
       const wa = normalizeWa(t.customer_phone);
       const waTrackMsg = EN
-        ? `Hello ${t.customer_name} 👋\nYour device (${t.device_model}) is registered at *${CFG.store.nameEn}* Repair Lab.\n🔖 Ticket: ${t.ticket_code}\n📍 Stage: ${t.stage_title}\n\nTrack live stages & reply here:\n${t.tracking_url}`
-        : `مرحباً أستاذ/ ${t.customer_name} 👋\nتم تسجيل جهازكم (${t.device_model}) بقسم الصيانة في *${CFG.store.nameAr}*\n🔖 رقم التذكرة: ${t.ticket_code}\n📍 المرحلة الحالية: ${t.stage_title}\n\nيمكنك متابعة مراحل الصيانة لحظة بلحظة وإضافة أي ملاحظات عبر الرابط التالي:\n${t.tracking_url}`;
+        ? `Hello ${t.customer_name},\nYour device (${t.device_model}) is registered at *${CFG.store.nameEn}* Repair Lab.\nTicket: ${t.ticket_code}\nStage: ${t.stage_title}\n\nTrack live stages & reply here:\n${t.tracking_url}`
+        : `مرحباً أستاذ/ ${t.customer_name}\nتم تسجيل جهازكم (${t.device_model}) بقسم الصيانة في *${CFG.store.nameAr}*\nرقم التذكرة: ${t.ticket_code}\nالمرحلة الحالية: ${t.stage_title}\n\nيمكنك متابعة مراحل الصيانة لحظة بلحظة وإضافة أي ملاحظات عبر الرابط التالي:\n${t.tracking_url}`;
 
-      document.getElementById('mdModalTitle').textContent = `🛠️ ${t.ticket_code} — ${t.device_model}`;
+      document.getElementById('mdModalTitle').innerHTML = `<i class="fa-solid fa-screwdriver-wrench"></i> ${esc(t.ticket_code)} — ${esc(t.device_model)}`;
 
       const stageOptions = Object.entries(stages)
         .filter(([k]) => k !== 'delivered')
@@ -1365,7 +1361,7 @@
       const notesHtml = notes.map((n) => `
         <div style="padding:10px 14px;border-radius:12px;margin-bottom:8px;background:${n.sender_type === 'admin' ? '#effafa' : '#fffbf0'};border-inline-start:4px solid ${n.sender_type === 'admin' ? '#14b4b8' : '#e4b453'};">
           <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:#475569;margin-bottom:4px;">
-            <strong>${n.sender_type === 'admin' ? '👨‍🔧 ' + esc(n.sender_name) : '👤 ' + esc(n.sender_name)} — [${esc(stages[n.stage_key]?.title || n.stage_key)}]</strong>
+            <strong><i class="fa-solid ${n.sender_type === 'admin' ? 'fa-user-gear' : 'fa-user'}"></i> ${esc(n.sender_name)} — [${esc(stages[n.stage_key]?.title || n.stage_key)}]</strong>
             <span style="direction:ltr;">${esc(n.created_at)}</span>
           </div>
           <div style="font-size:0.88rem;color:#1e293b;">${esc(n.note_text)}</div>
@@ -1377,10 +1373,10 @@
         <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:18px;margin-bottom:20px;">
           <div style="background:var(--db-bg);padding:16px;border-radius:16px;border:1px solid var(--db-border);font-size:0.88rem;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--db-border);">
-              <strong style="font-size:1rem;color:var(--db-text);">👤 ${esc(t.customer_name)}</strong>
+              <strong style="font-size:1rem;color:var(--db-text);"><i class="fa-solid fa-user"></i> ${esc(t.customer_name)}</strong>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm">📞 ${esc(t.customer_phone)}</a>
-                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm">💬 WhatsApp QR Link</a>` : ''}
+                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm"><i class="fa-solid fa-phone"></i> ${esc(t.customer_phone)}</a>
+                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp QR Link</a>` : ''}
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -1404,14 +1400,14 @@
             <div style="font-size:0.78rem;margin:4px 0;">${esc(t.device_model)}</div>
             <div style="font-size:0.74rem;color:#64748b;">${tr('امسح الرمز بكاميرا هاتفك لمتابعة المراحل', 'Scan QR with phone camera for live status')}</div>
             <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;" class="no-print">
-              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt">🖨️ ${tr('طباعة QR', 'Print QR')}</button>
+              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt"><i class="fa-solid fa-print"></i> ${tr('طباعة QR', 'Print QR')}</button>
               <a href="${esc(t.tracking_url)}" target="_blank" class="btn btn-ghost btn-sm">${tr('معاينة صفحة العميل', 'Preview Portal')}</a>
             </div>
           </div>
         </div>
 
         <div style="background:var(--db-teal-50);padding:16px;border-radius:16px;border:1px solid var(--db-teal-100);margin-bottom:18px;">
-          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-800);">🔄 ${tr('نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل', 'Update Repair Stage / Add Engineer Note')} ${t.customer_email ? '📧' : ''}</strong>
+          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-800);"><i class="fa-solid fa-arrows-rotate"></i> ${tr('نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل', 'Update Repair Stage / Add Engineer Note')} ${t.customer_email ? '<i class="fa-solid fa-envelope-circle-check"></i>' : ''}</strong>
           <form id="updateMaintStageForm" style="display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:end;">
             <div>
               <label style="font-size:0.78rem;font-weight:700;">${tr('المرحلة الحالية', 'Stage')}</label>
@@ -1426,13 +1422,13 @@
         </div>
 
         <div style="margin-bottom:20px;">
-          <h4 style="margin:0 0 10px;color:var(--db-text);">💬 ${tr('سجل المراحل والتعليقات المتبادلة', 'Stage History & Mutual Notes')}</h4>
+          <h4 style="margin:0 0 10px;color:var(--db-text);"><i class="fa-solid fa-comments"></i> ${tr('سجل المراحل والتعليقات المتبادلة', 'Stage History & Mutual Notes')}</h4>
           <div style="max-height:240px;overflow-y:auto;">${notesHtml || `<p style="color:var(--db-muted);">—</p>`}</div>
         </div>
 
         <!-- Bright Daylight Final Handover & Data Wipe Box -->
         <div style="background:linear-gradient(135deg,#effafa 0%,#fffbf0 100%);color:var(--db-text);padding:18px 20px;border-radius:18px;border:1.5px solid var(--db-gold-500);">
-          <strong style="color:var(--db-teal-800);display:block;margin-bottom:6px;font-size:1rem;">✅ ${tr('التسليم النهائي للجهاز (حفظ الإيراد + مسح بيانات الجهاز نهائياً)', 'Final Handover (Record Revenue + Permanently Wipe Device Data)')}</strong>
+          <strong style="color:var(--db-teal-800);display:block;margin-bottom:6px;font-size:1rem;"><i class="fa-solid fa-circle-check"></i> ${tr('التسليم النهائي للجهاز (حفظ الإيراد + مسح بيانات الجهاز نهائياً)', 'Final Handover (Record Revenue + Permanently Wipe Device Data)')}</strong>
           <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);">${tr('بمجرد تأكيد التسليم، يُسجّل المبلغ المدفوع في حسابات اليوم وتُمسح كافة تفاصيل الجهاز والعميل والملاحظات نهائياً.', 'Confirming delivery logs the paid amount into daily revenue and permanently deletes all personal device & customer records.')}</p>
           <form id="deliverWipeForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
             <div style="flex:1;min-width:150px;">
@@ -1532,7 +1528,7 @@
           <td style="direction:ltr;font-weight:700;">@${esc(u.username)}</td>
           <td>
             <span class="role-pill ${u.role === 'admin' ? 'role-admin' : 'role-staff'}">
-              ${u.role === 'admin' ? '👑 Admin' : '💼 Staff'}
+              <i class="fa-solid ${u.role === 'admin' ? 'fa-user-shield' : 'fa-id-badge'}"></i> ${u.role === 'admin' ? 'Admin' : 'Staff'}
             </span>
           </td>
           <td style="direction:ltr;">${esc(u.phone || '—')}</td>
@@ -1722,7 +1718,7 @@
           ? logs.map((l) => `
               <details style="border:1px solid var(--db-border);border-radius:14px;padding:12px 16px;margin-bottom:10px;background:var(--db-bg);">
                 <summary style="cursor:pointer;font-weight:800;color:var(--db-text);">
-                  📧 ${esc(l.recipient_email)} — ${esc(l.subject)} <span style="font-size:0.75rem;color:#059669;">[${esc(l.status)} • ${esc(l.created_at)}]</span>
+                  <i class="fa-solid fa-envelope" style="color:#0d9499;"></i> ${esc(l.recipient_email)} — ${esc(l.subject)} <span style="font-size:0.75rem;color:#059669;">[${esc(l.status)} • ${esc(l.created_at)}]</span>
                 </summary>
                 <div style="margin-top:12px;border-top:1px solid var(--db-border);padding-top:12px;">
                   ${l.error_message ? `<div style="color:#dc2626;margin-bottom:8px;">SMTP Error: ${esc(l.error_message)}</div>` : ''}
