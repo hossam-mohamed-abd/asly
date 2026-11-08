@@ -251,12 +251,12 @@ INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('primary_whatsapp', '201015981677'),
 ('primary_phone', '01015981677'),
 ('secondary_phone', '01154639718'),
-('store_address', 'سوهاج — جمهورية مصر العربية'),
-('store_address_en', 'Sohag — Arab Republic of Egypt'),
+('store_address', 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا'),
+('store_address_en', 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum'),
 ('working_hours', 'يومياً من ١١:٠٠ صباحاً حتى ١١:٠٠ مساءً'),
 ('working_hours_en', 'Daily from 11:00 AM to 11:00 PM'),
 ('primary_email', 'contact@aslystore.com'),
-('google_maps_url', 'https://maps.google.com/?q=Sohag,Egypt'),
+('google_maps_url', 'https://www.google.com/maps/search/?api=1&query=%D8%A7%D9%84%D9%81%D9%8A%D9%88%D9%85+%D8%B3%D9%86%D9%88%D8%B1%D8%B3+%D8%AA%D8%B1%D8%B3%D8%A7+%D8%B4%D8%A7%D8%B1%D8%B9+%D8%A7%D9%84%D8%B3%D9%88%D9%82+%D9%83%D9%86%D9%8A%D8%B3%D8%A9+%D8%AA%D8%B1%D8%B3%D8%A7'),
 ('social_facebook', 'https://facebook.com/aslytechstore'),
 ('social_instagram', 'https://instagram.com/aslytechstore'),
 ('social_tiktok', 'https://tiktok.com/@aslytechstore'),
@@ -265,7 +265,7 @@ INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('social_x', 'https://x.com/aslytechstore'),
 ('about_story_ar', 'أصلي تك ستور ليس مجرد معرض تقني تقليدي؛ بل استوديو هندسي ومعمل فحص وصيانة دقيقة تأسس ليضع معياراً حقيقياً للثقة والأصالة. كل جهاز يمر عبر بروتوكول فحص متعدد النقاط، وكل عملية صيانة موثقة لحظة بلحظة عبر نظام تتبع QR شفاف يحمي خصوصيتك وبياناتك.'),
 ('about_story_en', 'ASLY TECH STORE is not an ordinary retail counter — it is an engineering-first technology studio and precision diagnostic lab built to set an uncompromising standard for hardware authenticity. Every device undergoes multi-point verification, and every repair is documented in real time via transparent QR telemetry.'),
-('invoice_footer_note', 'جميع الأجهزة تخضع لضمان الفحص والتجربة المعتمد من مركز أصلي ASLY TECH STORE. يرجى الاحتفاظ بالفاتورة عند المراجعة.'),
+('invoice_footer_note', 'جميع الأجهزة تخضع لضمان الفحص المعتمد من مركز أصلي ASLY TECH STORE. يرجى الاحتفاظ بالفاتورة عند المراجعة.'),
 ('invoice_footer_note_en', 'All devices include ASLY TECH STORE certified hardware inspection & warranty. Please retain this invoice for service.'),
 ('public_base_url', ''),
 ('smtp_enabled', '0'),
@@ -281,114 +281,5 @@ INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`) VALUES
 INSERT IGNORE INTO `contact_channels` (`id`, `channel_type`, `label`, `value`, `url`, `sort_order`, `is_active`) VALUES
 (1, 'phone', 'مبيعات وصيانة - م. حسام محمد', '01015981677', 'tel:01015981677', 1, 1),
 (2, 'phone', 'مبيعات وصيانة - م. رمضان سلام', '01154639718', 'tel:01154639718', 2, 1),
-(3, 'whatsapp', 'واتساب المبيعات والاستفسار عن الأسعار', '01015981677', 'https://wa.me/201015981677', 3, 1),
+(3, 'whatsapp', 'واتساب الاستفسارات والمبيعات', '01015981677', 'https://wa.me/201015981677', 3, 1),
 (4, 'whatsapp', 'واتساب قسم الصيانة والدعم الفني', '01154639718', 'https://wa.me/201154639718', 4, 1);
-
--- Curated Dual-Image Showcase Products (3-tier pricing hidden on public storefront!)
-INSERT IGNORE INTO `products` (
-  `id`, `barcode`, `code_type`, `name`, `name_en`, `category`, `condition_status`, `brand`,
-  `specs`, `specs_en`, `description`, `description_en`,
-  `image_path`, `secondary_image_path`,
-  `purchase_price`, `sell_price`, `min_sell_price`,
-  `quantity`, `low_stock_threshold`, `warranty_default`, `show_on_landing`, `is_featured`, `created_by`
-) VALUES
-(
-  1, 'ASLY-LAP-1001', 'qr',
-  'لابتوب ديل ووركستيشن Dell Precision 5570',
-  'Dell Precision 5570 Studio Workstation',
-  'laptops', 'open_box', 'Dell',
-  'Core i7-12800H • رام 32GB DDR5 • هارد 1TB NVMe • كارت RTX A2000 8GB • شاشة 15.6" InfinityEdge',
-  'Intel Core i7-12800H • 32GB DDR5 RAM • 1TB NVMe SSD • NVIDIA RTX A2000 8GB • 15.6" FHD+ InfinityEdge',
-  'حالة كسر الزيرو بحالة المصنع، مفحوص هندسياً بالكامل ومثالي للتصميم الهندسي والمونتاج والبرمجة مع الشاحن الأصلي.',
-  'Pristine open-box workstation engineered for 3D rendering, CAD, and heavy creative workflows — includes genuine charger.',
-  'uploads/products/laptop-studio.jpg', 'uploads/products/laptop-lifestyle.jpg',
-  38500.00, 44500.00, 42800.00,
-  3, 1, 'ضمان 3 شهور استبدال وتجربة', 1, 1, 1
-),
-(
-  2, '6941812705421', 'barcode',
-  'آيفون 15 برو ماكس ٢٥٦ جيجا — تيتانيوم طبيعي',
-  'iPhone 15 Pro Max — 256GB Natural Titanium',
-  'mobiles', 'new', 'Apple',
-  'مساحة 256GB • معالج A17 Pro • شاشة 6.7" ProMotion 120Hz • بطارية 100% • تيتانيوم طبيعي',
-  '256GB NVMe • A17 Pro Chip • 6.7" Super Retina XDR 120Hz • 48MP Pro Camera • Natural Titanium',
-  'نسخة أصلية متبرشمة بضمان دولي وتجربة كاملة داخل معرض أصلي تك ستور.',
-  'Factory-sealed authentic Natural Titanium flagship with international warranty and full showroom verification.',
-  'uploads/products/mobile-studio.jpg', 'uploads/products/mobile-lifestyle.jpg',
-  54000.00, 59500.00, 58000.00,
-  2, 1, 'ضمان سنة ضد عيوب الصناعة', 1, 1, 1
-),
-(
-  3, 'ASLY-ACC-3001', 'qr',
-  'سماعة الرأس اللاسلكية العازلة للضوضاء Studio ANC Champagne',
-  'Studio ANC Wireless Over-Ear Headphones — Champagne Silver',
-  'accessories', 'new', 'ASLY Audio',
-  'عزل ضوضاء نشط ANC • بطارية ٤٥ ساعة • وسائد مريحة • بلوتوث 5.3 • شحن سريع USB-C',
-  'Active Noise Cancellation • 45-Hour Battery • Plush Memory Cushions • Bluetooth 5.3 • USB-C Fast Charge',
-  'تجربة صوتية استوديو فائقة النقاء مع عزل ضوضاء ذكي وتصميم أنيق باللون الفضي والذهبي الفاتح.',
-  'Pure spatial studio acoustics paired with featherlight champagne-silver anodized aluminum comfort for all-day focus.',
-  'uploads/products/headphones-studio.jpg', 'uploads/products/headphones-lifestyle.jpg',
-  1350.00, 1950.00, 1750.00,
-  8, 3, 'ضمان 6 شهور', 1, 1, 1
-),
-(
-  4, 'ASLY-WRB-4001', 'qr',
-  'ساعة ذكية Starlight Gold AMOLED Edition',
-  'Starlight Edition Smart Watch — Magnetic Link',
-  'wearables', 'new', 'ASLY Wearables',
-  'شاشة AMOLED ساطعة • مكالمات بلوتوث • مقاومة للماء IP68 • متابعة الصحة والرياضة • سوار ستارلايت فاخر',
-  'Always-On AMOLED Display • Bluetooth Calling • IP68 Water Resistant • Health & Fitness Suite • Starlight Band',
-  'ساعة ذكية أنيقة بإطار ستارلايت معدني وسوار مريح، متوافقة بسلاسة مع iOS وأندرويد.',
-  'Refined starlight finish with interchangeable magnetic and leather bands — seamless iOS and Android pairing.',
-  'uploads/products/watch-studio.jpg', 'uploads/products/watch-lifestyle.jpg',
-  1100.00, 1650.00, 1450.00,
-  6, 2, 'ضمان 6 شهور', 1, 1, 1
-),
-(
-  5, 'ASLY-ACC-3002', 'qr',
-  'سماعة أذن لاسلكية AirPods Pure Acoustic',
-  'Pure Acoustic Wireless Earbuds with Charging Case',
-  'accessories', 'new', 'ASLY Audio',
-  'مايك مزدوج نقي للمكالمات • شحن لاسلكي • اقتران فوري • بطارية ٢٨ ساعة مع العلبة',
-  'Dual Beamforming Mics • Wireless Charging Case • Instant Pairing • 28-Hour Total Listening Time',
-  'صوت نقي للمكالمات والموسيقى بحجم مدمج وتصميم أبيض ناصع يناسب حركتك اليومية.',
-  'Crisp everyday calls and rich balanced audio in an ultra-clean pocketable charging case.',
-  'uploads/products/earbuds-studio.jpg', 'uploads/products/earbuds-lifestyle.jpg',
-  750.00, 1150.00, 980.00,
-  10, 3, 'ضمان 6 شهور', 1, 0, 1
-),
-(
-  6, 'ASLY-ACC-3003', 'qr',
-  'باور بانك لاسلكي MagSafe بقوة ١٠٠٠٠ مللي أمبير مع ستاند',
-  'MagSafe 10,000mAh Magnetic Wireless Power Bank & Stand',
-  'accessories', 'new', 'ASLY Power',
-  'شحن لاسلكي MagSafe • شحن سريع PD 20W USB-C • شاشة رقمية للنسبة • مسند معدني مدمج',
-  'Snap-On MagSafe Wireless • 20W USB-C PD Fast Charge • Digital LED Battery Readout • Fold-Out Aluminum Kickstand',
-  'اشحن هاتفك لاسلكياً أثناء التنقل أو المكتب مع ستاند مدمج لمشاهدة مريحة وتصميم أبيض فائق النحافة.',
-  'Snap-and-go magnetic power bank with integrated desk kickstand and digital percentage display.',
-  'uploads/products/powerbank-studio.jpg', 'uploads/products/mobile-lifestyle.jpg',
-  680.00, 990.00, 880.00,
-  9, 3, 'ضمان 6 شهور استبدال', 1, 0, 1
-);
-
--- Sample Active Maintenance Ticket so Admin & Customer QR Tracking can be tested immediately
-INSERT IGNORE INTO `maintenance_tickets` (
-  `id`, `ticket_code`, `qr_token`,
-  `customer_name`, `customer_phone`, `customer_alt_phone`, `customer_email`, `customer_details`,
-  `device_type`, `device_model`, `serial_imei`, `device_specs`, `device_passcode`,
-  `physical_condition`, `problem_description`, `estimated_cost`, `parts_cost`, `deposit_paid`,
-  `current_stage`, `unread_customer_notes`, `received_by`
-) VALUES (
-  1, 'MNT-2026-101', 'asly_demo_qr_token_2026_101',
-  'أحمد محمود عبد الرحمن', '01098765432', '01122334455', 'ahmed.client@example.com', 'عميل بفرع سوهاج - يفضل التواصل عصرًا',
-  'laptop', 'Lenovo Legion 5 Pro 16ACH6H', 'PF38K9L2', 'Ryzen 7 5800H • 16GB RAM • RTX 3060', '123456',
-  'خدش بسيط في الغطاء الخلفي - مستلم مع الشاحن الأصلي 300W',
-  'ارتفاع شديد في درجة الحرارة وفصل مفاجئ أثناء الضغط مع بطء في الإقلاع',
-  850.00, 250.00, 200.00,
-  'diagnosing', 1, 1
-);
-
-INSERT IGNORE INTO `maintenance_notes` (`id`, `ticket_id`, `stage_key`, `sender_type`, `sender_name`, `note_text`, `is_stage_change`) VALUES
-(1, 1, 'received', 'admin', 'م. حسام محمد', 'تم استلام الجهاز والشاحن الأصلي وتسجيل الفحص الظاهري بنجاح.', 1),
-(2, 1, 'diagnosing', 'admin', 'م. رمضان سلام', 'تم فحص دائرة التبريد والهارد NVMe؛ الجهاز يحتاج تنظيف احترافي وتغيير معجون حراري أصلي Thermal Grizzly مع تحديث البيوس.', 1),
-(3, 1, 'diagnosing', 'customer', 'أحمد محمود عبد الرحمن', 'تمام يا باشمهندس توكل على الله، ويا ريت تتأكدلي كمان من مفصلات الشاشة بالمرة.', 0);

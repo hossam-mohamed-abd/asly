@@ -82,7 +82,6 @@
   const trackForm = document.getElementById('inlineTrackForm');
   const ticketInput = document.getElementById('inlineTicketInput');
   const resultBox = document.getElementById('inlineTicketResult');
-  const demoBtn = document.getElementById('tryDemoTicketBtn');
 
   async function inspectTicketInline(rawCode) {
     const code = (rawCode || '').trim().toUpperCase();
@@ -176,14 +175,6 @@
     trackForm.addEventListener('submit', (e) => {
       e.preventDefault();
       inspectTicketInline(ticketInput.value);
-    });
-  }
-
-  if (demoBtn && ticketInput) {
-    demoBtn.addEventListener('click', () => {
-      const code = demoBtn.getAttribute('data-code') || 'MNT-2026-101';
-      ticketInput.value = code;
-      inspectTicketInline(code);
     });
   }
 

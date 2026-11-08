@@ -46,8 +46,8 @@ $storeNameEn = $settings['store_name_en'] ?: 'ASLY TECH STORE';
 $primaryPhone = $settings['primary_phone'] ?: '01015981677';
 $secondaryPhone = $settings['secondary_phone'] ?: '01154639718';
 $address = $en
-    ? ($settings['store_address_en'] ?: 'Sohag — Arab Republic of Egypt')
-    : ($settings['store_address'] ?: 'سوهاج — جمهورية مصر العربية');
+    ? ($settings['store_address_en'] ?: 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum')
+    : ($settings['store_address'] ?: 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا');
 $footerNote = $en
     ? ($settings['invoice_footer_note_en'] ?: 'All devices include ASLY TECH STORE certified hardware inspection & warranty.')
     : ($settings['invoice_footer_note'] ?: 'جميع الأجهزة تخضع لضمان الفحص والتجربة المعتمد من مركز أصلي ASLY TECH STORE.');

@@ -30,8 +30,8 @@ $aboutStory = $en
     ? (($settings['about_story_en'] ?? '') !== '' ? $settings['about_story_en'] : 'ASLY TECH STORE is an engineering-first technology studio and precision diagnostic lab built to set an uncompromising standard for hardware authenticity and transparent QR repair tracking.')
     : (($settings['about_story_ar'] ?? '') !== '' ? $settings['about_story_ar'] : 'أصلي تك ستور هو استوديو هندسي ومعمل فحص وصيانة دقيقة تأسس ليضع معياراً حقيقياً للثقة والأصالة، مع توثيق لحظي لكل مرحلة صيانة عبر نظام QR تفاعلي يحمي خصوصيتك.');
 $address = $en
-    ? (($settings['store_address_en'] ?? '') !== '' ? $settings['store_address_en'] : ($settings['store_address'] ?? 'Sohag — Egypt'))
-    : ($settings['store_address'] ?? 'سوهاج — جمهورية مصر العربية');
+    ? (($settings['store_address_en'] ?? '') !== '' ? $settings['store_address_en'] : ($settings['store_address'] ?? 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum'))
+    : ($settings['store_address'] ?? 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا');
 $hours = $en
     ? (($settings['working_hours_en'] ?? '') !== '' ? $settings['working_hours_en'] : ($settings['working_hours'] ?? 'Daily 11:00 AM – 11:00 PM'))
     : ($settings['working_hours'] ?? 'يومياً من ١١:٠٠ صباحاً حتى ١١:٠٠ مساءً');
@@ -392,10 +392,10 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
                 <span><?= e(t('lab_btn_scan_qr')) ?></span>
               </button>
 
-              <button type="button" class="demo-code-chip" id="tryDemoTicketBtn" data-code="MNT-2026-101">
-                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--gold-deep);"></i>
-                <span><?= e(t('lab_try_demo')) ?></span>
-              </button>
+              <a href="<?= e(appUrl('track.php?lang=' . currentLang())) ?>" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span><?= e(t('lab_btn_open_portal')) ?></span>
+              </a>
             </div>
 
             <!-- Instant Live AJAX Telemetry Preview Box -->

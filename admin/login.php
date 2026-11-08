@@ -88,14 +88,6 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
     .login-card-body {
       padding: 28px;
     }
-    .quick-demo-box {
-      margin-top: 20px;
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: #f6fbfb;
-      border: 1px dashed #bce3e6;
-      font-size: 0.82rem;
-    }
   </style>
 </head>
 <body>
@@ -138,21 +130,7 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
           </button>
         </form>
 
-        <div class="quick-demo-box">
-          <div style="font-weight:800;color:#1e293b;margin-bottom:8px;"><?= e(t('login_demo_hint')) ?></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-gold btn-sm" onclick="fillLogin('admin','admin123')">
-              <i class="fa-solid fa-user-shield"></i>
-              <span><?= e(t('login_demo_admin')) ?></span>
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="fillLogin('staff1','staff123')">
-              <i class="fa-solid fa-id-badge"></i>
-              <span><?= e(t('login_demo_staff')) ?></span>
-            </button>
-          </div>
-        </div>
-
-        <div style="text-align:center;margin-top:18px;">
+        <div style="text-align:center;margin-top:20px;">
           <a href="<?= e(appUrl('index.php')) ?>" style="font-size:0.86rem;color:#0d9499;font-weight:800;text-decoration:none;">
             <i class="fa-solid fa-arrow-<?= $en ? 'left' : 'right' ?>"></i>
             <span><?= e(t('login_back_store')) ?></span>
@@ -161,12 +139,5 @@ $storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($setting
       </div>
     </div>
   </div>
-
-  <script>
-    function fillLogin(u, p) {
-      document.getElementById('username').value = u;
-      document.getElementById('password').value = p;
-    }
-  </script>
 </body>
 </html>

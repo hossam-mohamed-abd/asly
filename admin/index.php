@@ -60,8 +60,8 @@ $jsConfig = [
         'nameAr' => $storeNameAr,
         'nameEn' => $storeNameEn,
         'address' => $en
-            ? ($settings['store_address_en'] ?: 'Sohag — Arab Republic of Egypt')
-            : ($settings['store_address'] ?: 'سوهاج — جمهورية مصر العربية'),
+            ? ($settings['store_address_en'] ?: 'Al-Souq St., In Front of Tersa Church, Tersa, Sinnuris, Faiyum')
+            : ($settings['store_address'] ?: 'الفيوم - سنورس - ترسا - شارع السوق أمام كنيسة ترسا'),
         'primaryPhone' => $settings['primary_phone'] ?: '01015981677',
         'secondaryPhone' => $settings['secondary_phone'] ?: '01154639718',
         'primaryWhatsapp' => normalizeWhatsappNumber($settings['primary_whatsapp'] ?: ($settings['primary_phone'] ?: '01015981677')),
@@ -303,7 +303,7 @@ $jsConfig = [
             </div>
 
             <form id="quickManualForm" style="display:flex;gap:8px;">
-              <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Or scan / type barcode here (e.g. ASLY-LAP-1001)...' : 'أو امسح بمسدس الباركود / اكتب الكود هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
+              <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Scan or enter product barcode / QR code...' : 'أو امسح بمسدس الباركود / اكتب كود المنتج هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
               <button type="submit" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> <?= $en ? 'Lookup' : 'فحص' ?></button>
             </form>
           </div>
@@ -886,8 +886,8 @@ $jsConfig = [
             </div>
 
             <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;">
-              <input type="email" id="testEmailRecipient" class="form-control" placeholder="test@example.com" style="max-width:280px;direction:ltr;">
-              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail"><i class="fa-solid fa-paper-plane"></i> <?= $en ? 'Send Test Stage Email' : 'إرسال بريد تجريبي الآن' ?></button>
+              <input type="email" id="testEmailRecipient" class="form-control" placeholder="email@domain.com" style="max-width:280px;direction:ltr;">
+              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail"><i class="fa-solid fa-paper-plane"></i> <?= $en ? 'Verify SMTP Delivery' : 'فحص اتصال البريد الإلكتروني' ?></button>
             </div>
           </div>
 

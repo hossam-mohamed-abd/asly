@@ -128,10 +128,10 @@ function t(string $key): string
         'marquee_4' => ['ar' => 'حماية كاملة للخصوصية ومسح تلقائي لبيانات التذكرة فور التسليم', 'en' => 'PRIVACY-FIRST AUTO-WIPE PROTOCOL UPON DELIVERY'],
 
         // Hero Collage
-        'hero_eyebrow' => ['ar' => '01 // هويتنا الهندسية • ASLY TECH STUDIO', 'en' => '01 // IDENTITY & LAB • ASLY TECH STUDIO'],
-        'hero_title_1' => ['ar' => 'حيث تلتقي', 'en' => 'WHERE PURE'],
-        'hero_title_2' => ['ar' => 'الأصالة التقنية', 'en' => 'HARDWARE CRAFT'],
-        'hero_title_3' => ['ar' => 'بالدقة الهندسية.', 'en' => 'MEETS PRECISION.'],
+        'hero_eyebrow' => ['ar' => 'هويتنا الهندسية • ASLY TECH STUDIO', 'en' => 'IDENTITY & LAB • ASLY TECH STUDIO'],
+        'hero_title_1' => ['ar' => 'حيث تلتقي', 'en' => 'Where Authentic'],
+        'hero_title_2' => ['ar' => 'الأصالة التقنية', 'en' => 'Hardware Craft'],
+        'hero_title_3' => ['ar' => 'بالدقة الهندسية.', 'en' => 'Meets Precision.'],
         'hero_subtitle' => [
             'ar' => 'أصلي تك ستور هو وجهتك الموثوقة للأجهزة الأصلية المفحوصة هندسياً ومعمل الصيانة الذكي المدعوم بنظام تتبع تفاعلي عبر رمز الـ QR لحظة بلحظة.',
             'en' => 'ASLY Tech Store is an engineering-led technology house and precision diagnostic studio — uniting certified authentic hardware with transparent, real-time QR repair tracking.'
@@ -181,11 +181,11 @@ function t(string $key): string
             'ar' => 'أدخل كود التذكرة المطبوع على إيصال الاستلام لعرض المرحلة الحالية فوراً داخل الصفحة، أو امسح كود الـ QR بالكاميرا لفتح سجل المحادثة الكامل مع المهندس.',
             'en' => 'Enter your receipt ticket code to preview live stage progress right here, or scan your printed QR sticker with your camera to open two-way engineer notes.'
         ],
-        'lab_input_ph' => ['ar' => 'اكتب كود التذكرة — مثال: MNT-2026-101', 'en' => 'Enter Ticket Code — e.g. MNT-2026-101'],
+        'lab_input_ph' => ['ar' => 'أدخل كود إيصال الصيانة المطبوع على الإيصال', 'en' => 'Enter the repair code printed on your receipt'],
         'lab_btn_instant' => ['ar' => 'فحص فوري للحالة', 'en' => 'Check Status Now'],
         'lab_btn_scan_qr' => ['ar' => 'مسح QR بالكاميرا', 'en' => 'Scan QR Receipt'],
+        'lab_btn_open_portal' => ['ar' => 'فتح بوابة متابعة الصيانة الكاملة', 'en' => 'Open Full Repair Portal'],
         'lab_btn_open_full' => ['ar' => 'فتح صفحة المحادثة والملاحظات الكاملة', 'en' => 'Open Full Interactive Ticket & Reply'],
-        'lab_try_demo' => ['ar' => 'جرّب كود تذكرة حي للتجربة: MNT-2026-101', 'en' => 'Test live demo ticket: MNT-2026-101'],
 
         // Social Universe & Direct Contact
         'social_eyebrow' => ['ar' => '05 // مجتمع أصلي ومنصات التواصل • CONNECT WITH US', 'en' => '05 // SOCIAL UNIVERSE • FOLLOW & CONNECT'],
@@ -276,12 +276,9 @@ function t(string $key): string
         // Login Page
         'login_title' => ['ar' => 'بوابة الإدارة ونقطة البيع والصيانة الذكية', 'en' => 'Smart POS, Inventory & Repair Management'],
         'login_user_lbl' => ['ar' => 'اسم المستخدم', 'en' => 'Username'],
-        'login_user_ph' => ['ar' => 'مثال: admin أو staff1', 'en' => 'e.g. admin or staff1'],
+        'login_user_ph' => ['ar' => 'أدخل اسم المستخدم', 'en' => 'Enter username'],
         'login_pass_lbl' => ['ar' => 'كلمة المرور', 'en' => 'Password'],
         'login_btn' => ['ar' => 'تسجيل الدخول للوحة التحكم', 'en' => 'Sign In to Dashboard'],
-        'login_demo_hint' => ['ar' => 'تجربة سريعة للحسابات الافتراضية:', 'en' => 'Quick Demo Sign-In Presets:'],
-        'login_demo_admin' => ['ar' => 'دخول كمدير (admin)', 'en' => 'Admin Account (admin)'],
-        'login_demo_staff' => ['ar' => 'دخول كموظف مبيعات (staff1)', 'en' => 'Sales Staff (staff1)'],
         'login_back_store' => ['ar' => 'العودة للصفحة الرئيسية', 'en' => 'Return to Public Website'],
     ];
 
