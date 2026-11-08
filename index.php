@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/seo_meta.php';
 
 $pdo = Database::getConnection();
 $settings = getAllSettings($pdo);
@@ -40,9 +40,9 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= e($en ? "{$storeNameEn} — Authentic Tech Studio & QR Repair Lab" : "{$storeNameAr} | {$storeNameEn} — استوديو التقنية ومعمل الصيانة الذكي") ?></title>
-  <meta name="description" content="<?= e($tagline) ?>">
+  <?= renderPublicSeoHead($settings, $socialPlatforms, ['page' => 'home']) ?>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
+  <link rel="apple-touch-icon" href="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css')) ?>">
 </head>
@@ -160,17 +160,15 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
         
         <div class="collage-main-arch" data-parallax="-10">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="ASLY Sunlit Architectural Studio">
+          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'ASLY Tech Store Showroom in Tersa, Sinnuris, Faiyum' : 'معرض أصلي تك ستور في ترسا - سنورس - الفيوم') ?>" fetchpriority="high" decoding="async">
         </div>
 
-        
         <div class="collage-sub-chamfer" data-parallax="16">
-          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="Precision Tech Craft">
+          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Authentic Tech Accessories at ASLY' : 'أجهزة لابتوب وإكسسوارات أصلية مفحوصة في أصلي تك ستور') ?>" decoding="async">
         </div>
 
-        
         <div class="collage-top-pill" data-parallax="-18">
-          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="ASLY Diagnostic Engineer">
+          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Precision Board-Level Laptop & Mobile Repair Lab in Faiyum' : 'معمل صيانة اللابتوب والهواتف الدقيقة في أصلي تك ستور بالفيوم') ?>" decoding="async">
         </div>
 
         
@@ -249,7 +247,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
         
         <div class="mosaic-card mosaic-photo-tall reveal-up">
-          <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg')) ?>" alt="ASLY Everyday Experience">
+          <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg')) ?>" alt="<?= e($en ? 'Certified Smartphones and Genuine Tech Culture at ASLY Faiyum' : 'أجهزة أصلية مفحوصة هندسياً في مركز أصلي تك ستور بالفيوم') ?>" loading="lazy" decoding="async">
           <div class="mosaic-photo-caption">
             <span><i class="fa-solid fa-certificate" style="color: var(--teal-deep); margin-inline-end: 6px;"></i> <?= $en ? 'Authentic Hardware Culture' : 'ثقافة التقنية الأصلية' ?></span>
             <span style="font-family: var(--font-mono); color: var(--gold-deep);">100%</span>
@@ -305,7 +303,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
       <div class="craft-accordion-deck reveal-up">
         <div class="craft-slice active">
-          <img src="<?= e(appUrl('assets/images/lookbook/hero-1.jpg')) ?>" alt="Workstations" class="craft-slice-img">
+          <img src="<?= e(appUrl('assets/images/lookbook/hero-1.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Workstations in Faiyum' : 'لابتوبات ووركستيشن معتمدة في أصلي تك ستور الفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">01 // LAB</span>
@@ -317,7 +315,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </div>
 
         <div class="craft-slice">
-          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="Flagship Smartphones" class="craft-slice-img">
+          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Flagship Smartphones in Sinnuris and Tersa Faiyum' : 'هواتف ذكية أصلية في سنورس وترسا بالفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">02 // MOBILE</span>
@@ -329,7 +327,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </div>
 
         <div class="craft-slice">
-          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="Precision Repair Lab" class="craft-slice-img">
+          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Board-Level Laptop and Mobile Repair Lab with QR Tracking' : 'صيانة لابتوب وموبايلات احترافية بالـ QR في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">03 // QR REPAIR</span>
@@ -341,7 +339,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </div>
 
         <div class="craft-slice">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="Studio Ecosystem" class="craft-slice-img">
+          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'Smartwatches and Original Audio Accessories at ASLY Tech Store' : 'ساعات ذكية وإكسسوارات أصلية في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">04 // ECOSYSTEM</span>
@@ -605,14 +603,20 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
       </div>
 
       <div class="faq-list">
-        <?php for ($q = 1; $q <= 3; $q++): ?>
+        <?php for ($q = 1; $q <= 6; $q++):
+            $ansText = $q === 4
+                ? ($en
+                    ? "{$storeNameEn} is located at {$address}. Studio hours: {$hours}."
+                    : "يقع مقر {$storeNameAr} في {$address}. مواعيد استقبال العملاء: {$hours}.")
+                : t("faq_a{$q}");
+        ?>
           <div class="faq-item <?= $q === 1 ? 'open' : '' ?>">
             <button type="button" class="faq-trigger">
               <span><?= e(t("faq_q{$q}")) ?></span>
               <span class="faq-toggle-ico"><i class="fa-solid fa-plus"></i></span>
             </button>
             <div class="faq-answer" style="<?= $q === 1 ? 'max-height: 240px;' : '' ?>">
-              <div class="faq-answer-inner"><?= e(t("faq_a{$q}")) ?></div>
+              <div class="faq-answer-inner"><?= e($ansText) ?></div>
             </div>
           </div>
         <?php endfor; ?>

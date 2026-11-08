@@ -10,3 +10,29 @@ DirectoryIndex index.php
         Deny from all
     </IfModule>
 </FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^robots\.txt$ seo.php?doc=robots [L,QSA]
+    RewriteRule ^sitemap\.xml$ seo.php?doc=sitemap [L,QSA]
+    RewriteRule ^llms\.txt$ seo.php?doc=llms [L,QSA]
+    RewriteRule ^llms-full\.txt$ seo.php?doc=llms-full [L,QSA]
+    RewriteRule ^ai\.json$ seo.php?doc=ai-json [L,QSA]
+    RewriteRule ^\.well-known/ai-plugin\.json$ seo.php?doc=ai-json [L,QSA]
+    RewriteRule ^site\.webmanifest$ seo.php?doc=manifest [L,QSA]
+</IfModule>
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 365 days"
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+</IfModule>

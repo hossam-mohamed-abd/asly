@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/seo_meta.php';
 
 $pdo = Database::getConnection();
 $settings = getAllSettings($pdo);
+$socialPlatforms = getSocialPlatforms($settings);
 $stages = getMaintenanceStages();
 $en = isEn();
 $otherLang = $en ? 'ar' : 'en';
@@ -52,7 +53,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= e(t('track_page_title')) ?> | <?= e($displayStore) ?></title>
+  <?= renderPublicSeoHead($settings, $socialPlatforms, ['page' => 'track', 'noindex' => ($code !== '')]) ?>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css')) ?>">

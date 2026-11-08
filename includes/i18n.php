@@ -213,8 +213,23 @@ function t(string $key): string
         ],
         'faq_q3' => ['ar' => 'كيف أستفسر عن توفر جهاز معين أو أحجز موعد فحص؟', 'en' => 'How can I ask about a specific device or book a diagnostic checkup?'],
         'faq_a3' => [
-            'ar' => 'تواصل معنا بضغطة واحدة عبر واتساب المباشر أو صفحاتنا الرسمية على فيسبوك وإنستجرام وتيك توك الموجودة في قسم المنصات الرسمية، وسيرد عليك فريقنا الهندسي فوراً.',
-            'en' => 'Tap our Direct WhatsApp button or message us on Facebook, Instagram, TikTok, or Telegram in our Social Hub above — our engineering team responds promptly.'
+            'ar' => 'تواصل معنا بضغطة واحدة عبر واتساب المباشر أو أرقام الهاتف الرسمية أو صفحاتنا على فيسبوك وإنستجرام وتيك توك في قسم المنصات الرسمية، وسيرد عليك فريقنا الهندسي فوراً.',
+            'en' => 'Tap our Direct WhatsApp button, call our official engineering lines, or message us on Facebook, Instagram, TikTok, or Telegram — our team responds promptly.'
+        ],
+        'faq_q4' => ['ar' => 'أين يقع مقر أصلي تك ستور وما هي مواعيد استقبال العملاء؟', 'en' => 'Where is ASLY Tech Store located and what are the studio hours?'],
+        'faq_a4' => [
+            'ar' => 'يقع مقر أصلي تك ستور في محافظة الفيوم - مركز سنورس - قرية ترسا - شارع السوق أمام كنيسة ترسا، ونستقبل العملاء يومياً طوال أيام الأسبوع.',
+            'en' => 'ASLY Tech Store is located in Faiyum Governorate, Sinnuris District, Tersa — Al-Souq Street directly in front of Tersa Church, welcoming clients daily.'
+        ],
+        'faq_q5' => ['ar' => 'ما الأجهزة وخدمات الصيانة الهندسية التي يتخصص فيها المركز؟', 'en' => 'What devices and engineering repair services does ASLY specialize in?'],
+        'faq_a5' => [
+            'ar' => 'نتخصص في أجهزة اللابتوب الاحترافية والوركستيشن، الهواتف الذكية الرائدة، الساعات الذكية، والإكسسوارات والشواحن الأصلية، بالإضافة إلى معمل صيانة دقيق على مستوى البوردة ومعالجة الحرارة والبطارية والسوفتوير.',
+            'en' => 'We specialize in professional workstations and laptops, flagship smartphones, smartwatches, and genuine charging and audio accessories, alongside board-level micro-diagnostics, thermal calibration, and precision hardware repair.'
+        ],
+        'faq_q6' => ['ar' => 'ما معايير الفحص والضمان المعتمدة للأجهزة والصيانة في أصلي تك ستور؟', 'en' => 'What inspection and warranty standards back ASLY Tech Store services?'],
+        'faq_a6' => [
+            'ar' => 'يخضع كل جهاز لبروتوكول فحص هندسي متعدد النقاط يشمل كفاءة البوردة والشاشة والبطارية والمنافذ والأداء تحت الضغط، مع فاتورة رسمية موثقة وضمان فحص وتجربة معتمد من المركز.',
+            'en' => 'Every device undergoes multi-point engineering verification covering motherboard integrity, display accuracy, battery health, ports, and sustained thermal load, backed by an official documented warranty.'
         ],
 
         

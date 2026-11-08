@@ -74,6 +74,7 @@ $jsConfig = [
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
   <title><?= $en ? 'Smart Dashboard' : 'لوحة التحكم الذكية' ?> | <?= e($displayStore) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
@@ -866,6 +867,77 @@ $jsConfig = [
             <div class="form-group">
               <label><?= $en ? 'Invoice Warranty Footer Note' : 'نص الضمان أسفل الفاتورة' ?></label>
               <input type="text" name="invoice_footer_note" id="set_invoice_footer_note" class="form-control">
+            </div>
+          </div>
+
+          <div style="background:linear-gradient(135deg,#fffbf0,#effafa);padding:20px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:22px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+              <div>
+                <strong style="color:var(--db-teal-800);font-size:0.98rem;"><i class="fa-solid fa-magnifying-glass-chart"></i> <?= $en ? 'SEO & AI Answer Engine Optimization (Google, ChatGPT, Gemini, Perplexity)' : 'تهيئة محركات البحث (SEO) والظهور في إجابات الذكاء الاصطناعي (ChatGPT / Gemini / Perplexity)' ?></strong>
+                <div style="font-size:0.8rem;color:var(--db-muted);"><?= $en ? 'Controls Google meta tags, Schema.org Knowledge Graph, and live llms.txt / ai.json feeds read by AI assistants.' : 'يتحكم مباشرة في بيانات جوجل وخريطة المعرفة Schema.org وملفات llms.txt و ai.json التي تقرأها محركات الذكاء الاصطناعي لترشيح المركز.' ?></div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a href="<?= e(appUrl('llms.txt')) ?>" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-robot"></i> llms.txt</a>
+                <a href="<?= e(appUrl('llms-full.txt')) ?>" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-brain"></i> llms-full.txt</a>
+                <a href="<?= e(appUrl('ai.json')) ?>" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-code"></i> ai.json</a>
+                <a href="<?= e(appUrl('sitemap.xml')) ?>" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-sitemap"></i> sitemap.xml</a>
+                <a href="<?= e(appUrl('robots.txt')) ?>" target="_blank" class="btn btn-ghost btn-sm"><i class="fa-solid fa-file-shield"></i> robots.txt</a>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label><?= $en ? 'SEO Title (Arabic)' : 'عنوان الموقع في بحث جوجل (عربي)' ?></label>
+                <input type="text" name="seo_title_ar" id="set_seo_title_ar" class="form-control">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'SEO Title (English)' : 'عنوان الموقع في بحث جوجل (إنجليزي)' ?></label>
+                <input type="text" name="seo_title_en" id="set_seo_title_en" class="form-control" style="direction:ltr;">
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label><?= $en ? 'SEO Meta Description (Arabic)' : 'وصف الموقع في نتائج جوجل والسوشيال (عربي)' ?></label>
+                <textarea name="seo_description_ar" id="set_seo_description_ar" rows="2" class="form-control"></textarea>
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'SEO Meta Description (English)' : 'وصف الموقع في نتائج جوجل والسوشيال (إنجليزي)' ?></label>
+                <textarea name="seo_description_en" id="set_seo_description_en" rows="2" class="form-control" style="direction:ltr;"></textarea>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label><?= $en ? 'AI Recommendation Summary (Arabic — Fed to ChatGPT / Gemini / Perplexity)' : 'الملخص المرجعي لمحركات الذكاء الاصطناعي (عربي — يُقرأ في llms.txt و Schema)' ?></label>
+                <textarea name="seo_ai_summary_ar" id="set_seo_ai_summary_ar" rows="3" class="form-control"></textarea>
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'AI Recommendation Summary (English — Fed to ChatGPT / Gemini / Perplexity)' : 'الملخص المرجعي لمحركات الذكاء الاصطناعي (إنجليزي)' ?></label>
+                <textarea name="seo_ai_summary_en" id="set_seo_ai_summary_en" rows="3" class="form-control" style="direction:ltr;"></textarea>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label><?= $en ? 'SEO Keywords (Arabic)' : 'الكلمات المفتاحية للبحث المحلي (عربي)' ?></label>
+                <input type="text" name="seo_keywords_ar" id="set_seo_keywords_ar" class="form-control">
+              </div>
+              <div class="form-group">
+                <label><?= $en ? 'SEO Keywords (English)' : 'الكلمات المفتاحية (إنجليزي)' ?></label>
+                <input type="text" name="seo_keywords_en" id="set_seo_keywords_en" class="form-control" style="direction:ltr;">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Google Search Console Verification Code</label>
+                <input type="text" name="google_site_verification" id="set_google_site_verification" class="form-control" placeholder="google-site-verification token" style="direction:ltr;">
+              </div>
+              <div class="form-group">
+                <label>Bing Webmaster / Copilot Verification Code</label>
+                <input type="text" name="bing_site_verification" id="set_bing_site_verification" class="form-control" placeholder="msvalidate.01 token" style="direction:ltr;">
+              </div>
             </div>
           </div>
 

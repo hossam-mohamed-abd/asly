@@ -67,6 +67,7 @@ $paymentLabels = $en
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
   <title><?= $invoice ? e((string)$invoice['invoice_number']) : e(t('inv_not_found')) ?> | <?= e($storeNameEn) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
