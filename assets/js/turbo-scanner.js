@@ -12,6 +12,8 @@
         const z = window.zbarWasm;
         const sc = await z.getDefaultScanner();
         sc.enableCache(false);
+        sc.setConfig(z.ZBarSymbolType.ZBAR_UPCA, z.ZBarConfigType.ZBAR_CFG_ENABLE, 1);
+        sc.setConfig(z.ZBarSymbolType.ZBAR_UPCE, z.ZBarConfigType.ZBAR_CFG_ENABLE, 1);
         sc.setConfig(0, z.ZBarConfigType.ZBAR_CFG_TEST_INVERTED, 1);
         sc.setConfig(0, z.ZBarConfigType.ZBAR_CFG_X_DENSITY, 1);
         sc.setConfig(0, z.ZBarConfigType.ZBAR_CFG_Y_DENSITY, 1);

@@ -24,9 +24,11 @@ if ($method === 'GET') {
         $where[] = 'quantity > 0';
     }
     if ($search !== '') {
-        $where[] = '(name LIKE ? OR COALESCE(name_en, \'\') LIKE ? OR barcode LIKE ? OR brand LIKE ? OR specs LIKE ?)';
+        $searchAlt = (ctype_digit($search) && ltrim($search, '0') !== '') ? ltrim($search, '0') : $search;
+        $where[] = '(name LIKE ? OR COALESCE(name_en, \'\') LIKE ? OR barcode LIKE ? OR barcode LIKE ? OR brand LIKE ? OR specs LIKE ?)';
         $like = '%' . $search . '%';
-        array_push($params, $like, $like, $like, $like, $like);
+        $likeAlt = '%' . $searchAlt . '%';
+        array_push($params, $like, $like, $like, $likeAlt, $like, $like);
     }
 
     $sql = 'SELECT * FROM products';
@@ -118,8 +120,20 @@ if ($method === 'POST') {
             $codeType = 'qr';
         }
 
-        $dupStmt = $pdo->prepare("SELECT id, name FROM products WHERE barcode = ? AND id != ? LIMIT 1");
-        $dupStmt->execute([$barcode, $id]);
+        $dupVariants = [$barcode];
+        if (ctype_digit($barcode)) {
+            $coreDigits = ltrim($barcode, '0');
+            if ($coreDigits !== '') {
+                foreach ([$coreDigits, '0' . $coreDigits, str_pad($coreDigits, 12, '0', STR_PAD_LEFT), str_pad($coreDigits, 13, '0', STR_PAD_LEFT)] as $dv) {
+                    if (!in_array($dv, $dupVariants, true)) {
+                        $dupVariants[] = $dv;
+                    }
+                }
+            }
+        }
+        $placeholders = implode(',', array_fill(0, count($dupVariants), '?'));
+        $dupStmt = $pdo->prepare("SELECT id, name, barcode FROM products WHERE barcode IN ({$placeholders}) AND id != ? LIMIT 1");
+        $dupStmt->execute(array_merge($dupVariants, [$id]));
         $dup = $dupStmt->fetch();
         if ($dup) {
             jsonResponse([

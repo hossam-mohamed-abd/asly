@@ -10,6 +10,7 @@ function extractCodeFromPossibleUrl(string $raw): string
     if ($val === '') {
         return '';
     }
+    $val = preg_replace('/^\](?:E0|E4|C0|C1|Q1|Q3|d2)/', '', $val) ?? $val;
     if (stripos($val, 'code=') !== false) {
         $parts = parse_url($val);
         if (!empty($parts['query'])) {
@@ -22,7 +23,7 @@ function extractCodeFromPossibleUrl(string $raw): string
             return trim(rawurldecode($m[1]));
         }
     }
-    return $val;
+    return trim($val);
 }
 
 function mapArabicKeymapToAscii(string $raw): string
@@ -48,6 +49,37 @@ function mapArabicKeymapToAscii(string $raw): string
     return strtr($str, $map);
 }
 
+function expandBarcodeCandidates(array $seeds): array
+{
+    $out = [];
+    $add = static function (string $v) use (&$out): void {
+        if ($v !== '' && !in_array($v, $out, true)) {
+            $out[] = $v;
+        }
+    };
+
+    foreach ($seeds as $seed) {
+        $add($seed);
+        $digitsCompact = preg_replace('/\s+/', '', $seed) ?? $seed;
+        $add($digitsCompact);
+
+        if ($digitsCompact !== '' && ctype_digit($digitsCompact)) {
+            $core = ltrim($digitsCompact, '0');
+            if ($core !== '') {
+                $add($core);
+                $add('0' . $core);
+                $add('00' . $core);
+                foreach ([8, 12, 13, 14] as $gtinLen) {
+                    if (strlen($core) < $gtinLen) {
+                        $add(str_pad($core, $gtinLen, '0', STR_PAD_LEFT));
+                    }
+                }
+            }
+        }
+    }
+    return $out;
+}
+
 $user = requireLoginApi();
 $pdo = Database::getConnection();
 $action = $_GET['action'] ?? '';
@@ -67,15 +99,17 @@ if ($action === 'lookup') {
         jsonResponse(['ok' => false, 'error' => 'الكود الممسوح فارغ.'], 400);
     }
 
-    $candidates = [];
+    $seeds = [];
     $primary = extractCodeFromPossibleUrl($rawInput);
     if ($primary !== '') {
-        $candidates[] = $primary;
+        $seeds[] = $primary;
     }
     $asciiConverted = extractCodeFromPossibleUrl(mapArabicKeymapToAscii($rawInput));
-    if ($asciiConverted !== '' && !in_array($asciiConverted, $candidates, true)) {
-        $candidates[] = $asciiConverted;
+    if ($asciiConverted !== '' && !in_array($asciiConverted, $seeds, true)) {
+        $seeds[] = $asciiConverted;
     }
+
+    $candidates = expandBarcodeCandidates($seeds);
 
     $product = false;
     $matchedCode = $primary;
@@ -86,7 +120,7 @@ if ($action === 'lookup') {
         $row = $stmt->fetch();
         if ($row) {
             $product = $row;
-            $matchedCode = $cand;
+            $matchedCode = (string)$row['barcode'];
             break;
         }
     }
@@ -107,10 +141,17 @@ if ($action === 'lookup') {
             }
         }
 
+        $displayCode = $primary;
+        if ($asciiConverted !== '' && preg_match('/[\x{0600}-\x{06FF}]/u', $primary)) {
+            $displayCode = strtoupper($asciiConverted);
+        } elseif (strlen($displayCode) === 13 && str_starts_with($displayCode, '0') && ctype_digit($displayCode)) {
+            $displayCode = substr($displayCode, 1);
+        }
+
         jsonResponse([
             'ok' => true,
             'found' => false,
-            'scanned_code' => $asciiConverted !== '' && preg_match('/[\x{0600}-\x{06FF}]/u', $primary) ? strtoupper($asciiConverted) : $primary,
+            'scanned_code' => $displayCode,
         ]);
     }
 
