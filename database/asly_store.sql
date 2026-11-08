@@ -1,6 +1,7 @@
 -- ============================================================
 -- ASLY | أصلي TECH STORE - Complete MySQL Database Schema & Seed
 -- Compatible with XAMPP (MySQL / MariaDB) & phpMyAdmin
+-- Bilingual (Arabic + English) • Dual-Image Lookbook Catalog
 -- Charset: utf8mb4 / Collation: utf8mb4_unicode_ci
 -- ============================================================
 
@@ -55,19 +56,23 @@ CREATE TABLE IF NOT EXISTS `contact_channels` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- 4. Products Table (Inventory, 3-Tier Pricing, Barcode/QR)
+-- 4. Products Table (Bilingual + Dual Hover Images + 3-Tier Pricing)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `products` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `barcode` VARCHAR(100) NOT NULL,
   `code_type` VARCHAR(20) NOT NULL DEFAULT 'qr',
   `name` VARCHAR(200) NOT NULL,
+  `name_en` VARCHAR(200) DEFAULT NULL,
   `category` VARCHAR(30) NOT NULL DEFAULT 'laptops',
   `condition_status` VARCHAR(20) NOT NULL DEFAULT 'new',
   `brand` VARCHAR(80) DEFAULT NULL,
   `specs` TEXT DEFAULT NULL,
+  `specs_en` TEXT DEFAULT NULL,
   `description` TEXT DEFAULT NULL,
+  `description_en` TEXT DEFAULT NULL,
   `image_path` VARCHAR(255) DEFAULT NULL,
+  `secondary_image_path` VARCHAR(255) DEFAULT NULL,
   `purchase_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   `min_sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
@@ -223,31 +228,36 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- SEED DATA: Default Accounts, Brand Identity, Sample Catalog
+-- SEED DATA: Default Accounts, Bilingual Identity & Lookbook Catalog
 -- ============================================================
 
 -- Default Users:
--- 1) admin / admin123  (Admin - م. حسام محمد)
+-- 1) admin / admin123   (Admin - م. حسام محمد)
 -- 2) ramadan / admin123 (Admin - م. رمضان سلام)
--- 3) staff1 / staff123 (Staff Employee - موظف المبيعات)
+-- 3) staff1 / staff123  (Staff Employee - موظف المبيعات)
 INSERT IGNORE INTO `users` (`id`, `full_name`, `username`, `password_hash`, `role`, `phone`, `is_active`) VALUES
 (1, 'م. حسام محمد', 'admin', '$2y$12$jBd7WV5q5n2oxJwsLwmnWumXxQ/XFovzZi3XTFZXfT9UDXKNPj3ai', 'admin', '01015981677', 1),
 (2, 'م. رمضان سلام', 'ramadan', '$2y$12$jBd7WV5q5n2oxJwsLwmnWumXxQ/XFovzZi3XTFZXfT9UDXKNPj3ai', 'admin', '01154639718', 1),
 (3, 'موظف المبيعات والاستقبال', 'staff1', '$2y$12$UkWLoTXD2hP4D4Kl/0Rb1OsusUMq5LYO0IH3QmLk69XdN3U0ZsZOi', 'staff', '01015981677', 1);
 
--- Default Brand & Store Settings (from Official Banner)
+-- Default Bilingual Brand & Store Settings
 INSERT IGNORE INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('store_name_ar', 'أصلي تك ستور'),
 ('store_name_en', 'ASLY TECH STORE'),
-('store_tagline', 'المركز المتكامل لبيع وصيانة اللابتوبات والهواتف الذكية والأجهزة القابلة للارتداء والإكسسوارات الأصلية'),
-('founders_line', 'إشراف وإدارة: م. حسام محمد (Eng. Hossam Mohamed)  |  م. رمضان سلام (Eng. Ramadan Sallam)'),
+('store_tagline', 'المركز المتكامل لبيع وصيانة اللابتوبات والهواتف الذكية والساعات والإكسسوارات الأصلية'),
+('store_tagline_en', 'Curated Laptops, Flagship Smartphones, Original Accessories & Precision QR-Tracked Repair Lab'),
+('founders_line', 'إشراف وإدارة: م. حسام محمد (Eng. Hossam Mohamed)  •  م. رمضان سلام (Eng. Ramadan Sallam)'),
+('founders_line_en', 'Managed & Supervised by Eng. Hossam Mohamed  •  Eng. Ramadan Sallam'),
 ('primary_whatsapp', '201015981677'),
 ('primary_phone', '01015981677'),
 ('secondary_phone', '01154639718'),
-('store_address', 'سوهاج - جمهورية مصر العربية'),
-('working_hours', 'يومياً من 11:00 صباحاً حتى 11:00 مساءً'),
+('store_address', 'سوهاج — جمهورية مصر العربية'),
+('store_address_en', 'Sohag — Arab Republic of Egypt'),
+('working_hours', 'يومياً من ١١:٠٠ صباحاً حتى ١١:٠٠ مساءً'),
+('working_hours_en', 'Daily from 11:00 AM to 11:00 PM'),
 ('google_maps_url', ''),
 ('invoice_footer_note', 'جميع الأجهزة تخضع لضمان الفحص والتجربة المعتمد من مركز أصلي ASLY TECH STORE. يرجى الاحتفاظ بالفاتورة عند المراجعة.'),
+('invoice_footer_note_en', 'All devices include ASLY TECH STORE certified hardware inspection & warranty. Please retain this invoice for service.'),
 ('public_base_url', ''),
 ('smtp_enabled', '0'),
 ('smtp_host', 'smtp.gmail.com'),
@@ -265,72 +275,91 @@ INSERT IGNORE INTO `contact_channels` (`id`, `channel_type`, `label`, `value`, `
 (3, 'whatsapp', 'واتساب المبيعات والاستفسار عن الأسعار', '01015981677', 'https://wa.me/201015981677', 3, 1),
 (4, 'whatsapp', 'واتساب قسم الصيانة والدعم الفني', '01154639718', 'https://wa.me/201154639718', 4, 1);
 
--- Sample Showcase Products (3-tier pricing: purchase_price, sell_price, min_sell_price)
+-- Curated Dual-Image Showcase Products (3-tier pricing hidden on public storefront!)
 INSERT IGNORE INTO `products` (
-  `id`, `barcode`, `code_type`, `name`, `category`, `condition_status`, `brand`,
-  `specs`, `description`, `image_path`,
+  `id`, `barcode`, `code_type`, `name`, `name_en`, `category`, `condition_status`, `brand`,
+  `specs`, `specs_en`, `description`, `description_en`,
+  `image_path`, `secondary_image_path`,
   `purchase_price`, `sell_price`, `min_sell_price`,
   `quantity`, `low_stock_threshold`, `warranty_default`, `show_on_landing`, `is_featured`, `created_by`
 ) VALUES
 (
   1, 'ASLY-LAP-1001', 'qr',
-  'Dell Precision 5570 Workstation',
+  'لابتوب ديل ووركستيشن Dell Precision 5570',
+  'Dell Precision 5570 Studio Workstation',
   'laptops', 'open_box', 'Dell',
-  'Intel Core i7-12800H • RAM 32GB DDR5 • SSD 1TB NVMe • RTX A2000 8GB • 15.6" FHD+ InfinityEdge',
-  'حالة كسر زيرو استيراد الخارج فرز أول بحالة المصنع، مثالي للمهندسين والمونتاج والتصميم الثقيل مع شاحن أصلي.',
-  'uploads/products/sample-laptop.jpg',
+  'Core i7-12800H • رام 32GB DDR5 • هارد 1TB NVMe • كارت RTX A2000 8GB • شاشة 15.6" InfinityEdge',
+  'Intel Core i7-12800H • 32GB DDR5 RAM • 1TB NVMe SSD • NVIDIA RTX A2000 8GB • 15.6" FHD+ InfinityEdge',
+  'حالة كسر الزيرو بحالة المصنع، مفحوص هندسياً بالكامل ومثالي للتصميم الهندسي والمونتاج والبرمجة مع الشاحن الأصلي.',
+  'Pristine open-box workstation engineered for 3D rendering, CAD, and heavy creative workflows — includes genuine charger.',
+  'uploads/products/laptop-studio.jpg', 'uploads/products/laptop-lifestyle.jpg',
   38500.00, 44500.00, 42800.00,
   3, 1, 'ضمان 3 شهور استبدال وتجربة', 1, 1, 1
 ),
 (
   2, '6941812705421', 'barcode',
-  'iPhone 15 Pro Max - 256GB Natural Titanium',
+  'آيفون 15 برو ماكس ٢٥٦ جيجا — تيتانيوم طبيعي',
+  'iPhone 15 Pro Max — 256GB Natural Titanium',
   'mobiles', 'new', 'Apple',
-  '256GB NVMe • A17 Pro • شاشة 6.7" Super Retina XDR 120Hz • بطارية 100% • تيتانيوم طبيعي',
-  'نسخة أصلية متبرشمة بضمان دولي وتجربة كاملة داخل مركز أصلي تك ستور.',
-  'uploads/products/sample-mobile.jpg',
+  'مساحة 256GB • معالج A17 Pro • شاشة 6.7" ProMotion 120Hz • بطارية 100% • تيتانيوم طبيعي',
+  '256GB NVMe • A17 Pro Chip • 6.7" Super Retina XDR 120Hz • 48MP Pro Camera • Natural Titanium',
+  'نسخة أصلية متبرشمة بضمان دولي وتجربة كاملة داخل معرض أصلي تك ستور.',
+  'Factory-sealed authentic Natural Titanium flagship with international warranty and full showroom verification.',
+  'uploads/products/mobile-studio.jpg', 'uploads/products/mobile-lifestyle.jpg',
   54000.00, 59500.00, 58000.00,
   2, 1, 'ضمان سنة ضد عيوب الصناعة', 1, 1, 1
 ),
 (
   3, 'ASLY-ACC-3001', 'qr',
-  'سماعة رأس لاسلكية عازلة للضوضاء Studio ANC Pro',
-  'accessories', 'new', 'ASLY Selection',
-  'Active Noise Cancelling • بطارية 45 ساعة • Bluetooth 5.3 • مايك مزدوج للمكالمات • شحن سريع Type-C',
-  'صوت نقي فائق الجودة مع عزل ضوضاء احترافي وتصميم مريح لساعات العمل الطويلة.',
-  'uploads/products/sample-accessories.jpg',
+  'سماعة الرأس اللاسلكية العازلة للضوضاء Studio ANC Champagne',
+  'Studio ANC Wireless Over-Ear Headphones — Champagne Silver',
+  'accessories', 'new', 'ASLY Audio',
+  'عزل ضوضاء نشط ANC • بطارية ٤٥ ساعة • وسائد مريحة • بلوتوث 5.3 • شحن سريع USB-C',
+  'Active Noise Cancellation • 45-Hour Battery • Plush Memory Cushions • Bluetooth 5.3 • USB-C Fast Charge',
+  'تجربة صوتية استوديو فائقة النقاء مع عزل ضوضاء ذكي وتصميم أنيق باللون الفضي والذهبي الفاتح.',
+  'Pure spatial studio acoustics paired with featherlight champagne-silver anodized aluminum comfort for all-day focus.',
+  'uploads/products/headphones-studio.jpg', 'uploads/products/headphones-lifestyle.jpg',
   1350.00, 1950.00, 1750.00,
   8, 3, 'ضمان 6 شهور', 1, 1, 1
 ),
 (
   4, 'ASLY-WRB-4001', 'qr',
-  'ساعة ذكية Ultra Gold Edition AMOLED',
-  'wearables', 'new', 'Smart Watch',
-  'شاشة 2.1" AMOLED • مكالمات بلوتوث • مقاومة للماء IP68 • متابعة نبضات القلب والرياضة • إطار ذهبي معدني',
-  'ساعة ذكية فاخرة بإطار معدني واستيك إضافي هدية، متوافقة مع أندرويد وآيفون.',
-  'uploads/products/sample-wearable.jpg',
+  'ساعة ذكية Starlight Gold AMOLED Edition',
+  'Starlight Edition Smart Watch — Magnetic Link',
+  'wearables', 'new', 'ASLY Wearables',
+  'شاشة AMOLED ساطعة • مكالمات بلوتوث • مقاومة للماء IP68 • متابعة الصحة والرياضة • سوار ستارلايت فاخر',
+  'Always-On AMOLED Display • Bluetooth Calling • IP68 Water Resistant • Health & Fitness Suite • Starlight Band',
+  'ساعة ذكية أنيقة بإطار ستارلايت معدني وسوار مريح، متوافقة بسلاسة مع iOS وأندرويد.',
+  'Refined starlight finish with interchangeable magnetic and leather bands — seamless iOS and Android pairing.',
+  'uploads/products/watch-studio.jpg', 'uploads/products/watch-lifestyle.jpg',
   1100.00, 1650.00, 1450.00,
   6, 2, 'ضمان 6 شهور', 1, 1, 1
 ),
 (
-  5, 'ASLY-LAP-1002', 'qr',
-  'HP EliteBook 840 G8 Ultra-Slim',
-  'laptops', 'used', 'HP',
-  'Intel Core i5-1145G7 • RAM 16GB • SSD 512GB NVMe • شاشة 14" IPS FHD • بصمة وكيبورد مضيئة',
-  'لابتوب بيزنس خفيف وأنيق جداً من المعدن بالكامل، مفحوص بالكامل على أجهزة مركز أصلي.',
-  'uploads/products/sample-laptop.jpg',
-  14800.00, 17900.00, 16900.00,
-  4, 2, 'ضمان 3 شهور شامل الهاردوير', 1, 0, 1
+  5, 'ASLY-ACC-3002', 'qr',
+  'سماعة أذن لاسلكية AirPods Pure Acoustic',
+  'Pure Acoustic Wireless Earbuds with Charging Case',
+  'accessories', 'new', 'ASLY Audio',
+  'مايك مزدوج نقي للمكالمات • شحن لاسلكي • اقتران فوري • بطارية ٢٨ ساعة مع العلبة',
+  'Dual Beamforming Mics • Wireless Charging Case • Instant Pairing • 28-Hour Total Listening Time',
+  'صوت نقي للمكالمات والموسيقى بحجم مدمج وتصميم أبيض ناصع يناسب حركتك اليومية.',
+  'Crisp everyday calls and rich balanced audio in an ultra-clean pocketable charging case.',
+  'uploads/products/earbuds-studio.jpg', 'uploads/products/earbuds-lifestyle.jpg',
+  750.00, 1150.00, 980.00,
+  10, 3, 'ضمان 6 شهور', 1, 0, 1
 ),
 (
-  6, 'ASLY-MOB-2002', 'qr',
-  'Samsung Galaxy S23 Ultra 5G - 256GB',
-  'mobiles', 'used', 'Samsung',
-  'Snapdragon 8 Gen 2 • RAM 12GB • مساحة 256GB • قلم S-Pen • كاميرا 200MP • حالة الزيرو',
-  'مستعمل حالة كسر الزيرو بدون أي خدش، مفحوص شاشة وبطارية وبوردة بالكامل.',
-  'uploads/products/sample-mobile.jpg',
-  33000.00, 37500.00, 36200.00,
-  2, 1, 'ضمان شهر تجربة شاملة', 1, 0, 1
+  6, 'ASLY-ACC-3003', 'qr',
+  'باور بانك لاسلكي MagSafe بقوة ١٠٠٠٠ مللي أمبير مع ستاند',
+  'MagSafe 10,000mAh Magnetic Wireless Power Bank & Stand',
+  'accessories', 'new', 'ASLY Power',
+  'شحن لاسلكي MagSafe • شحن سريع PD 20W USB-C • شاشة رقمية للنسبة • مسند معدني مدمج',
+  'Snap-On MagSafe Wireless • 20W USB-C PD Fast Charge • Digital LED Battery Readout • Fold-Out Aluminum Kickstand',
+  'اشحن هاتفك لاسلكياً أثناء التنقل أو المكتب مع ستاند مدمج لمشاهدة مريحة وتصميم أبيض فائق النحافة.',
+  'Snap-and-go magnetic power bank with integrated desk kickstand and digital percentage display.',
+  'uploads/products/powerbank-studio.jpg', 'uploads/products/mobile-lifestyle.jpg',
+  680.00, 990.00, 880.00,
+  9, 3, 'ضمان 6 شهور استبدال', 1, 0, 1
 );
 
 -- Sample Active Maintenance Ticket so Admin & Customer QR Tracking can be tested immediately

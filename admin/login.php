@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Branded Admin & Staff Login Portal
+ * Bright Daylight Admin & Staff Login Portal (Bilingual EN + AR)
  */
 
 declare(strict_types=1);
@@ -15,11 +15,13 @@ if (currentUser() !== null) {
 
 $pdo = Database::getConnection();
 $settings = getAllSettings($pdo);
+$en = isEn();
+$otherLang = $en ? 'ar' : 'en';
 $error = '';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!verifyCsrf($_POST['csrf_token'] ?? '')) {
-        $error = 'انتهت صلاحية الجلسة، يرجى إعادة المحاولة.';
+        $error = $en ? 'Session expired, please try again.' : 'انتهت صلاحية الجلسة، يرجى إعادة المحاولة.';
     } else {
         $username = strtolower(trim((string)($_POST['username'] ?? '')));
         $password = (string)($_POST['password'] ?? '');
@@ -29,9 +31,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $account = $stmt->fetch();
 
         if (!$account || !password_verify($password, (string)$account['password_hash'])) {
-            $error = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+            $error = $en ? 'Invalid username or password.' : 'اسم المستخدم أو كلمة المرور غير صحيحة.';
         } elseif ((int)$account['is_active'] !== 1) {
-            $error = 'هذا الحساب معطل حالياً، يرجى مراجعة مدير المركز.';
+            $error = $en ? 'This account is currently disabled.' : 'هذا الحساب معطل حالياً، يرجى مراجعة مدير المركز.';
         } else {
             session_regenerate_id(true);
             $_SESSION['user_id'] = (int)$account['id'];
@@ -44,14 +46,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
-$storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
+$storeName = $en ? ($settings['store_name_en'] ?: 'ASLY TECH STORE') : ($settings['store_name_ar'] ?: 'أصلي تك ستور');
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?= e(currentLang()) ?>" dir="<?= e(htmlDir()) ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول | <?= e($storeNameAr) ?> - لوحة الإدارة</title>
+  <title><?= e(t('login_btn')) ?> | <?= e($storeName) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/dashboard.css')) ?>">
   <style>
@@ -61,41 +63,37 @@ $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(242, 199, 92, 0.16), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(11, 104, 109, 0.45), transparent 45%),
-        linear-gradient(135deg, #021a1c 0%, #043538 55%, #074f53 100%);
+      background: linear-gradient(135deg, #effafa 0%, #faf9f6 52%, #fffbf0 100%);
     }
     .login-card {
-      width: min(460px, 100%);
+      width: min(470px, 100%);
       background: #ffffff;
-      border-radius: 24px;
+      border-radius: 28px;
       overflow: hidden;
-      border: 2px solid rgba(212, 155, 39, 0.5);
-      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+      border: 1.5px solid #d5ecef;
+      box-shadow: 0 24px 60px rgba(20, 180, 184, 0.11);
     }
     .login-card-top {
-      background: linear-gradient(135deg, #032629, #06484c);
-      padding: 30px 28px 24px;
+      background: linear-gradient(135deg, #f3fcfc 0%, #ffffff 55%, #fffdf5 100%);
+      padding: 28px 28px 22px;
       text-align: center;
-      border-bottom: 4px solid #d49b27;
-      color: #ffffff;
+      border-bottom: 2px solid #e4b453;
     }
     .login-card-top img {
-      height: 62px;
+      height: 68px;
       margin: 0 auto 10px;
+      object-fit: contain;
     }
     .login-card-body {
       padding: 28px;
     }
     .quick-demo-box {
       margin-top: 20px;
-      padding: 14px;
-      border-radius: 12px;
-      background: #f3f9f9;
-      border: 1px dashed #b9d4d6;
-      font-size: 0.8rem;
-      color: #345255;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f6fbfb;
+      border: 1px dashed #bce3e6;
+      font-size: 0.82rem;
     }
   </style>
 </head>
@@ -103,13 +101,16 @@ $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
   <div class="login-shell">
     <div class="login-card">
       <div class="login-card-top">
-        <img src="<?= e(appUrl('assets/brand/logo-dark.svg')) ?>" alt="ASLY | أصلي">
-        <div style="font-size:0.9rem;color:#d6ecec;font-weight:700;">بوابة الإدارة ونقطة البيع والصيانة الذكية</div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+          <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">🌐 <?= e(t('lang_switch_label')) ?></a>
+        </div>
+        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
+        <div style="font-size:0.9rem;color:#475569;font-weight:700;"><?= e(t('login_title')) ?></div>
       </div>
 
       <div class="login-card-body">
         <?php if ($error !== ''): ?>
-          <div style="margin-bottom:16px;padding:12px 14px;border-radius:11px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:700;font-size:.88rem;">
+          <div style="margin-bottom:16px;padding:12px 14px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;font-weight:700;font-size:0.88rem;">
             ⚠️ <?= e($error) ?>
           </div>
         <?php endif; ?>
@@ -118,31 +119,31 @@ $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
           <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
 
           <div class="form-group" style="margin-bottom:16px;">
-            <label for="username">اسم المستخدم</label>
-            <input type="text" id="username" name="username" class="form-control" placeholder="مثال: admin أو staff1" required autofocus>
+            <label for="username"><?= e(t('login_user_lbl')) ?></label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="<?= e(t('login_user_ph')) ?>" required autofocus style="direction:ltr;">
           </div>
 
           <div class="form-group" style="margin-bottom:22px;">
-            <label for="password">كلمة المرور</label>
-            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            <label for="password"><?= e(t('login_pass_lbl')) ?></label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required style="direction:ltr;">
           </div>
 
-          <button type="submit" class="btn btn-gold" style="width:100%;padding:13px;font-size:1rem;">
-            تسجيل الدخول للوحة التحكم
+          <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
+            <?= e(t('login_btn')) ?>
           </button>
         </form>
 
         <div class="quick-demo-box">
-          <div style="font-weight:800;color:#043538;margin-bottom:8px;">بيانات الدخول الافتراضية (قابلة للتغيير من الإعدادات):</div>
+          <div style="font-weight:800;color:#1e293b;margin-bottom:8px;"><?= e(t('login_demo_hint')) ?></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button type="button" class="btn btn-teal btn-sm" onclick="fillLogin('admin','admin123')">دخول كمدير (admin)</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="fillLogin('staff1','staff123')">دخول كموظف مبيعات (staff1)</button>
+            <button type="button" class="btn btn-gold btn-sm" onclick="fillLogin('admin','admin123')"><?= e(t('login_demo_admin')) ?></button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="fillLogin('staff1','staff123')"><?= e(t('login_demo_staff')) ?></button>
           </div>
         </div>
 
         <div style="text-align:center;margin-top:18px;">
-          <a href="<?= e(appUrl('index.php')) ?>" style="font-size:.86rem;color:#074f53;font-weight:700;text-decoration:none;">
-            ← العودة لصفحة العرض الخارجية للعملاء
+          <a href="<?= e(appUrl('index.php')) ?>" style="font-size:0.86rem;color:#0d9499;font-weight:800;text-decoration:none;">
+            <?= $en ? '← ' : '→ ' ?><?= e(t('login_back_store')) ?>
           </a>
         </div>
       </div>

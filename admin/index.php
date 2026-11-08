@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Complete Unified Admin & Staff Dashboard
+ * Complete Unified Bright Daylight Admin & Staff Dashboard (Bilingual EN LTR + AR RTL)
  */
 
 declare(strict_types=1);
@@ -14,8 +14,9 @@ $pdo = Database::getConnection();
 $settings = getAllSettings($pdo);
 $stages = getMaintenanceStages();
 $catsMeta = getCategoryMeta();
+$en = isEn();
+$otherLang = $en ? 'ar' : 'en';
 
-// Quick server-side counts for badges & admin inventory capital
 $unreadMaintNotes = (int)$pdo->query("SELECT COALESCE(SUM(unread_customer_notes), 0) FROM maintenance_tickets")->fetchColumn();
 $activeMaintCount = (int)$pdo->query("SELECT COUNT(*) FROM maintenance_tickets")->fetchColumn();
 $lowStockCount = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE quantity <= low_stock_threshold")->fetchColumn();
@@ -42,10 +43,13 @@ if ($isAdmin) {
 
 $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
 $storeNameEn = $settings['store_name_en'] ?: 'ASLY TECH STORE';
+$displayStore = $en ? $storeNameEn : $storeNameAr;
 
 $jsConfig = [
     'baseUrl' => appBasePath(),
     'csrfToken' => csrfToken(),
+    'lang' => currentLang(),
+    'isEn' => $en,
     'user' => $user,
     'isAdmin' => $isAdmin,
     'inventoryStats' => $inventoryStats,
@@ -55,22 +59,26 @@ $jsConfig = [
     'store' => [
         'nameAr' => $storeNameAr,
         'nameEn' => $storeNameEn,
-        'address' => $settings['store_address'] ?: 'سوهاج - جمهورية مصر العربية',
+        'address' => $en
+            ? ($settings['store_address_en'] ?: 'Sohag — Arab Republic of Egypt')
+            : ($settings['store_address'] ?: 'سوهاج — جمهورية مصر العربية'),
         'primaryPhone' => $settings['primary_phone'] ?: '01015981677',
         'secondaryPhone' => $settings['secondary_phone'] ?: '01154639718',
         'primaryWhatsapp' => normalizeWhatsappNumber($settings['primary_whatsapp'] ?: ($settings['primary_phone'] ?: '01015981677')),
-        'footerNote' => $settings['invoice_footer_note'] ?: 'جميع الأجهزة تخضع لضمان الفحص والتجربة المعتمد من مركز أصلي ASLY TECH STORE.',
-        'logoDarkUrl' => appUrl('assets/brand/logo-dark.svg'),
-        'logoLightUrl' => appUrl('assets/brand/logo-light.svg'),
+        'footerNote' => $en
+            ? ($settings['invoice_footer_note_en'] ?: 'All devices include ASLY TECH STORE certified hardware inspection & warranty.')
+            : ($settings['invoice_footer_note'] ?: 'جميع الأجهزة تخضع لضمان الفحص والتجربة المعتمد من مركز أصلي ASLY TECH STORE.'),
+        'logoUrl' => appUrl('assets/brand/logo-transparent.png'),
+        'logoCardUrl' => appUrl('assets/brand/logo-card.jpg'),
     ],
 ];
 ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?= e(currentLang()) ?>" dir="<?= e(htmlDir()) ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم الذكية | <?= e($storeNameAr) ?></title>
+  <title><?= $en ? 'Smart Dashboard' : 'لوحة التحكم الذكية' ?> | <?= e($displayStore) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/css/dashboard.css')) ?>">
 </head>
@@ -78,75 +86,75 @@ $jsConfig = [
 
 <div class="app-layout">
 
-  <!-- Luxury Dark-Emerald & Gold Sidebar -->
+  <!-- Bright Daylight Frosted Sidebar -->
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-brand">
-      <img src="<?= e(appUrl('assets/brand/logo-dark.svg')) ?>" alt="ASLY | أصلي">
+      <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store">
       <span class="role-pill <?= $isAdmin ? 'role-admin' : 'role-staff' ?>">
-        <?= $isAdmin ? '👑 مدير النظام (Admin)' : '💼 موظف مبيعات (Staff)' ?>
+        <?= $isAdmin ? ($en ? '👑 System Admin' : '👑 مدير النظام (Admin)') : ($en ? '💼 Sales Staff' : '💼 موظف مبيعات (Staff)') ?>
       </span>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-label">التشغيل اليومي والمبيعات</div>
+      <div class="nav-section-label"><?= $en ? 'Daily Operations & Sales' : 'التشغيل اليومي والمبيعات' ?></div>
 
       <button type="button" class="side-btn active" data-tab="overview">
-        <span class="side-btn-left">📊 <?= $isAdmin ? 'المبيعات اليومية والأرباح' : 'ملخص المبيعات اليومية' ?></span>
+        <span class="side-btn-left">📊 <?= $isAdmin ? ($en ? 'Daily Sales & Profit' : 'المبيعات اليومية والأرباح') : ($en ? 'Daily Sales Summary' : 'ملخص المبيعات اليومية') ?></span>
       </button>
 
       <button type="button" class="side-btn" data-tab="quick-scanner">
-        <span class="side-btn-left">📷 كاشف السعر السريع</span>
-        <span style="font-size:.7rem;color:var(--db-gold-400);">أمام العميل</span>
+        <span class="side-btn-left">📷 <?= $en ? 'Quick Price Checker' : 'كاشف السعر السريع' ?></span>
+        <span style="font-size:0.7rem;color:var(--db-gold-600);font-weight:800;"><?= $en ? 'Client Safe' : 'أمام العميل' ?></span>
       </button>
 
       <button type="button" class="side-btn" data-tab="pos">
-        <span class="side-btn-left">🛒 نقطة البيع والفواتير</span>
-        <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-gold-500);color:#032224;">0</span>
+        <span class="side-btn-left">🛒 <?= $en ? 'POS & Invoicing' : 'نقطة البيع والفواتير' ?></span>
+        <span id="posCartBadge" class="badge-alert" style="display:none;background:var(--db-teal-700);color:#fff;">0</span>
       </button>
 
-      <div class="nav-section-label">المخزون والباركود / QR</div>
+      <div class="nav-section-label"><?= $en ? 'Inventory & QR/Barcode' : 'المخزون والباركود / QR' ?></div>
 
       <?php if ($isAdmin): ?>
         <button type="button" class="side-btn" data-tab="add-product">
-          <span class="side-btn-left">➕ إضافة منتج (اسكان / QR)</span>
+          <span class="side-btn-left">➕ <?= $en ? 'Add Product (Scan / QR)' : 'إضافة منتج (اسكان / QR)' ?></span>
         </button>
       <?php endif; ?>
 
       <button type="button" class="side-btn" data-tab="inventory">
-        <span class="side-btn-left">📦 المخزون والمنتجات</span>
+        <span class="side-btn-left">📦 <?= $en ? 'Inventory Catalog' : 'المخزون والمنتجات' ?></span>
         <?php if ($lowStockCount > 0): ?>
-          <span class="badge-alert" title="منتجات قاربت على النفاد"><?= $lowStockCount ?></span>
+          <span class="badge-alert" title="Low stock"><?= $lowStockCount ?></span>
         <?php endif; ?>
       </button>
 
-      <div class="nav-section-label">قسم الصيانة التفاعلي</div>
+      <div class="nav-section-label"><?= $en ? 'Interactive Repair Lab' : 'قسم الصيانة التفاعلي' ?></div>
 
       <button type="button" class="side-btn" data-tab="maintenance">
-        <span class="side-btn-left">🛠️ الصيانة وتتبع الـ QR</span>
+        <span class="side-btn-left">🛠️ <?= $en ? 'QR Repair Tickets' : 'الصيانة وتتبع الـ QR' ?></span>
         <span id="maintNavBadge" class="badge-alert" style="display:<?= $unreadMaintNotes > 0 ? 'inline-block' : 'none' ?>;">
-          <?= $unreadMaintNotes ?> جديد
+          <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
         </span>
       </button>
 
       <?php if ($isAdmin): ?>
-        <div class="nav-section-label">الإدارة والهوية</div>
+        <div class="nav-section-label"><?= $en ? 'Administration & Brand' : 'الإدارة والهوية' ?></div>
 
         <button type="button" class="side-btn" data-tab="staff">
-          <span class="side-btn-left">👥 الموظفون والصلاحيات</span>
+          <span class="side-btn-left">👥 <?= $en ? 'Staff & Permissions' : 'الموظفون والصلاحيات' ?></span>
         </button>
 
         <button type="button" class="side-btn" data-tab="settings">
-          <span class="side-btn-left">⚙️ الهوية وقنوات التواصل</span>
+          <span class="side-btn-left">⚙️ <?= $en ? 'Brand & Contact Channels' : 'الهوية وقنوات التواصل' ?></span>
         </button>
       <?php endif; ?>
     </nav>
 
     <div class="sidebar-footer">
       <div>
-        <strong style="display:block;color:#fff;"><?= e($user['full_name']) ?></strong>
-        <span style="font-size:.75rem;color:#9cc2c5;">@<?= e($user['username']) ?></span>
+        <strong style="display:block;color:var(--db-text);"><?= e($user['full_name']) ?></strong>
+        <span style="font-size:0.75rem;color:var(--db-muted);">@<?= e($user['username']) ?></span>
       </div>
-      <a href="<?= e(appUrl('admin/logout.php')) ?>" class="btn btn-danger btn-sm">خروج</a>
+      <a href="<?= e(appUrl('admin/logout.php')) ?>" class="btn btn-danger btn-sm"><?= $en ? 'Sign Out' : 'خروج' ?></a>
     </div>
   </aside>
 
@@ -158,17 +166,18 @@ $jsConfig = [
       <div class="topbar-title-wrap">
         <button type="button" class="mobile-menu-btn" id="btnMobileSidebar">☰</button>
         <div>
-          <h2 id="activePageTitle" style="margin:0;font-size:1.22rem;color:var(--db-teal-900);">
-            <?= $isAdmin ? 'لوحة المبيعات اليومية والأرباح' : 'ملخص المبيعات والتشغيل اليومي' ?>
+          <h2 id="activePageTitle" style="margin:0;font-size:1.2rem;color:var(--db-text);">
+            <?= $isAdmin ? ($en ? 'Daily Sales & Net Profit Overview' : 'لوحة المبيعات اليومية والأرباح') : ($en ? 'Daily Sales & Operations' : 'ملخص المبيعات والتشغيل اليومي') ?>
           </h2>
-          <span style="font-size:.78rem;color:var(--db-muted);"><?= e($storeNameAr) ?> • <?= date('Y-m-d') ?></span>
+          <span style="font-size:0.78rem;color:var(--db-muted);"><?= e($displayStore) ?> • <?= date('Y-m-d') ?></span>
         </div>
       </div>
 
       <div class="quick-bar-btns">
-        <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">📷 فحص سعر بالكاميرا</button>
-        <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">🧾 فاتورة بيع جديدة</button>
-        <a href="<?= e(appUrl('index.php')) ?>" target="_blank" class="btn btn-ghost btn-sm">🌐 اللاندينج بيدج</a>
+        <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">📷 <?= $en ? 'Price Scanner' : 'فحص سعر بالكاميرا' ?></button>
+        <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">🧾 <?= $en ? 'New Sale Invoice' : 'فاتورة بيع جديدة' ?></button>
+        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-ghost btn-sm">🌐 <?= e(t('lang_switch_label')) ?></a>
+        <a href="<?= e(appUrl('index.php')) ?>" target="_blank" class="btn btn-ghost btn-sm">🛍️ <?= $en ? 'Public Storefront' : 'اللاندينج بيدج' ?></a>
       </div>
     </header>
 
@@ -181,17 +190,17 @@ $jsConfig = [
         <div class="card" style="padding:16px 22px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <strong style="color:var(--db-teal-900);">عرض حسابات ومبيعات:</strong>
-              <button type="button" class="btn btn-teal btn-sm js-date-preset" data-preset="today">اليوم</button>
-              <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="yesterday">أمس</button>
-              <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="month">هذا الشهر</button>
+              <strong><?= $en ? 'Report Period:' : 'عرض حسابات ومبيعات:' ?></strong>
+              <button type="button" class="btn btn-teal btn-sm js-date-preset" data-preset="today"><?= $en ? 'Today' : 'اليوم' ?></button>
+              <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="yesterday"><?= $en ? 'Yesterday' : 'أمس' ?></button>
+              <button type="button" class="btn btn-ghost btn-sm js-date-preset" data-preset="month"><?= $en ? 'This Month' : 'هذا الشهر' ?></button>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <label style="font-size:.82rem;font-weight:700;">من:</label>
+              <label style="font-size:0.82rem;font-weight:700;"><?= $en ? 'From:' : 'من:' ?></label>
               <input type="date" id="repDateFrom" class="form-control" style="width:auto;padding:6px 10px;" value="<?= date('Y-m-d') ?>">
-              <label style="font-size:.82rem;font-weight:700;">إلى:</label>
+              <label style="font-size:0.82rem;font-weight:700;"><?= $en ? 'To:' : 'إلى:' ?></label>
               <input type="date" id="repDateTo" class="form-control" style="width:auto;padding:6px 10px;" value="<?= date('Y-m-d') ?>">
-              <button type="button" class="btn btn-gold btn-sm" id="btnLoadReport">تحديث الجرد</button>
+              <button type="button" class="btn btn-gold btn-sm" id="btnLoadReport"><?= $en ? 'Refresh' : 'تحديث الجرد' ?></button>
             </div>
           </div>
         </div>
@@ -201,60 +210,57 @@ $jsConfig = [
         <!-- Daily Sold Invoices Table -->
         <div class="card">
           <div class="card-header">
-            <h3>🧾 سجل الفواتير والقطع المباعة خلال الفترة المحددة</h3>
-            <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('pos')">+ إصدار فاتورة جديدة</button>
+            <h3>🧾 <?= $en ? 'Sales Invoices & Sold Items' : 'سجل الفواتير والقطع المباعة خلال الفترة المحددة' ?></h3>
+            <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('pos')">+ <?= $en ? 'New Invoice' : 'إصدار فاتورة جديدة' ?></button>
           </div>
           <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>التوقيت</th>
-                  <th>العميل</th>
-                  <th>الأصناف المباعة</th>
-                  <th>البائع</th>
-                  <th>الإجمالي المحصل</th>
+                  <th><?= $en ? 'Invoice #' : 'رقم الفاتورة' ?></th>
+                  <th><?= $en ? 'Date / Time' : 'التوقيت' ?></th>
+                  <th><?= $en ? 'Customer' : 'العميل' ?></th>
+                  <th><?= $en ? 'Sold Items' : 'الأصناف المباعة' ?></th>
+                  <th><?= $en ? 'Cashier' : 'البائع' ?></th>
+                  <th><?= $en ? 'Total Collected' : 'الإجمالي المحصل' ?></th>
                   <?php if ($isAdmin): ?>
-                    <th>تكلفة الشراء</th>
-                    <th>صافي الربح</th>
+                    <th><?= $en ? 'Purchase Cost' : 'تكلفة الشراء' ?></th>
+                    <th><?= $en ? 'Net Profit' : 'صافي الربح' ?></th>
                   <?php endif; ?>
-                  <th>الفاتورة</th>
+                  <th><?= $en ? 'Actions' : 'الفاتورة' ?></th>
                 </tr>
               </thead>
               <tbody id="dailyInvoicesBody">
-                <tr><td colspan="<?= $isAdmin ? 9 : 7 ?>" style="text-align:center;padding:24px;">جاري تحميل بيانات المبيعات...</td></tr>
+                <tr><td colspan="<?= $isAdmin ? 9 : 7 ?>" style="text-align:center;padding:24px;">...</td></tr>
               </tbody>
             </table>
           </div>
         </div>
 
         <?php if ($isAdmin): ?>
-          <!-- Delivered Maintenance Revenues Table (Only Financial Figures Kept!) -->
           <div class="card">
             <div class="card-header">
               <div>
-                <h3>🛠️ إيرادات أجهزة الصيانة المسلمة (بعد الحذف التلقائي لبيانات الأجهزة)</h3>
-                <span style="font-size:.8rem;color:var(--db-muted);">يتم الاحتفاظ بالمبالغ المحصلة فقط لحساب إيراد وأرباح اليوم بعد مسح بيانات الجهاز والعميل فور التسليم.</span>
+                <h3>🛠️ <?= $en ? 'Delivered Repair Revenues (Post-Privacy Wipe Ledger)' : 'إيرادات أجهزة الصيانة المسلمة (بعد الحذف التلقائي لبيانات الأجهزة)' ?></h3>
+                <span style="font-size:0.8rem;color:var(--db-muted);"><?= $en ? 'Only collected amounts are retained for daily accounting after device & personal customer data are wiped upon handover.' : 'يتم الاحتفاظ بالمبالغ المحصلة فقط لحساب إيراد وأرباح اليوم بعد مسح بيانات الجهاز والعميل فور التسليم.' ?></span>
               </div>
-              <span style="padding:5px 12px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-900);font-size:.8rem;font-weight:800;">حماية خصوصية مفعّلة ✓</span>
+              <span style="padding:5px 12px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.8rem;font-weight:800;"><?= $en ? 'Privacy Wipe Active ✓' : 'حماية خصوصية مفعّلة ✓' ?></span>
             </div>
             <div class="table-responsive">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>كود التذكرة المرجعي</th>
-                    <th>التاريخ</th>
-                    <th>فئة الجهاز</th>
-                    <th>المبلغ المحصل</th>
-                    <th>تكلفة قطع الغيار</th>
-                    <th>صافي ربح الصيانة</th>
-                    <th>طريقة الدفع</th>
-                    <th>المُسلّم</th>
+                    <th><?= $en ? 'Ticket Ref' : 'كود التذكرة المرجعي' ?></th>
+                    <th><?= $en ? 'Date' : 'التاريخ' ?></th>
+                    <th><?= $en ? 'Device Type' : 'فئة الجهاز' ?></th>
+                    <th><?= $en ? 'Amount Paid' : 'المبلغ المحصل' ?></th>
+                    <th><?= $en ? 'Parts Cost' : 'تكلفة قطع الغيار' ?></th>
+                    <th><?= $en ? 'Net Profit' : 'صافي ربح الصيانة' ?></th>
+                    <th><?= $en ? 'Payment' : 'طريقة الدفع' ?></th>
+                    <th><?= $en ? 'Delivered By' : 'المُسلّم' ?></th>
                   </tr>
                 </thead>
-                <tbody id="dailyMaintRevBody">
-                  <tr><td colspan="8" style="text-align:center;padding:20px;">لا توجد تذاكر مسلمة في هذه الفترة بعد.</td></tr>
-                </tbody>
+                <tbody id="dailyMaintRevBody"></tbody>
               </table>
             </div>
           </div>
@@ -262,42 +268,42 @@ $jsConfig = [
       </section>
 
       <!-- ========================================================
-           TAB 2: QUICK CAMERA PRICE CHECKER (PART 2 - IN FRONT OF CUSTOMER)
+           TAB 2: QUICK CAMERA PRICE CHECKER (IN FRONT OF CUSTOMER)
            ======================================================== -->
       <section class="tab-panel" id="tab-quick-scanner">
         <div class="scanner-grid">
 
-          <!-- Camera Box -->
           <div class="camera-viewport-box">
-            <h3 style="margin:0 0 6px;color:var(--db-gold-400);">📷 اسكان الباركود المطاول أو رمز الـ QR</h3>
-            <p style="margin:0 0 14px;font-size:.83rem;color:#c9e2e4;">وجّه الكاميرا نحو الباركود الطولي أو الـ QR الموجود على الجهاز لعرض سعر البيع فوراً</p>
+            <h3 style="margin:0 0 6px;color:var(--db-teal-800);">📷 <?= $en ? 'Scan 1D Barcode or 2D QR Code' : 'اسكان الباركود المطاول أو رمز الـ QR' ?></h3>
+            <p style="margin:0 0 14px;font-size:0.84rem;color:var(--db-muted);"><?= $en ? 'Point your camera at the elongated box barcode or QR sticker to display customer selling price immediately.' : 'وجّه الكاميرا نحو الباركود الطولي أو الـ QR الموجود على الجهاز لعرض سعر البيع فوراً' ?></p>
 
             <div id="quickCameraReader" class="reader-mount">
-              <div style="padding:24px;color:#9bc0c3;font-size:.9rem;">اضغط «تشغيل الكاميرا» لبدء المسح المباشر أو استخدم قارئ الباركود</div>
+              <div style="padding:24px;color:var(--db-muted);font-size:0.9rem;"><?= $en ? 'Click "Start Camera" to scan live or use a USB scanner / image' : 'اضغط «تشغيل الكاميرا» لبدء المسح المباشر أو استخدم قارئ الباركود' ?></div>
             </div>
 
             <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
-              <button type="button" class="btn btn-gold btn-sm" id="btnStartQuickCam">▶ تشغيل الكاميرا</button>
-              <button type="button" class="btn btn-danger btn-sm" id="btnStopQuickCam" style="display:none;">⏹ إيقاف الكاميرا</button>
+              <button type="button" class="btn btn-teal btn-sm" id="btnStartQuickCam">▶ <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnStopQuickCam" style="display:none;">⏹ <?= $en ? 'Stop Camera' : 'إيقاف الكاميرا' ?></button>
               <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
-                🖼️ مسح من صورة باركود
+                🖼️ <?= $en ? 'Scan Barcode Image' : 'مسح من صورة باركود' ?>
                 <input type="file" id="quickScanFile" accept="image/*" style="display:none;">
               </label>
             </div>
 
             <form id="quickManualForm" style="display:flex;gap:8px;">
-              <input type="text" id="quickCodeInput" class="form-control" placeholder="أو امسح بمسدس الباركود / اكتب الكود هنا..." style="direction:ltr;text-align:center;font-weight:800;">
-              <button type="submit" class="btn btn-teal">فحص</button>
+              <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Or scan / type barcode here (e.g. ASLY-LAP-1001)...' : 'أو امسح بمسدس الباركود / اكتب الكود هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
+              <button type="submit" class="btn btn-gold"><?= $en ? 'Lookup' : 'فحص' ?></button>
             </form>
           </div>
 
-          <!-- Customer-Facing Price Result Card -->
           <div id="quickScanResult">
             <div class="card" style="text-align:center;padding:48px 24px;">
               <div style="font-size:3rem;margin-bottom:10px;">🔍</div>
-              <h3 style="margin:0 0 8px;color:var(--db-teal-900);">في انتظار مسح كود القطعة</h3>
-              <p style="margin:0;color:var(--db-muted);font-size:.9rem;">
-                بمجرد مسح الباركود أو الـ QR سيظهر <strong>سعر البيع فقط</strong> بخط واضح، مع زر <strong>«اعرض سعر الشراء»</strong> الذي يعرض <strong>أقل سعر بيع مسموح</strong> بأمان أمام العميل.
+              <h3 style="margin:0 0 8px;color:var(--db-text);"><?= $en ? 'Ready to Scan Product Code' : 'في انتظار مسح كود القطعة' ?></h3>
+              <p style="margin:0;color:var(--db-muted);font-size:0.9rem;">
+                <?= $en
+                  ? 'Scanning displays <strong>Selling Price only</strong>, with a safe <strong>“Show Purchase Price”</strong> button that reveals the <strong>Minimum Allowed Floor Price</strong> in front of customers.'
+                  : 'بمجرد مسح الباركود أو الـ QR سيظهر <strong>سعر البيع فقط</strong> بخط واضح، مع زر <strong>«اعرض سعر الشراء»</strong> الذي يعرض <strong>أقل سعر بيع مسموح</strong> بأمان أمام العميل.' ?>
               </p>
             </div>
           </div>
@@ -311,75 +317,73 @@ $jsConfig = [
       <section class="tab-panel" id="tab-pos">
         <div class="pos-layout">
 
-          <!-- Left: Catalog & Scan into Cart -->
           <div class="card">
             <div class="card-header">
-              <h3>📦 اختر المنتجات أو امسح الكود للإضافة للفاتورة</h3>
-              <button type="button" class="btn btn-gold btn-sm" id="btnPosToggleCam">📷 مسح بالكاميرا للفاتورة</button>
+              <h3>📦 <?= $en ? 'Select Products or Scan into Invoice' : 'اختر المنتجات أو امسح الكود للإضافة للفاتورة' ?></h3>
+              <button type="button" class="btn btn-teal btn-sm" id="btnPosToggleCam">📷 <?= $en ? 'Scan with Camera' : 'مسح بالكاميرا للفاتورة' ?></button>
             </div>
 
             <div id="posCameraWrap" style="display:none;margin-bottom:16px;" class="camera-viewport-box">
               <div id="posCameraReader" class="reader-mount" style="min-height:210px;"></div>
-              <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam">إغلاق الكاميرا</button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam"><?= $en ? 'Close Camera' : 'إغلاق الكاميرا' ?></button>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-              <input type="text" id="posSearchInput" class="form-control" placeholder="ابحث بالاسم أو امسح الباركود واضغط Enter..." style="flex:1;min-width:200px;">
+              <input type="text" id="posSearchInput" class="form-control" placeholder="<?= $en ? 'Search by name or scan barcode & press Enter...' : 'ابحث بالاسم أو امسح الباركود واضغط Enter...' ?>" style="flex:1;min-width:200px;">
               <select id="posCatFilter" class="form-control" style="width:auto;">
-                <option value="all">كل الأقسام</option>
-                <option value="laptops">لابتوب</option>
-                <option value="mobiles">هواتف</option>
-                <option value="accessories">إكسسوارات</option>
-                <option value="wearables">أجهزة قابلة للارتداء</option>
+                <option value="all"><?= $en ? 'All Categories' : 'كل الأقسام' ?></option>
+                <option value="laptops"><?= $en ? 'Laptops' : 'لابتوب' ?></option>
+                <option value="mobiles"><?= $en ? 'Smartphones' : 'هواتف' ?></option>
+                <option value="accessories"><?= $en ? 'Accessories' : 'إكسسوارات' ?></option>
+                <option value="wearables"><?= $en ? 'Wearables' : 'ساعات ذكية' ?></option>
               </select>
             </div>
 
             <div class="pos-products-grid" id="posProductsGrid"></div>
           </div>
 
-          <!-- Right: Current Invoice Cart -->
-          <div class="card" style="border:2px solid var(--db-teal-800);">
+          <div class="card" style="border:1.5px solid var(--db-teal-100);">
             <div class="card-header">
-              <h3>🧾 فاتورة البيع الحالية</h3>
-              <button type="button" class="btn btn-danger btn-sm" id="btnClearCart">إفراغ السلة</button>
+              <h3>🧾 <?= $en ? 'Active Sales Invoice' : 'فاتورة البيع الحالية' ?></h3>
+              <button type="button" class="btn btn-danger btn-sm" id="btnClearCart"><?= $en ? 'Clear Cart' : 'إفراغ السلة' ?></button>
             </div>
 
             <div class="form-grid" style="margin-bottom:14px;">
               <div class="form-group">
-                <label>اسم العميل</label>
-                <input type="text" id="posCustomerName" class="form-control" placeholder="عميل نقدي / اسم المشتري">
+                <label><?= $en ? 'Customer Name' : 'اسم العميل' ?></label>
+                <input type="text" id="posCustomerName" class="form-control" placeholder="<?= $en ? 'Walk-in Customer / Buyer Name' : 'عميل نقدي / اسم المشتري' ?>">
               </div>
               <div class="form-group">
-                <label>رقم واتساب / هاتف العميل (لإرسال الفاتورة)</label>
+                <label><?= $en ? 'Customer WhatsApp / Phone' : 'رقم واتساب / هاتف العميل (لإرسال الفاتورة)' ?></label>
                 <input type="text" id="posCustomerPhone" class="form-control" placeholder="010xxxxxxxx" style="direction:ltr;">
               </div>
             </div>
 
             <div class="form-grid" style="margin-bottom:16px;">
               <div class="form-group">
-                <label>طريقة الدفع</label>
+                <label><?= $en ? 'Payment Method' : 'طريقة الدفع' ?></label>
                 <select id="posPaymentMethod" class="form-control">
-                  <option value="cash">نقدي (كاش بالدرج)</option>
-                  <option value="vodafone_cash">فودافون كاش / محفظة</option>
-                  <option value="instapay">إنستا باي (InstaPay)</option>
-                  <option value="card">بطاقة بنكية</option>
+                  <option value="cash"><?= $en ? 'Cash' : 'نقدي (كاش بالدرج)' ?></option>
+                  <option value="vodafone_cash"><?= $en ? 'Vodafone Cash / Wallet' : 'فودافون كاش / محفظة' ?></option>
+                  <option value="instapay">InstaPay</option>
+                  <option value="card"><?= $en ? 'Bank Card' : 'بطاقة بنكية' ?></option>
                 </select>
               </div>
               <div class="form-group">
-                <label>ملاحظات إضافية بالفاتورة</label>
-                <input type="text" id="posInvoiceNotes" class="form-control" placeholder="مثال: شامل شنطة وماوس هدية">
+                <label><?= $en ? 'Invoice Notes' : 'ملاحظات إضافية بالفاتورة' ?></label>
+                <input type="text" id="posInvoiceNotes" class="form-control" placeholder="<?= $en ? 'e.g. Includes free sleeve & mouse' : 'مثال: شامل شنطة وماوس هدية' ?>">
               </div>
             </div>
 
             <div id="posCartItemsList"></div>
 
-            <div style="background:linear-gradient(135deg,var(--db-teal-900),var(--db-teal-800));color:#fff;padding:16px 20px;border-radius:14px;display:flex;justify-content:space-between;align-items:center;margin:16px 0;border:1.5px solid var(--db-gold-500);">
-              <span style="font-weight:800;color:var(--db-gold-400);">إجمالي الفاتورة المطلوب:</span>
-              <strong id="posTotalDisplay" style="font-size:1.5rem;">0.00 ج.م</strong>
+            <div style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));padding:16px 20px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;margin:16px 0;border:1.5px solid var(--db-gold-500);">
+              <span style="font-weight:800;color:var(--db-text);"><?= $en ? 'Invoice Total:' : 'إجمالي الفاتورة المطلوب:' ?></span>
+              <strong id="posTotalDisplay" style="font-size:1.5rem;color:var(--db-teal-800);">0.00 <?= e(t('currency')) ?></strong>
             </div>
 
-            <button type="button" class="btn btn-gold" id="btnCompleteSale" style="width:100%;padding:14px;font-size:1rem;">
-              ✅ إتمام البيع وإصدار الفاتورة (صورة + واتساب + طباعة)
+            <button type="button" class="btn btn-teal" id="btnCompleteSale" style="width:100%;padding:14px;font-size:0.98rem;">
+              ✅ <?= $en ? 'Complete Sale & Generate Invoice (PNG + WhatsApp + Print)' : 'إتمام البيع وإصدار الفاتورة (صورة + واتساب + طباعة)' ?>
             </button>
           </div>
 
@@ -388,165 +392,185 @@ $jsConfig = [
 
       <?php if ($isAdmin): ?>
       <!-- ========================================================
-           TAB 4: ADD / EDIT PRODUCT WITH SCANNER OR AUTO-QR (ADMIN ONLY)
+           TAB 4: ADD / EDIT PRODUCT WITH SCANNER, AUTO-QR & DUAL PHOTOS
            ======================================================== -->
       <section class="tab-panel" id="tab-add-product">
         <div class="scanner-grid">
 
-          <!-- Left: Scan Box Barcode OR Auto-Generate Printable QR -->
           <div>
             <div class="camera-viewport-box" style="margin-bottom:20px;">
-              <h3 style="margin:0 0 6px;color:var(--db-gold-400);">1️⃣ مسح كود العلبة أو توليد رمز QR جديد</h3>
-              <p style="margin:0 0 12px;font-size:.82rem;color:#c9e2e4;">يمكنك مسح الباركود المطاول الموجود على العلبة بالكاميرا، أو الضغط على «توليد QR تلقائي» للأجهزة المستعملة والإكسسوارات بدون علبة.</p>
+              <h3 style="margin:0 0 6px;color:var(--db-teal-800);">1️⃣ <?= $en ? 'Scan Box Barcode OR Generate Auto QR' : 'مسح كود العلبة أو توليد رمز QR جديد' ?></h3>
+              <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Scan the original 1D barcode on a retail box, or click "Generate Auto QR" for open-box devices and accessories.' : 'يمكنك مسح الباركود المطاول الموجود على العلبة بالكاميرا، أو الضغط على «توليد QR تلقائي» للأجهزة المستعملة والإكسسوارات بدون علبة.' ?></p>
 
-              <div id="addProdCameraReader" class="reader-mount" style="min-height:230px;">
-                <div style="padding:20px;color:#9bc0c3;font-size:.88rem;">الكاميرا متوقفة — اضغط تشغيل لمسح باركود المنتج أو ولّد رمز QR مباشرة</div>
+              <div id="addProdCameraReader" class="reader-mount" style="min-height:220px;">
+                <div style="padding:20px;color:var(--db-muted);font-size:0.88rem;"><?= $en ? 'Camera idle — start camera to scan box or click Auto QR below' : 'الكاميرا متوقفة — اضغط تشغيل لمسح باركود المنتج أو ولّد رمز QR مباشرة' ?></div>
               </div>
 
               <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-                <button type="button" class="btn btn-teal btn-sm" id="btnStartAddCam">📷 مسح باركود العلبة بالكاميرا</button>
-                <button type="button" class="btn btn-danger btn-sm" id="btnStopAddCam" style="display:none;">⏹ إيقاف</button>
-                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr">✨ توليد QR تلقائي للمنتج</button>
+                <button type="button" class="btn btn-teal btn-sm" id="btnStartAddCam">📷 <?= $en ? 'Scan Box Barcode' : 'مسح باركود العلبة بالكاميرا' ?></button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnStopAddCam" style="display:none;">⏹ <?= $en ? 'Stop' : 'إيقاف' ?></button>
+                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr">✨ <?= $en ? 'Generate Auto QR Code' : 'توليد QR تلقائي للمنتج' ?></button>
               </div>
             </div>
 
-            <!-- Live Printable Sticker Preview -->
             <div class="card" style="text-align:center;">
               <div class="card-header">
-                <h3>🏷️ معاينة استيكر الكود الجاهز للطباعة واللصق</h3>
-                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker">🖨️ طباعة الاستيكر</button>
+                <h3>🏷️ <?= $en ? 'Printable Sticker Preview' : 'معاينة استيكر الكود الجاهز للطباعة واللصق' ?></h3>
+                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker">🖨️ <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
               </div>
               <div class="sticker-preview-box" id="liveStickerBox">
-                <strong style="font-size:.84rem;color:#043538;">ASLY | أصلي TECH STORE</strong>
-                <div id="stickerProdName" style="font-size:.78rem;color:#475569;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">منتج جديد</div>
+                <strong style="font-size:0.84rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
+                <div id="stickerProdName" style="font-size:0.78rem;color:#475569;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $en ? 'New Product' : 'منتج جديد' ?></div>
                 <div id="stickerQrMount" style="margin:4px auto;"></div>
                 <svg id="stickerBarcodeSvg" style="max-width:210px;height:48px;"></svg>
-                <div id="stickerCodeText" style="font-family:monospace;font-weight:800;font-size:.82rem;letter-spacing:1px;">—</div>
+                <div id="stickerCodeText" style="font-family:monospace;font-weight:800;font-size:0.82rem;letter-spacing:1px;">—</div>
               </div>
             </div>
           </div>
 
-          <!-- Right: Product Details & 3-Tier Pricing Form -->
           <div class="card">
             <div class="card-header">
-              <h3 id="productFormHeading">➕ تسجيل بيانات المنتج والأسعار الثلاثة</h3>
-              <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm">تفريغ النموذج لمنتج جديد</button>
+              <h3 id="productFormHeading">➕ <?= $en ? 'Register Product & 3-Tier Pricing' : 'تسجيل بيانات المنتج والأسعار الثلاثة' ?></h3>
+              <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm"><?= $en ? 'Reset Form' : 'تفريغ النموذج' ?></button>
             </div>
 
-            <div id="existingProdAlert" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:12px;background:var(--db-gold-50);border:1.5px solid var(--db-gold-500);color:#043538;font-weight:700;font-size:.88rem;"></div>
+            <div id="existingProdAlert" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:14px;background:var(--db-gold-50);border:1.5px solid var(--db-gold-500);color:var(--db-text);font-weight:700;font-size:0.88rem;"></div>
 
             <form id="productSaveForm" enctype="multipart/form-data">
               <input type="hidden" name="id" id="prodId" value="0">
 
               <div class="form-grid" style="margin-bottom:14px;">
                 <div class="form-group">
-                  <label>الباركود المطاول / كود الـ QR *</label>
-                  <input type="text" name="barcode" id="prodBarcode" class="form-control" placeholder="امسح الكود أو اضغط توليد QR تلقائي" style="direction:ltr;font-weight:800;">
+                  <label><?= $en ? '1D Barcode / QR Code *' : 'الباركود المطاول / كود الـ QR *' ?></label>
+                  <input type="text" name="barcode" id="prodBarcode" class="form-control" placeholder="<?= $en ? 'Scan or click Generate Auto QR' : 'امسح الكود أو اضغط توليد QR تلقائي' ?>" style="direction:ltr;font-weight:800;">
                 </div>
                 <div class="form-group">
-                  <label>نوع الكود</label>
+                  <label><?= $en ? 'Code Type' : 'نوع الكود' ?></label>
                   <select name="code_type" id="prodCodeType" class="form-control">
-                    <option value="qr">QR Code (مولّد أو ممسوح)</option>
-                    <option value="barcode">باركود مطاول 1D (علبة أصلية)</option>
+                    <option value="qr"><?= $en ? 'QR Code (Generated or Scanned)' : 'QR Code (مولّد أو ممسوح)' ?></option>
+                    <option value="barcode"><?= $en ? '1D Elongated Box Barcode' : 'باركود مطاول 1D (علبة أصلية)' ?></option>
                   </select>
                 </div>
-              </div>
-
-              <div class="form-group" style="margin-bottom:14px;">
-                <label>اسم وموديل المنتج *</label>
-                <input type="text" name="name" id="prodName" class="form-control" placeholder="مثال: Dell XPS 15 9520 Core i7 32GB RTX 3050 Ti" required>
               </div>
 
               <div class="form-grid" style="margin-bottom:14px;">
                 <div class="form-group">
-                  <label>القسم *</label>
+                  <label><?= $en ? 'Product Name (Arabic) *' : 'اسم وموديل المنتج (عربي) *' ?></label>
+                  <input type="text" name="name" id="prodName" class="form-control" placeholder="لابتوب ديل Dell XPS 15" required>
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Product Name (English — Optional)' : 'اسم المنتج بالإنجليزية (اختياري)' ?></label>
+                  <input type="text" name="name_en" id="prodNameEn" class="form-control" placeholder="Dell XPS 15 Workstation" style="direction:ltr;">
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-bottom:14px;">
+                <div class="form-group">
+                  <label><?= $en ? 'Category *' : 'القسم *' ?></label>
                   <select name="category" id="prodCategory" class="form-control">
-                    <option value="laptops">لابتوب (Laptops)</option>
-                    <option value="mobiles">هواتف ذكية (Mobiles)</option>
-                    <option value="accessories">إكسسوارات (Accessories)</option>
-                    <option value="wearables">أجهزة قابلة للارتداء (Wearables)</option>
+                    <option value="laptops">Laptops • لابتوب</option>
+                    <option value="mobiles">Smartphones • هواتف ذكية</option>
+                    <option value="accessories">Accessories • إكسسوارات</option>
+                    <option value="wearables">Wearables • ساعات ذكية</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>حالة المنتج *</label>
+                  <label><?= $en ? 'Condition *' : 'حالة المنتج *' ?></label>
                   <select name="condition_status" id="prodCondition" class="form-control">
-                    <option value="new">جديد متبرشم</option>
-                    <option value="open_box">كسر زيرو</option>
-                    <option value="used">مستعمل فرز أول</option>
+                    <option value="new"><?= $en ? 'Brand New • Sealed' : 'جديد متبرشم' ?></option>
+                    <option value="open_box"><?= $en ? 'Open Box • Like New' : 'كسر زيرو' ?></option>
+                    <option value="used"><?= $en ? 'Certified Pre-Owned' : 'مستعمل فرز أول' ?></option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>الماركة (Brand)</label>
+                  <label><?= $en ? 'Brand' : 'الماركة (Brand)' ?></label>
                   <input type="text" name="brand" id="prodBrand" class="form-control" placeholder="Apple / Dell / HP / Samsung">
                 </div>
               </div>
 
-              <!-- 3-Tier Pricing Highlight Box -->
-              <div style="background:linear-gradient(135deg,#043538,#074f53);padding:18px;border-radius:16px;border:1.5px solid var(--db-gold-500);color:#fff;margin-bottom:16px;">
-                <div style="font-weight:800;color:var(--db-gold-400);margin-bottom:10px;font-size:.92rem;">
-                  💰 نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)
+              <!-- Bright 3-Tier Pricing Highlight Box -->
+              <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:16px;">
+                <div style="font-weight:800;color:var(--db-teal-800);margin-bottom:10px;font-size:0.92rem;">
+                  💰 <?= $en ? 'Smart 3-Tier Pricing System (Role-Protected)' : 'نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)' ?>
                 </div>
                 <div class="form-grid">
                   <div class="form-group">
-                    <label style="color:#fde68a;">1. سعر الشراء الحقيقي (للمدير فقط) *</label>
+                    <label style="color:#b45309;"><?= $en ? '1. True Purchase Cost (Admin Only) *' : '1. سعر الشراء الحقيقي (للمدير فقط) *' ?></label>
                     <input type="number" step="0.01" min="0" name="purchase_price" id="prodPurchasePrice" class="form-control" placeholder="0.00" required>
                   </div>
                   <div class="form-group">
-                    <label style="color:#ffffff;">2. سعر البيع الأساسي (يظهر بالاسكان) *</label>
+                    <label style="color:var(--db-teal-800);"><?= $en ? '2. Selling Price (Shown on Scan) *' : '2. سعر البيع الأساسي (يظهر بالاسكان) *' ?></label>
                     <input type="number" step="0.01" min="0" name="sell_price" id="prodSellPrice" class="form-control" placeholder="0.00" required>
                   </div>
                   <div class="form-group">
-                    <label style="color:#6ee7b7;">3. أقل سعر بيع (يظهر بزر سعر الشراء) *</label>
+                    <label style="color:#059669;"><?= $en ? '3. Min Floor Price (Decoy Button) *' : '3. أقل سعر بيع (يظهر بزر سعر الشراء) *' ?></label>
                     <input type="number" step="0.01" min="0" name="min_sell_price" id="prodMinSellPrice" class="form-control" placeholder="0.00" required>
                   </div>
                 </div>
-                <div id="liveProfitHint" style="margin-top:10px;font-size:.82rem;color:#d5ecee;"></div>
+                <div id="liveProfitHint" style="margin-top:10px;font-size:0.82rem;color:var(--db-text);font-weight:700;"></div>
               </div>
 
               <div class="form-grid" style="margin-bottom:14px;">
                 <div class="form-group">
-                  <label>الكمية المتوفرة بالمخزن *</label>
+                  <label><?= $en ? 'Stock Quantity *' : 'الكمية المتوفرة بالمخزن *' ?></label>
                   <input type="number" min="0" name="quantity" id="prodQuantity" class="form-control" value="1" required>
                 </div>
                 <div class="form-group">
-                  <label>حد التنبيه بالنواقص</label>
+                  <label><?= $en ? 'Low Stock Alert' : 'حد التنبيه بالنواقص' ?></label>
                   <input type="number" min="0" name="low_stock_threshold" id="prodLowStock" class="form-control" value="2">
                 </div>
                 <div class="form-group">
-                  <label>فترة ونوع الضمان الافتراضي</label>
+                  <label><?= $en ? 'Default Invoice Warranty' : 'فترة ونوع الضمان الافتراضي' ?></label>
                   <input type="text" name="warranty_default" id="prodWarranty" class="form-control" value="ضمان الفحص والتجربة - أصلي تك ستور">
                 </div>
               </div>
 
-              <div class="form-group" style="margin-bottom:14px;">
-                <label>المواصفات الفنية (تظهر للزوار بدون أسعار)</label>
-                <input type="text" name="specs" id="prodSpecs" class="form-control" placeholder="مثال: Core i7-12700H • RAM 16GB DDR5 • SSD 512GB • RTX 3060">
-              </div>
-
-              <div class="form-group" style="margin-bottom:14px;">
-                <label>وصف إضافي للمنتج</label>
-                <textarea name="description" id="prodDescription" rows="2" class="form-control" placeholder="تفاصيل الحالة والملحقات المرفقة..."></textarea>
-              </div>
-
-              <div class="form-grid" style="margin-bottom:18px;align-items:center;">
+              <div class="form-grid" style="margin-bottom:14px;">
                 <div class="form-group">
-                  <label>صورة المنتج (JPG / PNG / WebP)</label>
+                  <label><?= $en ? 'Specs (Arabic)' : 'المواصفات الفنية (عربي)' ?></label>
+                  <input type="text" name="specs" id="prodSpecs" class="form-control" placeholder="Core i7 • RAM 16GB • SSD 512GB">
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Specs (English — Optional)' : 'المواصفات بالإنجليزية (اختياري)' ?></label>
+                  <input type="text" name="specs_en" id="prodSpecsEn" class="form-control" placeholder="Core i7 • 16GB DDR5 • 512GB NVMe" style="direction:ltr;">
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-bottom:14px;">
+                <div class="form-group">
+                  <label><?= $en ? 'Description (Arabic)' : 'وصف المنتج (عربي)' ?></label>
+                  <textarea name="description" id="prodDescription" rows="2" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Description (English — Optional)' : 'وصف المنتج بالإنجليزية (اختياري)' ?></label>
+                  <textarea name="description_en" id="prodDescriptionEn" rows="2" class="form-control" style="direction:ltr;"></textarea>
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-bottom:16px;">
+                <div class="form-group">
+                  <label>📸 <?= $en ? 'Primary Studio Image' : 'الصورة الأساسية (لقطة الاستوديو)' ?></label>
                   <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
                 </div>
-                <div style="display:flex;flex-direction:column;gap:8px;padding-top:14px;">
-                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:.88rem;">
-                    <input type="checkbox" name="show_on_landing" id="prodShowLanding" value="1" checked>
-                    عرض المنتج في اللاندينج بيدج للزوار (بدون سعر)
-                  </label>
-                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:.88rem;">
-                    <input type="checkbox" name="is_featured" id="prodFeatured" value="1">
-                    تمييز المنتج في مقدمة المعرض (Featured)
-                  </label>
+                <div class="form-group">
+                  <label>✨ <?= $en ? 'Hover Lifestyle Image (Lookbook Swap)' : 'الصورة الثانية عند التمرير (لقطة لايف ستايل)' ?></label>
+                  <input type="file" name="secondary_image" id="prodSecondaryImageInput" accept="image/*" class="form-control">
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-gold" style="width:100%;padding:13px;font-size:1rem;">
-                💾 حفظ المنتج وتحديث المخزن والكود
+              <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:18px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:0.88rem;">
+                  <input type="checkbox" name="show_on_landing" id="prodShowLanding" value="1" checked>
+                  <?= $en ? 'Show on Public Lookbook Storefront (Zero Price)' : 'عرض المنتج في اللاندينج بيدج للزوار (بدون سعر)' ?>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:0.88rem;">
+                  <input type="checkbox" name="is_featured" id="prodFeatured" value="1">
+                  <?= $en ? 'Mark as Editor’s Pick (Featured)' : 'تمييز المنتج في مقدمة المعرض (Featured)' ?>
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
+                💾 <?= $en ? 'Save Product & Update Code' : 'حفظ المنتج وتحديث المخزن والكود' ?>
               </button>
             </form>
           </div>
@@ -561,18 +585,18 @@ $jsConfig = [
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
           <div class="card-header">
-            <h3>📦 سجل المخزون والأجهزة والإكسسوارات</h3>
+            <h3>📦 <?= $en ? 'Inventory & Stock Catalog' : 'سجل المخزون والأجهزة والإكسسوارات' ?></h3>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <input type="text" id="invSearch" class="form-control" placeholder="بحث بالاسم أو الكود أو الماركة..." style="width:240px;">
+              <input type="text" id="invSearch" class="form-control" placeholder="<?= $en ? 'Search name, barcode, brand...' : 'بحث بالاسم أو الكود أو الماركة...' ?>" style="width:240px;">
               <select id="invCategory" class="form-control" style="width:auto;">
-                <option value="all">كل الأقسام</option>
-                <option value="laptops">لابتوب</option>
-                <option value="mobiles">هواتف</option>
-                <option value="accessories">إكسسوارات</option>
-                <option value="wearables">أجهزة قابلة للارتداء</option>
+                <option value="all"><?= $en ? 'All Categories' : 'كل الأقسام' ?></option>
+                <option value="laptops"><?= $en ? 'Laptops' : 'لابتوب' ?></option>
+                <option value="mobiles"><?= $en ? 'Smartphones' : 'هواتف' ?></option>
+                <option value="accessories"><?= $en ? 'Accessories' : 'إكسسوارات' ?></option>
+                <option value="wearables"><?= $en ? 'Wearables' : 'ساعات ذكية' ?></option>
               </select>
               <?php if ($isAdmin): ?>
-                <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('add-product')">+ إضافة منتج جديد</button>
+                <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('add-product')">+ <?= $en ? 'Add Product' : 'إضافة منتج جديد' ?></button>
               <?php endif; ?>
             </div>
           </div>
@@ -581,19 +605,19 @@ $jsConfig = [
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>الصورة</th>
-                  <th>المنتج والمواصفات</th>
-                  <th>الكود (QR/Barcode)</th>
-                  <th>الكمية</th>
+                  <th><?= $en ? 'Photo' : 'الصورة' ?></th>
+                  <th><?= $en ? 'Product & Specs' : 'المنتج والمواصفات' ?></th>
+                  <th><?= $en ? 'Code (QR/Barcode)' : 'الكود (QR/Barcode)' ?></th>
+                  <th><?= $en ? 'Stock' : 'الكمية' ?></th>
                   <?php if ($isAdmin): ?>
-                    <th>سعر الشراء (سري)</th>
+                    <th><?= $en ? 'True Buy Cost' : 'سعر الشراء (سري)' ?></th>
                   <?php endif; ?>
-                  <th>سعر البيع</th>
-                  <th>أقل سعر مسموح</th>
+                  <th><?= $en ? 'Sell Price' : 'سعر البيع' ?></th>
+                  <th><?= $en ? 'Min Floor Price' : 'أقل سعر مسموح' ?></th>
                   <?php if ($isAdmin): ?>
-                    <th>اللاندينج</th>
+                    <th><?= $en ? 'Storefront' : 'اللاندينج' ?></th>
                   <?php endif; ?>
-                  <th>إجراءات</th>
+                  <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
                 </tr>
               </thead>
               <tbody id="inventoryTableBody"></tbody>
@@ -609,16 +633,16 @@ $jsConfig = [
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>🛠️ إدارة أجهزة الصيانة النشطة وتتبع المراحل بالـ QR</h3>
-              <span style="font-size:.82rem;color:var(--db-muted);">كل جهاز يُولّد له QR خاص للعميل، مع إشعار بريد إلكتروني بكل مرحلة، وحذف كامل للبيانات فور التسليم مع حفظ الإيراد فقط.</span>
+              <h3>🛠️ <?= $en ? 'Active QR Repair Tickets & Stage Management' : 'إدارة أجهزة الصيانة النشطة وتتبع المراحل بالـ QR' ?></h3>
+              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Unique customer QR receipt per device, automatic stage email notifications, and full personal data wipe upon delivery.' : 'كل جهاز يُولّد له QR خاص للعميل، مع إشعار بريد إلكتروني بكل مرحلة، وحذف كامل للبيانات فور التسليم مع حفظ الإيراد فقط.' ?></span>
             </div>
-            <button type="button" class="btn btn-gold" id="btnOpenNewMaint">+ استلام جهاز صيانة جديد</button>
+            <button type="button" class="btn btn-teal" id="btnOpenNewMaint">+ <?= $en ? 'Receive Repair Device' : 'استلام جهاز صيانة جديد' ?></button>
           </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-            <input type="text" id="maintSearch" class="form-control" placeholder="ابحث بكود التذكرة، اسم العميل، الهاتف، أو موديل الجهاز..." style="flex:1;min-width:240px;">
+            <input type="text" id="maintSearch" class="form-control" placeholder="<?= $en ? 'Search ticket code, customer, phone, or device model...' : 'ابحث بكود التذكرة، اسم العميل، الهاتف، أو موديل الجهاز...' ?>" style="flex:1;min-width:240px;">
             <select id="maintStageFilter" class="form-control" style="width:auto;">
-              <option value="all">كل المراحل النشطة</option>
+              <option value="all"><?= $en ? 'All Active Stages' : 'كل المراحل النشطة' ?></option>
               <?php foreach ($stages as $sKey => $sInfo): if ($sKey === 'delivered') continue; ?>
                 <option value="<?= e($sKey) ?>"><?= e($sInfo['title']) ?></option>
               <?php endforeach; ?>
@@ -629,13 +653,13 @@ $jsConfig = [
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>كود التذكرة</th>
-                  <th>العميل والتواصل السريع</th>
-                  <th>الجهاز والعطل</th>
-                  <th>المرحلة الحالية</th>
-                  <th>التكلفة / العربون</th>
-                  <th>ملاحظات العميل</th>
-                  <th>إدارة وتحديث</th>
+                  <th><?= $en ? 'Ticket #' : 'كود التذكرة' ?></th>
+                  <th><?= $en ? 'Customer & Contact' : 'العميل والتواصل السريع' ?></th>
+                  <th><?= $en ? 'Device & Issue' : 'الجهاز والعطل' ?></th>
+                  <th><?= $en ? 'Current Stage' : 'المرحلة الحالية' ?></th>
+                  <th><?= $en ? 'Est. / Deposit' : 'التكلفة / العربون' ?></th>
+                  <th><?= $en ? 'Client Notes' : 'ملاحظات العميل' ?></th>
+                  <th><?= $en ? 'Manage' : 'إدارة وتحديث' ?></th>
                 </tr>
               </thead>
               <tbody id="maintTableBody"></tbody>
@@ -649,30 +673,30 @@ $jsConfig = [
            TAB 7: STAFF & ROLES MANAGEMENT (ADMIN ONLY)
            ======================================================== -->
       <section class="tab-panel" id="tab-staff">
-        <div class="card" style="background:linear-gradient(135deg,#043538,#074f53);color:#fff;border-color:var(--db-gold-500);">
-          <h3 style="margin:0 0 8px;color:var(--db-gold-400);">🛡️ نظام حماية الأسعار والصلاحيات بين المدير والموظفين</h3>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;font-size:.86rem;color:#d9efef;">
-            <div><strong>👑 المدير (Admin):</strong> يتحكم في كل شيء، يرى سعر الشراء الحقيقي، رأس مال المخزن، صافي أرباح كل فاتورة، إيرادات الصيانة اليومية، وإعدادات الهوية والتواصل.</div>
-            <div><strong>💼 الموظف (Staff):</strong> يفحص الأسعار بالكاميرا، يرى فقط (سعر البيع) و(أقل سعر بيع)، يُصدر فواتير البيع ويخصم المخزون، ويُمنع برمجياً من البيع بأقل من الحد الأدنى المسموح!</div>
+        <div class="card" style="background:linear-gradient(135deg,var(--db-teal-50),var(--db-gold-50));border-color:var(--db-gold-500);">
+          <h3 style="margin:0 0 8px;color:var(--db-teal-800);">🛡️ <?= $en ? 'Role Separation & Price Floor Protection' : 'نظام حماية الأسعار والصلاحيات بين المدير والموظفين' ?></h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;font-size:0.86rem;color:var(--db-text);">
+            <div><strong>👑 Admin:</strong> <?= $en ? 'Full access to true purchase cost, inventory capital, net invoice profit, delivered maintenance revenues, and store settings.' : 'يتحكم في كل شيء، يرى سعر الشراء الحقيقي، رأس مال المخزن، صافي أرباح كل فاتورة، إيرادات الصيانة اليومية، وإعدادات الهوية والتواصل.' ?></div>
+            <div><strong>💼 Staff:</strong> <?= $en ? 'Sees only Selling Price & Minimum Floor Price, issues invoices, decrements stock, and is strictly blocked from selling below Minimum Floor Price!' : 'يفحص الأسعار بالكاميرا، يرى فقط (سعر البيع) و(أقل سعر بيع)، يُصدر فواتير البيع ويخصم المخزون، ويُمنع برمجياً من البيع بأقل من الحد الأدنى المسموح!' ?></div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header">
-            <h3>👥 حسابات المديرين وموظفي المبيعات</h3>
-            <button type="button" class="btn btn-gold btn-sm" id="btnAddUserModal">+ إضافة موظف / مدير جديد</button>
+            <h3>👥 <?= $en ? 'Admin & Sales Staff Accounts' : 'حسابات المديرين وموظفي المبيعات' ?></h3>
+            <button type="button" class="btn btn-teal btn-sm" id="btnAddUserModal">+ <?= $en ? 'Add Account' : 'إضافة موظف / مدير جديد' ?></button>
           </div>
           <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>الاسم الكامل</th>
-                  <th>اسم المستخدم</th>
-                  <th>الصلاحية</th>
-                  <th>الهاتف</th>
-                  <th>الحالة</th>
-                  <th>تاريخ الإنشاء</th>
-                  <th>إجراءات</th>
+                  <th><?= $en ? 'Full Name' : 'الاسم الكامل' ?></th>
+                  <th><?= $en ? 'Username' : 'اسم المستخدم' ?></th>
+                  <th><?= $en ? 'Role' : 'الصلاحية' ?></th>
+                  <th><?= $en ? 'Phone' : 'الهاتف' ?></th>
+                  <th><?= $en ? 'Status' : 'الحالة' ?></th>
+                  <th><?= $en ? 'Created' : 'تاريخ الإنشاء' ?></th>
+                  <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
                 </tr>
               </thead>
               <tbody id="usersTableBody"></tbody>
@@ -686,29 +710,28 @@ $jsConfig = [
            ======================================================== -->
       <section class="tab-panel" id="tab-settings">
 
-        <!-- Official Brand Identity Kit -->
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>🎨 حزمة الهوية البصرية المعتمدة — ASLY | أصلي TECH STORE</h3>
-              <span style="font-size:.82rem;color:var(--db-muted);">تم تصميم الشعارات المتجهة (Vector SVG) عالية الدقة استناداً إلى بنر المركز الرسمي لاستخدامها على الموقع والفواتير والمطبوعات.</span>
+              <h3>🎨 <?= $en ? 'Official Luminous Brand Identity Kit — ASLY TECH STORE' : 'حزمة الهوية البصرية المحدثة (الفاتحة) — ASLY | أصلي TECH STORE' ?></h3>
+              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'High-resolution lighter turquoise-teal & champagne-gold brand marks for web, invoices, and print.' : 'الشعار المضيء الجديد بدرجات التيفاني الفاتح والذهبي الهادي للموقع والفواتير والمطبوعات.' ?></span>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:stretch;">
-            <div style="background:#043538;padding:20px;border-radius:14px;text-align:center;border:1px solid var(--db-gold-500);">
-              <img src="<?= e(appUrl('assets/brand/logo-dark.svg')) ?>" alt="Dark Logo" style="height:64px;margin:0 auto 12px;">
-              <div style="color:#d8ecec;font-size:.82rem;margin-bottom:10px;">الشعار الرسمي للخلفيات الداكنة</div>
-              <a href="<?= e(appUrl('assets/brand/logo-dark.svg')) ?>" download="ASLY-Logo-Dark.svg" class="btn btn-gold btn-sm">تحميل SVG</a>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;align-items:stretch;">
+            <div style="background:var(--db-bg);padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="Transparent Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Transparent PNG Logo' : 'الشعار الرسمي بخلفية شفافة (PNG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" download="ASLY-Logo-Transparent.png" class="btn btn-teal btn-sm">Download PNG</a>
             </div>
-            <div style="background:#f8fbfb;padding:20px;border-radius:14px;text-align:center;border:1px solid var(--db-border);">
-              <img src="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" alt="Light Logo" style="height:64px;margin:0 auto 12px;">
-              <div style="color:var(--db-muted);font-size:.82rem;margin-bottom:10px;">الشعار الرسمي للخلفيات الفاتحة والطباعة</div>
-              <a href="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" download="ASLY-Logo-Light.svg" class="btn btn-teal btn-sm">تحميل SVG</a>
+            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" alt="Vector Logo" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Scalable Vector Logo (SVG)' : 'الشعار المتجه للطباعة (SVG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/logo-light.svg')) ?>" download="ASLY-Logo.svg" class="btn btn-gold btn-sm">Download SVG</a>
             </div>
-            <div style="background:#ffffff;padding:20px;border-radius:14px;text-align:center;border:1px solid var(--db-border);">
-              <img src="<?= e(appUrl('assets/brand/favicon.svg')) ?>" alt="Icon" style="height:64px;margin:0 auto 12px;">
-              <div style="color:var(--db-muted);font-size:.82rem;margin-bottom:10px;">أيقونة العلامة (Monogram Crest)</div>
-              <a href="<?= e(appUrl('assets/brand/favicon.svg')) ?>" download="ASLY-Icon.svg" class="btn btn-ghost btn-sm">تحميل الأيقونة</a>
+            <div style="background:#ffffff;padding:20px;border-radius:18px;text-align:center;border:1px solid var(--db-border);">
+              <img src="<?= e(appUrl('assets/brand/favicon.svg')) ?>" alt="Icon" style="height:66px;margin:0 auto 12px;object-fit:contain;">
+              <div style="color:var(--db-muted);font-size:0.82rem;margin-bottom:10px;"><?= $en ? 'Brand Monogram Icon' : 'أيقونة العلامة (Favicon SVG)' ?></div>
+              <a href="<?= e(appUrl('assets/brand/favicon.svg')) ?>" download="ASLY-Icon.svg" class="btn btn-ghost btn-sm">Download Icon</a>
             </div>
           </div>
         </div>
@@ -717,22 +740,22 @@ $jsConfig = [
         <div class="card">
           <div class="card-header">
             <div>
-              <h3>📞 إدارة أرقام الهواتف والواتساب ومنصات التواصل (تظهر بالموقع الخارجي)</h3>
-              <span style="font-size:.82rem;color:var(--db-muted);">أضف أو عدّل أي رقم هاتف، واتساب، فيسبوك، إنستجرام، تيك توك، أو لوكيشن ليظهر فوراً للعملاء.</span>
+              <h3>📞 <?= $en ? 'Dynamic Contact & Social Channels (Live on Storefront)' : 'إدارة أرقام الهواتف والواتساب ومنصات التواصل (تظهر بالموقع الخارجي)' ?></h3>
+              <span style="font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Add or edit phone lines, WhatsApp, Facebook, Instagram, TikTok, or Map links.' : 'أضف أو عدّل أي رقم هاتف، واتساب، فيسبوك، إنستجرام، تيك توك، أو لوكيشن ليظهر فوراً للعملاء.' ?></span>
             </div>
-            <button type="button" class="btn btn-gold btn-sm" id="btnAddChannelModal">+ إضافة وسيلة تواصل</button>
+            <button type="button" class="btn btn-teal btn-sm" id="btnAddChannelModal">+ <?= $en ? 'Add Channel' : 'إضافة وسيلة تواصل' ?></button>
           </div>
           <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>النوع</th>
-                  <th>العنوان الظاهر للعميل</th>
-                  <th>الرقم / القيمة</th>
-                  <th>الرابط التلقائي</th>
-                  <th>الترتيب</th>
-                  <th>الحالة</th>
-                  <th>إجراءات</th>
+                  <th><?= $en ? 'Type' : 'النوع' ?></th>
+                  <th><?= $en ? 'Public Label' : 'العنوان الظاهر للعميل' ?></th>
+                  <th><?= $en ? 'Value / Number' : 'الرقم / القيمة' ?></th>
+                  <th><?= $en ? 'Direct URL' : 'الرابط التلقائي' ?></th>
+                  <th><?= $en ? 'Order' : 'الترتيب' ?></th>
+                  <th><?= $en ? 'Status' : 'الحالة' ?></th>
+                  <th><?= $en ? 'Actions' : 'إجراءات' ?></th>
                 </tr>
               </thead>
               <tbody id="channelsTableBody"></tbody>
@@ -743,124 +766,146 @@ $jsConfig = [
         <!-- Store Info & SMTP Email Settings Form -->
         <form id="settingsSaveForm" class="card">
           <div class="card-header">
-            <h3>⚙️ إعدادات بيانات المركز، رابط الـ QR، وإشعارات البريد الإلكتروني (SMTP)</h3>
-            <button type="button" class="btn btn-ghost btn-sm" id="btnViewEmailLogs">📬 سجل رسائل البريد المرسلة</button>
+            <h3>⚙️ <?= $en ? 'Store Identity, Bilingual Copy, QR Base URL & SMTP Email' : 'إعدادات بيانات المركز (عربي + إنجليزي)، رابط الـ QR، والبريد الإلكتروني (SMTP)' ?></h3>
+            <button type="button" class="btn btn-ghost btn-sm" id="btnViewEmailLogs">📬 <?= $en ? 'Sent Email Outbox' : 'سجل رسائل البريد المرسلة' ?></button>
           </div>
 
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label>اسم المركز بالعربية</label>
+              <label><?= $en ? 'Store Name (Arabic)' : 'اسم المركز بالعربية' ?></label>
               <input type="text" name="store_name_ar" id="set_store_name_ar" class="form-control">
             </div>
             <div class="form-group">
-              <label>اسم المركز بالإنجليزية</label>
+              <label><?= $en ? 'Store Name (English)' : 'اسم المركز بالإنجليزية' ?></label>
               <input type="text" name="store_name_en" id="set_store_name_en" class="form-control" style="direction:ltr;">
             </div>
             <div class="form-group">
-              <label>رقم واتساب الاستفسارات الرئيسي (بكود الدولة 20)</label>
+              <label><?= $en ? 'Primary WhatsApp (with country code 20)' : 'رقم واتساب الاستفسارات الرئيسي (بكود الدولة 20)' ?></label>
               <input type="text" name="primary_whatsapp" id="set_primary_whatsapp" class="form-control" placeholder="201015981677" style="direction:ltr;">
             </div>
           </div>
 
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label>هاتف الفواتير الرئيسي 1</label>
+              <label><?= $en ? 'Invoice Phone 1' : 'هاتف الفواتير الرئيسي 1' ?></label>
               <input type="text" name="primary_phone" id="set_primary_phone" class="form-control" style="direction:ltr;">
             </div>
             <div class="form-group">
-              <label>هاتف الفواتير 2</label>
+              <label><?= $en ? 'Invoice Phone 2' : 'هاتف الفواتير 2' ?></label>
               <input type="text" name="secondary_phone" id="set_secondary_phone" class="form-control" style="direction:ltr;">
             </div>
             <div class="form-group">
-              <label>مواعيد العمل</label>
-              <input type="text" name="working_hours" id="set_working_hours" class="form-control">
+              <label><?= $en ? 'Google Maps Link (Optional)' : 'رابط خرائط جوجل (اختياري)' ?></label>
+              <input type="url" name="google_maps_url" id="set_google_maps_url" class="form-control" placeholder="https://maps.google.com/..." style="direction:ltr;">
             </div>
           </div>
 
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label>عنوان المركز بالتفصيل</label>
+              <label><?= $en ? 'Address (Arabic)' : 'العنوان (عربي)' ?></label>
               <input type="text" name="store_address" id="set_store_address" class="form-control">
             </div>
             <div class="form-group">
-              <label>سطر الإدارة والإشراف الهندسي</label>
-              <input type="text" name="founders_line" id="set_founders_line" class="form-control">
+              <label><?= $en ? 'Address (English)' : 'العنوان (إنجليزي)' ?></label>
+              <input type="text" name="store_address_en" id="set_store_address_en" class="form-control" style="direction:ltr;">
             </div>
           </div>
 
           <div class="form-grid" style="margin-bottom:18px;">
             <div class="form-group">
-              <label>وصف المركز بالواجهة الرئيسية</label>
+              <label><?= $en ? 'Working Hours (Arabic)' : 'مواعيد العمل (عربي)' ?></label>
+              <input type="text" name="working_hours" id="set_working_hours" class="form-control">
+            </div>
+            <div class="form-group">
+              <label><?= $en ? 'Working Hours (English)' : 'مواعيد العمل (إنجليزي)' ?></label>
+              <input type="text" name="working_hours_en" id="set_working_hours_en" class="form-control" style="direction:ltr;">
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px;">
+            <div class="form-group">
+              <label><?= $en ? 'Management Line (Arabic)' : 'سطر الإدارة والإشراف (عربي)' ?></label>
+              <input type="text" name="founders_line" id="set_founders_line" class="form-control">
+            </div>
+            <div class="form-group">
+              <label><?= $en ? 'Management Line (English)' : 'سطر الإدارة والإشراف (إنجليزي)' ?></label>
+              <input type="text" name="founders_line_en" id="set_founders_line_en" class="form-control" style="direction:ltr;">
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:18px;">
+            <div class="form-group">
+              <label><?= $en ? 'Store Tagline (Arabic)' : 'وصف المركز (عربي)' ?></label>
               <input type="text" name="store_tagline" id="set_store_tagline" class="form-control">
             </div>
             <div class="form-group">
-              <label>رابط خرائط جوجل (اختياري)</label>
-              <input type="url" name="google_maps_url" id="set_google_maps_url" class="form-control" placeholder="https://maps.google.com/..." style="direction:ltr;">
+              <label><?= $en ? 'Store Tagline (English)' : 'وصف المركز (إنجليزي)' ?></label>
+              <input type="text" name="store_tagline_en" id="set_store_tagline_en" class="form-control" style="direction:ltr;">
             </div>
           </div>
 
           <div class="form-grid" style="margin-bottom:22px;">
             <div class="form-group">
-              <label>الرابط الأساسي لتوليد أكواد QR الصيانة والفواتير (اتركه فارغاً للتعرف التلقائي أو ضع IP الشبكة على XAMPP)</label>
-              <input type="text" name="public_base_url" id="set_public_base_url" class="form-control" placeholder="مثال على الشبكة: http://192.168.1.10/asly" style="direction:ltr;">
+              <label><?= $en ? 'Public Base URL for QR Links (Leave empty for auto-detect or enter LAN IP on XAMPP)' : 'الرابط الأساسي لتوليد أكواد QR الصيانة والفواتير (اتركه فارغاً للتعرف التلقائي أو ضع IP الشبكة)' ?></label>
+              <input type="text" name="public_base_url" id="set_public_base_url" class="form-control" placeholder="http://192.168.1.10/asly" style="direction:ltr;">
             </div>
             <div class="form-group">
-              <label>نص الضمان أسفل الفاتورة</label>
+              <label><?= $en ? 'Invoice Warranty Footer Note' : 'نص الضمان أسفل الفاتورة' ?></label>
               <input type="text" name="invoice_footer_note" id="set_invoice_footer_note" class="form-control">
             </div>
           </div>
 
-          <!-- SMTP Configuration for Maintenance Stage Emails -->
-          <div style="background:var(--db-teal-50);padding:20px;border-radius:16px;border:1px solid var(--db-border);margin-bottom:20px;">
+          <!-- SMTP Configuration -->
+          <div style="background:var(--db-teal-50);padding:20px;border-radius:18px;border:1px solid var(--db-teal-100);margin-bottom:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
               <div>
-                <strong style="color:var(--db-teal-900);font-size:.98rem;">📧 إعدادات إشعارات البريد الإلكتروني التلقائية لمراحل الصيانة (SMTP)</strong>
-                <div style="font-size:.8rem;color:var(--db-muted);">عند تسجيل إيميل العميل بتذكرة الصيانة، يصله بريد بتفاصيل كل مرحلة جديدة تلقائياً (يعمل مع Gmail App Password أو أي استضافة).</div>
+                <strong style="color:var(--db-teal-800);font-size:0.98rem;">📧 <?= $en ? 'Automatic Repair Stage Email Notifications (SMTP)' : 'إعدادات إشعارات البريد الإلكتروني التلقائية لمراحل الصيانة (SMTP)' ?></strong>
+                <div style="font-size:0.8rem;color:var(--db-muted);"><?= $en ? 'Automatically emails registered customers whenever their repair moves to a new stage.' : 'عند تسجيل إيميل العميل بتذكرة الصيانة، يصله بريد بتفاصيل كل مرحلة جديدة تلقائياً.' ?></div>
               </div>
               <select name="smtp_enabled" id="set_smtp_enabled" class="form-control" style="width:auto;font-weight:800;">
-                <option value="0">وضع التجربة المحلية (حفظ بالسجل / PHP mail)</option>
-                <option value="1">تفعيل الإرسال الفعلي عبر SMTP</option>
+                <option value="0"><?= $en ? 'Local Outbox / PHP mail()' : 'وضع التجربة المحلية (حفظ بالسجل / PHP mail)' ?></option>
+                <option value="1"><?= $en ? 'Live SMTP Delivery' : 'تفعيل الإرسال الفعلي عبر SMTP' ?></option>
               </select>
             </div>
 
             <div class="form-grid">
               <div class="form-group">
-                <label>خادم SMTP Host</label>
+                <label>SMTP Host</label>
                 <input type="text" name="smtp_host" id="set_smtp_host" class="form-control" placeholder="smtp.gmail.com" style="direction:ltr;">
               </div>
               <div class="form-group">
-                <label>المنفذ (Port)</label>
+                <label>Port</label>
                 <input type="number" name="smtp_port" id="set_smtp_port" class="form-control" placeholder="587" style="direction:ltr;">
               </div>
               <div class="form-group">
-                <label>التشفير</label>
+                <label><?= $en ? 'Encryption' : 'التشفير' ?></label>
                 <select name="smtp_encryption" id="set_smtp_encryption" class="form-control">
-                  <option value="tls">TLS (Port 587 - مستحسن)</option>
-                  <option value="ssl">SSL (Port 465)</option>
-                  <option value="none">بدون تشفير</option>
+                  <option value="tls">TLS (587)</option>
+                  <option value="ssl">SSL (465)</option>
+                  <option value="none">None</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>البريد المرسل / اسم مستخدم SMTP</label>
+                <label>SMTP Username</label>
                 <input type="text" name="smtp_username" id="set_smtp_username" class="form-control" placeholder="yourstore@gmail.com" style="direction:ltr;">
               </div>
               <div class="form-group">
-                <label>كلمة مرور التطبيقات (SMTP App Password)</label>
+                <label>SMTP App Password</label>
                 <input type="password" name="smtp_password" id="set_smtp_password" class="form-control" placeholder="••••••••••••" style="direction:ltr;">
               </div>
               <div class="form-group">
-                <label>البريد الظاهر كمرسل (From Email)</label>
+                <label>From Email</label>
                 <input type="email" name="smtp_from_email" id="set_smtp_from_email" class="form-control" style="direction:ltr;">
               </div>
             </div>
 
             <div style="display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;">
-              <input type="email" id="testEmailRecipient" class="form-control" placeholder="أدخل إيميل لإرسال رسالة مرحلة تجريبية..." style="max-width:300px;direction:ltr;">
-              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail">📨 إرسال بريد تجريبي الآن</button>
+              <input type="email" id="testEmailRecipient" class="form-control" placeholder="test@example.com" style="max-width:280px;direction:ltr;">
+              <button type="button" class="btn btn-teal btn-sm" id="btnSendTestEmail">📨 <?= $en ? 'Send Test Stage Email' : 'إرسال بريد تجريبي الآن' ?></button>
             </div>
           </div>
 
-          <button type="submit" class="btn btn-gold" style="padding:13px 32px;font-size:1rem;">💾 حفظ جميع الإعدادات</button>
+          <button type="submit" class="btn btn-teal" style="padding:13px 32px;font-size:1rem;">💾 <?= $en ? 'Save All Settings' : 'حفظ جميع الإعدادات' ?></button>
         </form>
 
       </section>
@@ -871,25 +916,24 @@ $jsConfig = [
 </div>
 
 <!-- ============================================================
-     MODALS: INVOICE PNG/WHATSAPP/PRINT, NEW MAINTENANCE, TICKET DETAIL, STICKER, STAFF, CHANNELS, EMAIL LOGS
+     BRIGHT DAYLIGHT MODALS
      ============================================================ -->
 
 <!-- 1. Invoice Preview, PNG Export, WhatsApp Share & Print Modal -->
 <div class="db-modal-backdrop" id="invoiceModal">
   <div class="db-modal" style="width:min(820px,100%);">
     <div class="db-modal-head">
-      <strong>🧾 فاتورة مبيعات رسمية — جاهزة للتحميل كصورة أو الإرسال واتساب أو الطباعة</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('invoiceModal')">إغلاق ×</button>
+      <strong>🧾 <?= $en ? 'Official Sales Invoice — Download PNG, Share on WhatsApp, or Print' : 'فاتورة مبيعات رسمية — جاهزة للتحميل كصورة أو الإرسال واتساب أو الطباعة' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('invoiceModal')">✕</button>
     </div>
     <div class="db-modal-body">
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;">
-        <button type="button" class="btn btn-gold" id="btnModalInvoicePng">📥 تحميل الفاتورة كصورة (PNG)</button>
-        <button type="button" class="btn btn-emerald" id="btnModalInvoiceWhatsapp">💬 إرسال الفاتورة للعميل عبر واتساب</button>
-        <button type="button" class="btn btn-teal" id="btnModalInvoicePrint">🖨️ طباعة الفاتورة</button>
+        <button type="button" class="btn btn-teal" id="btnModalInvoicePng">📥 <?= $en ? 'Download PNG Image' : 'تحميل الفاتورة كصورة (PNG)' ?></button>
+        <button type="button" class="btn btn-emerald" id="btnModalInvoiceWhatsapp">💬 <?= $en ? 'Send via WhatsApp' : 'إرسال الفاتورة للعميل عبر واتساب' ?></button>
+        <button type="button" class="btn btn-gold" id="btnModalInvoicePrint">🖨️ <?= $en ? 'Print Invoice' : 'طباعة الفاتورة' ?></button>
       </div>
 
-      <!-- Crisp Branded Invoice Capture Surface -->
-      <div id="modalInvoiceCapture" style="background:#ffffff;border:2px solid #043538;border-radius:16px;overflow:hidden;"></div>
+      <div id="modalInvoiceCapture" style="background:#ffffff;border:1.5px solid #d5f2f4;border-radius:18px;overflow:hidden;"></div>
     </div>
   </div>
 </div>
@@ -898,115 +942,115 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="newMaintModal">
   <div class="db-modal">
     <div class="db-modal-head">
-      <strong>🛠️ استلام وتسجيل جهاز صيانة جديد + توليد كود QR للعميل</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('newMaintModal')">إغلاق ×</button>
+      <strong>🛠️ <?= $en ? 'Receive Repair Device & Generate Customer QR Receipt' : 'استلام وتسجيل جهاز صيانة جديد + توليد كود QR للعميل' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('newMaintModal')">✕</button>
     </div>
     <div class="db-modal-body">
       <form id="newMaintForm">
-        <h4 style="margin:0 0 10px;color:var(--db-teal-900);">👤 أولاً: بيانات العميل والتواصل</h4>
+        <h4 style="margin:0 0 10px;color:var(--db-teal-800);">👤 <?= $en ? '1. Customer Contact Details' : 'أولاً: بيانات العميل والتواصل' ?></h4>
         <div class="form-grid" style="margin-bottom:14px;">
           <div class="form-group">
-            <label>اسم العميل الثلاثي *</label>
-            <input type="text" name="customer_name" class="form-control" required placeholder="مثال: محمد أحمد علي">
+            <label><?= $en ? 'Customer Full Name *' : 'اسم العميل الثلاثي *' ?></label>
+            <input type="text" name="customer_name" class="form-control" required>
           </div>
           <div class="form-group">
-            <label>رقم الموبايل الأساسي *</label>
+            <label><?= $en ? 'Primary Mobile *' : 'رقم الموبايل الأساسي *' ?></label>
             <input type="text" name="customer_phone" class="form-control" required placeholder="010xxxxxxxx" style="direction:ltr;">
           </div>
           <div class="form-group">
-            <label>رقم هاتف بديل / واتساب</label>
+            <label><?= $en ? 'Alt Phone / WhatsApp' : 'رقم هاتف بديل / واتساب' ?></label>
             <input type="text" name="customer_alt_phone" class="form-control" placeholder="011xxxxxxxx" style="direction:ltr;">
           </div>
         </div>
 
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="form-group">
-            <label>البريد الإلكتروني للعميل (اختياري — يصله إيميل تلقائي بكل مرحلة!)</label>
+            <label><?= $en ? 'Customer Email (Optional — Auto stage emails!)' : 'البريد الإلكتروني للعميل (اختياري — يصله إيميل تلقائي بكل مرحلة!)' ?></label>
             <input type="email" name="customer_email" class="form-control" placeholder="client@gmail.com" style="direction:ltr;">
           </div>
           <div class="form-group">
-            <label>تفاصيل إضافية عن العميل / العنوان</label>
-            <input type="text" name="customer_details" class="form-control" placeholder="مثال: عنوان العميل أو الموعد المفضل للاتصال">
+            <label><?= $en ? 'Address / Notes' : 'تفاصيل إضافية عن العميل / العنوان' ?></label>
+            <input type="text" name="customer_details" class="form-control">
           </div>
         </div>
 
-        <h4 style="margin:0 0 10px;color:var(--db-teal-900);padding-top:10px;border-top:1px solid var(--db-border);">💻 ثانياً: مواصفات الجهاز والعطل والتكلفة</h4>
+        <h4 style="margin:0 0 10px;color:var(--db-teal-800);padding-top:10px;border-top:1px solid var(--db-border);">💻 <?= $en ? '2. Device Specs, Issue & Estimate' : 'ثانياً: مواصفات الجهاز والعطل والتكلفة' ?></h4>
         <div class="form-grid" style="margin-bottom:14px;">
           <div class="form-group">
-            <label>نوع الجهاز *</label>
+            <label><?= $en ? 'Device Type *' : 'نوع الجهاز *' ?></label>
             <select name="device_type" class="form-control">
-              <option value="laptop">لابتوب (Laptop)</option>
-              <option value="mobile">موبايل (Smartphone)</option>
-              <option value="wearable">ساعة ذكية / Wearable</option>
-              <option value="other">جهاز آخر</option>
+              <option value="laptop">Laptop • لابتوب</option>
+              <option value="mobile">Smartphone • موبايل</option>
+              <option value="wearable">Smart Watch • ساعة ذكية</option>
+              <option value="other">Other • جهاز آخر</option>
             </select>
           </div>
           <div class="form-group">
-            <label>الماركة والموديل *</label>
-            <input type="text" name="device_model" class="form-control" required placeholder="مثال: HP ZBook G7 أو iPhone 14 Pro">
+            <label><?= $en ? 'Brand & Model *' : 'الماركة والموديل *' ?></label>
+            <input type="text" name="device_model" class="form-control" required placeholder="HP ZBook G7 / iPhone 14 Pro">
           </div>
           <div class="form-group">
-            <label>السيريال / IMEI</label>
+            <label>Serial / IMEI</label>
             <input type="text" name="serial_imei" class="form-control" style="direction:ltr;">
           </div>
         </div>
 
         <div class="form-grid" style="margin-bottom:14px;">
           <div class="form-group">
-            <label>مواصفات الجهاز (رام، مساحة، لون...)</label>
-            <input type="text" name="device_specs" class="form-control" placeholder="Core i7 • 16GB • 512GB • رمادي">
+            <label><?= $en ? 'Device Specs' : 'مواصفات الجهاز (رام، مساحة، لون...)' ?></label>
+            <input type="text" name="device_specs" class="form-control">
           </div>
           <div class="form-group">
-            <label>باسورد / رمز قفل الجهاز للفحص</label>
-            <input type="text" name="device_passcode" class="form-control" placeholder="سري للفني فقط (يُمسح عند التسليم)">
+            <label><?= $en ? 'Passcode (Wiped on delivery)' : 'باسورد / رمز قفل الجهاز للفحص' ?></label>
+            <input type="text" name="device_passcode" class="form-control">
           </div>
           <div class="form-group">
-            <label>الحالة الظاهرية والملحقات المستلمة</label>
-            <input type="text" name="physical_condition" class="form-control" placeholder="مثال: بدون شاحن، خدش بالإطار">
+            <label><?= $en ? 'Physical Condition & Accessories' : 'الحالة الظاهرية والملحقات المستلمة' ?></label>
+            <input type="text" name="physical_condition" class="form-control">
           </div>
         </div>
 
         <div class="form-group" style="margin-bottom:14px;">
-          <label>وصف العطل المطلوب إصلاحه بالتفصيل *</label>
-          <textarea name="problem_description" rows="2" class="form-control" required placeholder="اكتب شكوى العميل والعطل الظاهري..."></textarea>
+          <label><?= $en ? 'Problem Description *' : 'وصف العطل المطلوب إصلاحه بالتفصيل *' ?></label>
+          <textarea name="problem_description" rows="2" class="form-control" required></textarea>
         </div>
 
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="form-group">
-            <label>التكلفة المبدئية المتوقعة (ج.م)</label>
+            <label><?= $en ? 'Estimated Cost' : 'التكلفة المبدئية المتوقعة' ?></label>
             <input type="number" step="0.01" min="0" name="estimated_cost" class="form-control" value="0">
           </div>
           <?php if ($isAdmin): ?>
           <div class="form-group">
-            <label>تكلفة قطع الغيار المبدئية (للأدمن)</label>
+            <label><?= $en ? 'Est. Parts Cost (Admin)' : 'تكلفة قطع الغيار المبدئية (للأدمن)' ?></label>
             <input type="number" step="0.01" min="0" name="parts_cost" class="form-control" value="0">
           </div>
           <?php endif; ?>
           <div class="form-group">
-            <label>العربون المدفوع عند الاستلام (ج.م)</label>
+            <label><?= $en ? 'Deposit Paid' : 'العربون المدفوع عند الاستلام' ?></label>
             <input type="number" step="0.01" min="0" name="deposit_paid" class="form-control" value="0">
           </div>
         </div>
 
         <div class="form-group" style="margin-bottom:18px;">
-          <label>ملاحظة المرحلة الأولى (تظهر للعميل عند مسح الـ QR)</label>
-          <input type="text" name="initial_note" class="form-control" value="تم استلام الجهاز وتسجيل بياناته بمركز أصلي تك ستور لبدء الفحص الفني.">
+          <label><?= $en ? 'Initial Stage Note (Visible on Customer QR)' : 'ملاحظة المرحلة الأولى (تظهر للعميل عند مسح الـ QR)' ?></label>
+          <input type="text" name="initial_note" class="form-control" value="<?= $en ? 'Device received and logged at ASLY Tech Store diagnostic lab.' : 'تم استلام الجهاز وتسجيل بياناته بمركز أصلي تك ستور لبدء الفحص الفني.' ?>">
         </div>
 
-        <button type="submit" class="btn btn-gold" style="width:100%;padding:13px;font-size:1rem;">
-          ✅ تسجيل الجهاز وتوليد إيصال الـ QR للعميل
+        <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
+          ✅ <?= $en ? 'Register Ticket & Generate Customer QR' : 'تسجيل الجهاز وتوليد إيصال الـ QR للعميل' ?>
         </button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- 3. Maintenance Ticket Detail, QR Receipt, Stages, Mutual Notes & Final Delivery Wipe Modal -->
+<!-- 3. Maintenance Ticket Detail Modal -->
 <div class="db-modal-backdrop" id="maintDetailModal">
   <div class="db-modal" style="width:min(920px,100%);">
     <div class="db-modal-head">
-      <strong id="mdModalTitle">ملف تذكرة الصيانة</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('maintDetailModal')">إغلاق ×</button>
+      <strong id="mdModalTitle"><?= $en ? 'Repair Ticket Profile' : 'ملف تذكرة الصيانة' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('maintDetailModal')">✕</button>
     </div>
     <div class="db-modal-body" id="maintDetailBody"></div>
   </div>
@@ -1016,19 +1060,19 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="stickerModal">
   <div class="db-modal" style="width:min(440px,100%);">
     <div class="db-modal-head">
-      <strong>🏷️ طباعة استيكر QR / باركود للمنتج</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('stickerModal')">إغلاق ×</button>
+      <strong>🏷️ <?= $en ? 'Print Product QR / Barcode Sticker' : 'طباعة استيكر QR / باركود للمنتج' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('stickerModal')">✕</button>
     </div>
     <div class="db-modal-body" style="text-align:center;">
       <div id="modalStickerArea" class="sticker-preview-box" style="margin-bottom:18px;">
-        <strong style="font-size:.9rem;color:#043538;">ASLY | أصلي TECH STORE</strong>
-        <div id="modalStickerName" style="font-size:.82rem;color:#334155;font-weight:700;"></div>
+        <strong style="font-size:0.9rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
+        <div id="modalStickerName" style="font-size:0.82rem;color:#334155;font-weight:700;"></div>
         <div id="modalStickerQr" style="margin:6px auto;"></div>
         <svg id="modalStickerBarcode" style="max-width:220px;height:52px;"></svg>
-        <div id="modalStickerCode" style="font-family:monospace;font-weight:900;font-size:.88rem;"></div>
+        <div id="modalStickerCode" style="font-family:monospace;font-weight:900;font-size:0.88rem;"></div>
       </div>
       <div>
-        <button type="button" class="btn btn-gold" id="btnPrintModalSticker" style="width:100%;">🖨️ طباعة الاستيكر الآن</button>
+        <button type="button" class="btn btn-teal" id="btnPrintModalSticker" style="width:100%;">🖨️ <?= $en ? 'Print Sticker Now' : 'طباعة الاستيكر الآن' ?></button>
       </div>
     </div>
   </div>
@@ -1039,41 +1083,41 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="userModal">
   <div class="db-modal" style="width:min(500px,100%);">
     <div class="db-modal-head">
-      <strong id="userModalTitle">إدارة حساب موظف / مدير</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">إغلاق ×</button>
+      <strong id="userModalTitle"><?= $en ? 'Manage Staff / Admin Account' : 'إدارة حساب موظف / مدير' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
     </div>
     <div class="db-modal-body">
       <form id="userSaveForm">
         <input type="hidden" name="id" id="uFormId" value="0">
         <div class="form-group" style="margin-bottom:12px;">
-          <label>الاسم الكامل *</label>
+          <label><?= $en ? 'Full Name *' : 'الاسم الكامل *' ?></label>
           <input type="text" name="full_name" id="uFormFullName" class="form-control" required>
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label>اسم المستخدم للدخول *</label>
+          <label><?= $en ? 'Username *' : 'اسم المستخدم للدخول *' ?></label>
           <input type="text" name="username" id="uFormUsername" class="form-control" required style="direction:ltr;">
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label>كلمة المرور <span id="uPassHint" style="font-weight:400;color:var(--db-muted);"></span></label>
+          <label><?= $en ? 'Password' : 'كلمة المرور' ?> <span id="uPassHint" style="font-weight:400;color:var(--db-muted);"></span></label>
           <input type="password" name="password" id="uFormPassword" class="form-control" style="direction:ltr;">
         </div>
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="form-group">
-            <label>الصلاحية *</label>
+            <label><?= $en ? 'Role *' : 'الصلاحية *' ?></label>
             <select name="role" id="uFormRole" class="form-control">
-              <option value="staff">موظف مبيعات وصيانة (Staff - بدون سعر الشراء)</option>
-              <option value="admin">مدير كامل الصلاحيات (Admin)</option>
+              <option value="staff"><?= $en ? 'Sales & Repair Staff (No Buy Cost)' : 'موظف مبيعات وصيانة (Staff - بدون سعر الشراء)' ?></option>
+              <option value="admin"><?= $en ? 'Full Administrator (Admin)' : 'مدير كامل الصلاحيات (Admin)' ?></option>
             </select>
           </div>
           <div class="form-group">
-            <label>رقم الهاتف</label>
+            <label><?= $en ? 'Phone' : 'رقم الهاتف' ?></label>
             <input type="text" name="phone" id="uFormPhone" class="form-control" style="direction:ltr;">
           </div>
         </div>
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-weight:700;">
-          <input type="checkbox" name="is_active" id="uFormActive" value="1" checked> الحساب نشط ومسموح له بالدخول
+          <input type="checkbox" name="is_active" id="uFormActive" value="1" checked> <?= $en ? 'Account Active' : 'الحساب نشط ومسموح له بالدخول' ?>
         </label>
-        <button type="submit" class="btn btn-gold" style="width:100%;">حفظ الحساب</button>
+        <button type="submit" class="btn btn-teal" style="width:100%;"><?= $en ? 'Save Account' : 'حفظ الحساب' ?></button>
       </form>
     </div>
   </div>
@@ -1083,47 +1127,47 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="channelModal">
   <div class="db-modal" style="width:min(520px,100%);">
     <div class="db-modal-head">
-      <strong>📞 إضافة / تعديل وسيلة تواصل بالموقع</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('channelModal')">إغلاق ×</button>
+      <strong>📞 <?= $en ? 'Add / Edit Storefront Contact Channel' : 'إضافة / تعديل وسيلة تواصل بالموقع' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('channelModal')">✕</button>
     </div>
     <div class="db-modal-body">
       <form id="channelSaveForm">
         <input type="hidden" name="id" id="chFormId" value="0">
         <div class="form-grid" style="margin-bottom:12px;">
           <div class="form-group">
-            <label>نوع الوسيلة *</label>
+            <label><?= $en ? 'Channel Type *' : 'نوع الوسيلة *' ?></label>
             <select name="channel_type" id="chFormType" class="form-control">
-              <option value="phone">اتصال هاتفي (Phone)</option>
-              <option value="whatsapp">واتساب (WhatsApp)</option>
-              <option value="facebook">فيسبوك (Facebook)</option>
-              <option value="instagram">إنستجرام (Instagram)</option>
-              <option value="tiktok">تيك توك (TikTok)</option>
-              <option value="telegram">تيليجرام (Telegram)</option>
-              <option value="email">بريد إلكتروني (Email)</option>
-              <option value="location">موقع / عنوان</option>
+              <option value="phone">Phone • اتصال هاتفي</option>
+              <option value="whatsapp">WhatsApp • واتساب</option>
+              <option value="facebook">Facebook • فيسبوك</option>
+              <option value="instagram">Instagram • إنستجرام</option>
+              <option value="tiktok">TikTok • تيك توك</option>
+              <option value="telegram">Telegram • تيليجرام</option>
+              <option value="email">Email • بريد إلكتروني</option>
+              <option value="location">Location • موقع</option>
             </select>
           </div>
           <div class="form-group">
-            <label>ترتيب الظهور</label>
+            <label><?= $en ? 'Display Order' : 'ترتيب الظهور' ?></label>
             <input type="number" name="sort_order" id="chFormSort" class="form-control" value="1">
           </div>
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label>العنوان الظاهر للعميل *</label>
-          <input type="text" name="label" id="chFormLabel" class="form-control" placeholder="مثال: مبيعات واستفسارات - م. حسام" required>
+          <label><?= $en ? 'Public Label *' : 'العنوان الظاهر للعميل *' ?></label>
+          <input type="text" name="label" id="chFormLabel" class="form-control" required>
         </div>
         <div class="form-group" style="margin-bottom:12px;">
-          <label>الرقم أو اسم الحساب الظاهر *</label>
-          <input type="text" name="value" id="chFormValue" class="form-control" placeholder="01015981677 أو @asly.store" required style="direction:ltr;">
+          <label><?= $en ? 'Phone Number / Handle *' : 'الرقم أو اسم الحساب الظاهر *' ?></label>
+          <input type="text" name="value" id="chFormValue" class="form-control" required style="direction:ltr;">
         </div>
         <div class="form-group" style="margin-bottom:16px;">
-          <label>الرابط المباشر عند الضغط (اتركه فارغاً للتوليد التلقائي للهاتف والواتساب)</label>
-          <input type="text" name="url" id="chFormUrl" class="form-control" placeholder="https://facebook.com/..." style="direction:ltr;">
+          <label><?= $en ? 'Direct URL (Leave empty to auto-generate tel/wa.me)' : 'الرابط المباشر عند الضغط (اتركه فارغاً للتوليد التلقائي)' ?></label>
+          <input type="text" name="url" id="chFormUrl" class="form-control" style="direction:ltr;">
         </div>
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-weight:700;">
-          <input type="checkbox" name="is_active" id="chFormActive" value="1" checked> إظهار في الصفحة الرئيسية للعملاء
+          <input type="checkbox" name="is_active" id="chFormActive" value="1" checked> <?= $en ? 'Visible on Public Storefront' : 'إظهار في الصفحة الرئيسية للعملاء' ?>
         </label>
-        <button type="submit" class="btn btn-gold" style="width:100%;">حفظ وسيلة التواصل</button>
+        <button type="submit" class="btn btn-teal" style="width:100%;"><?= $en ? 'Save Channel' : 'حفظ وسيلة التواصل' ?></button>
       </form>
     </div>
   </div>
@@ -1133,8 +1177,8 @@ $jsConfig = [
 <div class="db-modal-backdrop" id="emailLogsModal">
   <div class="db-modal" style="width:min(860px,100%);">
     <div class="db-modal-head">
-      <strong>📬 سجل إشعارات البريد الإلكتروني المرسلة للعملاء</strong>
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('emailLogsModal')">إغلاق ×</button>
+      <strong>📬 <?= $en ? 'Sent Customer Email Notifications Log' : 'سجل إشعارات البريد الإلكتروني المرسلة للعملاء' ?></strong>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('emailLogsModal')">✕</button>
     </div>
     <div class="db-modal-body" id="emailLogsBody"></div>
   </div>

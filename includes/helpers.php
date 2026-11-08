@@ -1,12 +1,13 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Core Helpers, Formatters, Settings & Constants
+ * Core Helpers, Formatters, Settings, Bilingual Meta & File Uploads
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/i18n.php';
 
 function e(?string $value): string
 {
@@ -68,58 +69,87 @@ function getCategoryMeta(): array
 {
     return [
         'laptops'     => ['ar' => 'لابتوب', 'en' => 'Laptops', 'prefix' => 'LAP'],
-        'mobiles'     => ['ar' => 'هواتف ذكية', 'en' => 'Mobiles', 'prefix' => 'MOB'],
-        'accessories' => ['ar' => 'إكسسوارات', 'en' => 'Accessories', 'prefix' => 'ACC'],
-        'wearables'   => ['ar' => 'أجهزة قابلة للارتداء', 'en' => 'Wearables', 'prefix' => 'WRB'],
+        'mobiles'     => ['ar' => 'هواتف ذكية', 'en' => 'Smartphones', 'prefix' => 'MOB'],
+        'accessories' => ['ar' => 'إكسسوارات وصوتيات', 'en' => 'Audio & Accessories', 'prefix' => 'ACC'],
+        'wearables'   => ['ar' => 'ساعات وأجهزة ذكية', 'en' => 'Smart Wearables', 'prefix' => 'WRB'],
     ];
 }
 
 function getConditionMeta(): array
 {
     return [
-        'new'      => ['ar' => 'جديد متبرشم', 'badge' => 'new'],
-        'open_box' => ['ar' => 'كسر زيرو', 'badge' => 'open_box'],
-        'used'     => ['ar' => 'مستعمل فرز أول', 'badge' => 'used'],
+        'new'      => ['ar' => 'جديد متبرشم', 'en' => 'Brand New • Sealed', 'badge' => 'new'],
+        'open_box' => ['ar' => 'كسر زيرو', 'en' => 'Open Box • Like New', 'badge' => 'open_box'],
+        'used'     => ['ar' => 'مستعمل فرز أول', 'en' => 'Certified Pre-Owned', 'badge' => 'used'],
     ];
 }
 
 function getMaintenanceStages(): array
 {
+    $en = isEn();
     return [
         'received' => [
-            'order' => 1,
-            'title' => 'تم استلام الجهاز',
-            'desc'  => 'تم تسجيل الجهاز واستلامه بمركز الصيانة لبدء الفحص الفني.',
+            'order'    => 1,
+            'title'    => $en ? 'Device Received at Lab' : 'تم استلام الجهاز',
+            'title_ar' => 'تم استلام الجهاز',
+            'title_en' => 'Device Received at Lab',
+            'desc'     => $en
+                ? 'Your device has been logged at our diagnostic center and queued for hardware inspection.'
+                : 'تم تسجيل الجهاز واستلامه بمركز الصيانة لبدء الفحص الفني.',
         ],
         'diagnosing' => [
-            'order' => 2,
-            'title' => 'قيد الفحص والتشخيص',
-            'desc'  => 'يقوم مهندسو المركز حالياً بفحص الجهاز وتحديد العطل بدقة.',
+            'order'    => 2,
+            'title'    => $en ? 'Hardware Diagnostics in Progress' : 'قيد الفحص والتشخيص',
+            'title_ar' => 'قيد الفحص والتشخيص',
+            'title_en' => 'Hardware Diagnostics in Progress',
+            'desc'     => $en
+                ? 'Our engineers are running board-level & component diagnostics to pinpoint the issue accurately.'
+                : 'يقوم مهندسو المركز حالياً بفحص الجهاز وتحديد العطل بدقة.',
         ],
         'waiting_approval' => [
-            'order' => 3,
-            'title' => 'بانتظار موافقة العميل / قطع الغيار',
-            'desc'  => 'تم تحديد متطلبات الصيانة والتكلفة وفي انتظار التأكيد أو تجهيز القطعة الأصلية.',
+            'order'    => 3,
+            'title'    => $en ? 'Awaiting Approval / Genuine Parts' : 'بانتظار موافقة العميل / قطع الغيار',
+            'title_ar' => 'بانتظار موافقة العميل / قطع الغيار',
+            'title_en' => 'Awaiting Approval / Genuine Parts',
+            'desc'     => $en
+                ? 'Repair plan and estimate are ready; awaiting confirmation or genuine part allocation.'
+                : 'تم تحديد متطلبات الصيانة والتكلفة وفي انتظار التأكيد أو تجهيز القطعة الأصلية.',
         ],
         'repairing' => [
-            'order' => 4,
-            'title' => 'جاري الإصلاح والصيانة',
-            'desc'  => 'جاري العمل الفعلي على إصلاح العطل بأحدث أجهزة الصيانة.',
+            'order'    => 4,
+            'title'    => $en ? 'Precision Repair Underway' : 'جاري الإصلاح والصيانة',
+            'title_ar' => 'جاري الإصلاح والصيانة',
+            'title_en' => 'Precision Repair Underway',
+            'desc'     => $en
+                ? 'Active repair and calibration are currently underway using precision lab equipment.'
+                : 'جاري العمل الفعلي على إصلاح العطل بأحدث أجهزة الصيانة.',
         ],
         'testing' => [
-            'order' => 5,
-            'title' => 'الفحص والاختبار النهائي',
-            'desc'  => 'تم الإصلاح وجاري اختبار كفاءة الجهاز تحت الضغط لضمان الجودة.',
+            'order'    => 5,
+            'title'    => $en ? 'Final Stress Testing & QA' : 'الفحص والاختبار النهائي',
+            'title_ar' => 'الفحص والاختبار النهائي',
+            'title_en' => 'Final Stress Testing & QA',
+            'desc'     => $en
+                ? 'Repair complete — running thermal, battery, and stability tests to ensure peak reliability.'
+                : 'تم الإصلاح وجاري اختبار كفاءة الجهاز تحت الضغط لضمان الجودة.',
         ],
         'ready' => [
-            'order' => 6,
-            'title' => 'جاهز للاستلام بالمركز',
-            'desc'  => 'اكتملت الصيانة بنجاح والجهاز جاهز الآن لتشريفكم بالاستلام.',
+            'order'    => 6,
+            'title'    => $en ? 'Ready for Showroom Pickup' : 'جاهز للاستلام بالمركز',
+            'title_ar' => 'جاهز للاستلام بالمركز',
+            'title_en' => 'Ready for Showroom Pickup',
+            'desc'     => $en
+                ? 'All tests passed! Your device is ready for pickup at ASLY Tech Store.'
+                : 'اكتملت الصيانة بنجاح والجهاز جاهز الآن لتشريفكم بالاستلام.',
         ],
         'delivered' => [
-            'order' => 7,
-            'title' => 'تم التسليم النهائي للعميل',
-            'desc'  => 'تم تسليم الجهاز للعميل وإغلاق وحذف سجل البيانات الشخصية للتذكرة.',
+            'order'    => 7,
+            'title'    => $en ? 'Delivered to Customer' : 'تم التسليم النهائي للعميل',
+            'title_ar' => 'تم التسليم النهائي للعميل',
+            'title_en' => 'Delivered to Customer',
+            'desc'     => $en
+                ? 'Handed over to customer and personal ticket data wiped per privacy protocol.'
+                : 'تم تسليم الجهاز للعميل وإغلاق وحذف سجل البيانات الشخصية للتذكرة.',
         ],
     ];
 }
@@ -162,7 +192,8 @@ function generateInvoiceNumber(PDO $pdo): string
 
 function formatMoney(float|int|string $amount): string
 {
-    return number_format((float)$amount, 2, '.', ',') . ' ج.م';
+    $formatted = number_format((float)$amount, 2, '.', ',');
+    return isEn() ? ($formatted . ' EGP') : ($formatted . ' ج.م');
 }
 
 function normalizeWhatsappNumber(string $phone): string
@@ -190,7 +221,7 @@ function handleProductImageUpload(array $file): ?string
     }
     $maxSize = 8 * 1024 * 1024; // 8 MB
     if (($file['size'] ?? 0) > $maxSize) {
-        throw new RuntimeException('حجم الصورة يجب ألا يتجاوز 8 ميجابايت.');
+        throw new RuntimeException(isEn() ? 'Image size must not exceed 8 MB.' : 'حجم الصورة يجب ألا يتجاوز 8 ميجابايت.');
     }
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = $finfo->file($file['tmp_name']);
@@ -201,14 +232,13 @@ function handleProductImageUpload(array $file): ?string
         'image/gif'  => 'gif',
     ];
     if (!isset($allowed[$mime])) {
-        throw new RuntimeException('صيغة الصورة غير مدعومة. يرجى رفع JPG أو PNG أو WebP.');
+        throw new RuntimeException(isEn() ? 'Unsupported image format. Please upload JPG, PNG, or WebP.' : 'صيغة الصورة غير مدعومة. يرجى رفع JPG أو PNG أو WebP.');
     }
     $filename = 'prd_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
     $dest = UPLOADS_DIR . '/' . $filename;
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
-        // Fallback copy for environments where move_uploaded_file behaves across temp mounts
         if (!@copy($file['tmp_name'], $dest)) {
-            throw new RuntimeException('تعذر حفظ الصورة المرفوعة.');
+            throw new RuntimeException(isEn() ? 'Failed to save uploaded image.' : 'تعذر حفظ الصورة المرفوعة.');
         }
     }
     return 'uploads/products/' . $filename;

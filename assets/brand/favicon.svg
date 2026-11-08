@@ -1,21 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="ASLY Icon">
-  <defs>
-    <linearGradient id="bgCrest" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#085A5E"/>
-      <stop offset="55%" stop-color="#053C3F"/>
-      <stop offset="100%" stop-color="#022325"/>
-    </linearGradient>
-    <linearGradient id="goldRim" x1="8" y1="118" x2="118" y2="10" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#B67C13"/>
-      <stop offset="50%" stop-color="#FFE082"/>
-      <stop offset="100%" stop-color="#CC9222"/>
-    </linearGradient>
-  </defs>
-  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bgCrest)" stroke="url(#goldRim)" stroke-width="3.5"/>
-  <!-- Geometric A -->
-  <path d="M26 96 L60 26 H76 L100 96 H81 L67 49 L45 96 H26 Z" fill="#FFFFFF"/>
-  <!-- Golden Swoosh -->
-  <path d="M16 101 C40 70, 74 57, 114 68 C88 69, 52 80, 22 106 Z" fill="url(#goldRim)"/>
-  <!-- Golden Dot / Crown Accent -->
-  <circle cx="96" cy="30" r="5" fill="url(#goldRim)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="18" fill="#FFFFFF"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="16.5" stroke="#DDF2F3" stroke-width="2"/>
+  <!-- Orbital Champagne Gold Swooshes -->
+  <path d="M18 20C28 11 43 10 51 17C44 14 31 15 21 22Z" fill="#E4B453"/>
+  <path d="M10 45C15 54 32 55 46 46C33 51 19 50 13 43Z" fill="#E4B453"/>
+  <!-- Floating Digital Pixel Squares -->
+  <rect x="46" y="13" width="5" height="5" rx="1" fill="#14B4B8"/>
+  <rect x="52" y="9" width="6" height="6" rx="1" fill="#E4B453"/>
+  <rect x="53" y="16" width="4.5" height="4.5" rx="1" fill="#14B4B8"/>
+  <!-- Bold Luminous Turquoise 'A' Monogram -->
+  <path d="M31 19L16 44H24L27.2 38.2H36.8L40 44H48L33 19H31ZM29.7 33.2L32 28.6L34.3 33.2H29.7Z" fill="#14B4B8"/>
+  <path d="M14 41C20 35 28 34 35 37C27 36.5 20 38.5 14 41Z" fill="#E4B453"/>
 </svg>

@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * Branded HTML Email Notification Engine (Pure PHP TLS/SSL SMTP + mail() + Log)
+ * Branded Bright Daylight HTML Email Notification Engine (Pure PHP TLS/SSL SMTP + mail() + Log)
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ class AslyMailer
 
         $settings = getAllSettings($pdo);
         $stages = getMaintenanceStages();
-        $stageInfo = $stages[$stageKey] ?? ['order' => 1, 'title' => $stageKey, 'desc' => ''];
+        $stageInfo = $stages[$stageKey] ?? ['order' => 1, 'title' => $stageKey, 'title_ar' => $stageKey, 'title_en' => $stageKey, 'desc' => ''];
 
         $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
         $storeNameEn = $settings['store_name_en'] ?: 'ASLY TECH STORE';
@@ -36,11 +36,15 @@ class AslyMailer
             $settings['public_base_url'] ?? null
         );
 
+        $stageAr = $stageInfo['title_ar'] ?? $stageInfo['title'];
+        $stageEn = $stageInfo['title_en'] ?? $stageInfo['title'];
+
         $subject = sprintf(
-            '[%s] تحديث حالة جهازك (%s): %s - تذكرة %s',
+            '[%s | %s] %s (%s) — %s',
+            $storeNameEn,
             $storeNameAr,
+            $stageAr,
             $ticket['device_model'],
-            $stageInfo['title'],
             $ticket['ticket_code']
         );
 
@@ -48,33 +52,33 @@ class AslyMailer
         $currentOrder = (int)$stageInfo['order'];
         foreach ($stages as $k => $st) {
             $order = (int)$st['order'];
-            $bg = $order < $currentOrder ? '#085A5E' : ($order === $currentOrder ? '#D49B27' : '#E5ECEC');
-            $color = $order <= $currentOrder ? '#FFFFFF' : '#6D8082';
+            $bg = $order < $currentOrder ? '#14B4B8' : ($order === $currentOrder ? '#E4B453' : '#EEF6F7');
+            $color = $order <= $currentOrder ? '#FFFFFF' : '#64748B';
             $progressStepsHtml .= sprintf(
-                '<td align="center" style="padding:4px;"><div style="width:28px;height:28px;line-height:28px;border-radius:50%%;background:%s;color:%s;font-weight:bold;font-size:12px;">%d</div><div style="font-size:10px;color:#334E50;margin-top:4px;">%s</div></td>',
+                '<td align="center" style="padding:4px;"><div style="width:28px;height:28px;line-height:28px;border-radius:50%%;background:%s;color:%s;font-weight:bold;font-size:12px;">%d</div><div style="font-size:10px;color:#475569;margin-top:4px;">%s</div></td>',
                 $bg,
                 $color,
                 $order,
-                e($st['title'])
+                e($st['title_ar'] ?? $st['title'])
             );
         }
 
         $noteHtml = '';
         if (trim($latestNote) !== '') {
             $noteHtml = sprintf(
-                '<div style="margin:18px 0;padding:15px 18px;background:#F4F9F9;border-right:4px solid #D49B27;border-radius:8px;">
-                    <div style="font-size:12px;color:#085A5E;font-weight:bold;margin-bottom:6px;">ملاحظة مهندس الصيانة بالمرحلة الحالية:</div>
-                    <div style="font-size:14px;color:#162D2F;line-height:1.7;">%s</div>
+                '<div style="margin:18px 0;padding:15px 18px;background:#FFFBEB;border-right:4px solid #E4B453;border-radius:12px;">
+                    <div style="font-size:12px;color:#B45309;font-weight:bold;margin-bottom:6px;">ملاحظة مهندس الصيانة • Engineer Note:</div>
+                    <div style="font-size:14px;color:#334155;line-height:1.7;">%s</div>
                 </div>',
                 nl2br(e($latestNote))
             );
         }
 
         $actionBlock = $stageKey === 'delivered'
-            ? '<div style="margin-top:20px;padding:14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;color:#065F46;font-size:13px;text-align:center;">تم تسليم الجهاز بنجاح وإغلاق التذكرة. نشكركم لثقتكم الغالية في مركز أصلي ASLY TECH STORE!</div>'
+            ? '<div style="margin-top:20px;padding:14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;color:#059669;font-size:13px;text-align:center;">تم تسليم الجهاز بنجاح وإغلاق التذكرة • Device delivered & closed. Thank you for choosing ASLY TECH STORE!</div>'
             : sprintf(
                 '<div style="text-align:center;margin:26px 0 10px;">
-                    <a href="%s" style="display:inline-block;padding:13px 28px;background:linear-gradient(135deg,#074F53,#043538);color:#FFE082;text-decoration:none;border-radius:10px;font-weight:bold;font-size:15px;border:1px solid #D49B27;">متابعة حالة الجهاز وإضافة تعليق</a>
+                    <a href="%s" style="display:inline-block;padding:13px 30px;background:linear-gradient(135deg,#14B4B8,#0E9599);color:#FFFFFF;text-decoration:none;border-radius:999px;font-weight:bold;font-size:15px;">متابعة حالة الجهاز • Track Repair Live</a>
                 </div>',
                 e($trackUrl)
             );
@@ -83,45 +87,47 @@ class AslyMailer
             '<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:24px;background:#EFF5F5;font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;">
-  <div style="max-width:620px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #D7E5E5;box-shadow:0 8px 24px rgba(4,53,56,0.08);">
-    <div style="background:linear-gradient(135deg,#043538 0%%,#085A5E 100%%);padding:26px 28px;border-bottom:4px solid #D49B27;text-align:center;">
-      <div style="font-size:26px;font-weight:900;color:#FFFFFF;letter-spacing:1px;">ASLY <span style="color:#F2C75C;">|</span> أصلي</div>
-      <div style="font-size:12px;color:#F2C75C;letter-spacing:4px;margin-top:4px;">TECH STORE</div>
+<body style="margin:0;padding:24px;background:#FAF9F6;font-family:Tahoma,Arial,sans-serif;direction:rtl;text-align:right;color:#1E293B;">
+  <div style="max-width:620px;margin:0 auto;background:#FFFFFF;border-radius:20px;overflow:hidden;border:1px solid #E2ECEE;box-shadow:0 12px 32px rgba(20,180,184,0.08);">
+    <div style="background:linear-gradient(135deg,#EFFAFA 0%%,#FFFBF0 100%%);padding:26px 28px;border-bottom:3px solid #E4B453;text-align:center;">
+      <div style="font-size:28px;font-weight:900;color:#14B4B8;letter-spacing:2px;">ASLY <span style="color:#E4B453;">|</span> أصلي</div>
+      <div style="font-size:11px;color:#D6992A;letter-spacing:5px;margin-top:4px;font-weight:bold;">TECH STORE</div>
     </div>
     <div style="padding:28px;">
-      <p style="margin:0 0 12px;font-size:16px;color:#102A2C;">أهلاً بك أستاذ/ <strong>%s</strong>،</p>
-      <p style="margin:0 0 18px;font-size:14px;color:#425B5D;line-height:1.7;">نود إعلامكم بتحديث جديد بخصوص جهازكم المسجل بقسم الصيانة لدى <strong>%s</strong>:</p>
+      <p style="margin:0 0 10px;font-size:16px;color:#1E293B;">مرحباً <strong>%s</strong>،</p>
+      <p style="margin:0 0 18px;font-size:14px;color:#52637A;line-height:1.7;">تحديث جديد بخصوص جهازكم المسجل بمعمل الصيانة في <strong>%s (%s)</strong>:</p>
 
-      <div style="background:#063F42;color:#FFFFFF;padding:18px;border-radius:12px;margin-bottom:18px;">
-        <div style="font-size:12px;color:#F2C75C;margin-bottom:4px;">المرحلة الحالية للجهاز</div>
-        <div style="font-size:20px;font-weight:bold;">%s</div>
-        <div style="font-size:13px;color:#D6ECEC;margin-top:6px;">%s</div>
+      <div style="background:#EFF9FA;border:1px solid #CBECEE;padding:18px;border-radius:14px;margin-bottom:18px;">
+        <div style="font-size:12px;color:#0E8F94;font-weight:bold;margin-bottom:4px;">المرحلة الحالية • Current Stage</div>
+        <div style="font-size:20px;font-weight:bold;color:#1E293B;">%s <span style="font-size:14px;color:#52637A;font-weight:normal;">(%s)</span></div>
+        <div style="font-size:13px;color:#52637A;margin-top:6px;">%s</div>
       </div>
 
-      <table width="100%%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px;background:#FAFDFD;border:1px solid #E3EEEE;border-radius:10px;padding:10px;">
+      <table width="100%%" cellpadding="0" cellspacing="0" style="margin:14px 0 18px;background:#FFFFFF;border:1px solid #E6F0F2;border-radius:12px;padding:10px;">
         <tr>%s</tr>
       </table>
 
-      <table width="100%%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:13px;color:#1D383A;border:1px solid #E5EFEF;border-radius:8px;">
-        <tr style="background:#F7FAFA;"><td style="font-weight:bold;width:36%%;">رقم تذكرة الصيانة:</td><td>%s</td></tr>
-        <tr><td style="font-weight:bold;">الجهاز والموديل:</td><td>%s</td></tr>
-        <tr style="background:#F7FAFA;"><td style="font-weight:bold;">وصف العطل:</td><td>%s</td></tr>
-        <tr><td style="font-weight:bold;">التكلفة المقدرة / العربون:</td><td>%s (المدفوع مقدماً: %s)</td></tr>
+      <table width="100%%" cellpadding="9" cellspacing="0" style="border-collapse:collapse;font-size:13px;color:#1E293B;border:1px solid #E6F0F2;border-radius:10px;">
+        <tr style="background:#F8FAFC;"><td style="font-weight:bold;width:36%%;">رقم التذكرة • Ticket:</td><td>%s</td></tr>
+        <tr><td style="font-weight:bold;">الجهاز • Device:</td><td>%s</td></tr>
+        <tr style="background:#F8FAFC;"><td style="font-weight:bold;">العطل • Issue:</td><td>%s</td></tr>
+        <tr><td style="font-weight:bold;">التكلفة المقدرة / العربون:</td><td>%s (%s)</td></tr>
       </table>
 
       %s
       %s
     </div>
-    <div style="background:#F6F9F9;padding:16px 24px;text-align:center;font-size:12px;color:#5B7476;border-top:1px solid #E4EEEE;">
-      %s (%s) — للاستفسار: %s | %s
+    <div style="background:#FAF9F6;padding:16px 24px;text-align:center;font-size:12px;color:#64748B;border-top:1px solid #E8EEF0;">
+      %s (%s) — 📞 %s | %s
     </div>
   </div>
 </body>
 </html>',
             e((string)$ticket['customer_name']),
             e($storeNameAr),
-            e($stageInfo['title']),
+            e($storeNameEn),
+            e($stageAr),
+            e($stageEn),
             e($stageInfo['desc']),
             $progressStepsHtml,
             e((string)$ticket['ticket_code']),
@@ -185,7 +191,6 @@ class AslyMailer
             }
         }
 
-        // Try PHP mail() if configured on server, otherwise store cleanly in local outbox log for XAMPP testing
         $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
         $encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
         $headers = implode("\r\n", [
@@ -208,9 +213,6 @@ class AslyMailer
         ];
     }
 
-    /**
-     * Lightweight pure-PHP RFC-compliant SMTP client (SSL & STARTTLS) — Zero external libraries needed on XAMPP!
-     */
     private static function sendViaSmtp(
         string $host,
         int $port,
@@ -228,7 +230,7 @@ class AslyMailer
         $errstr = '';
         $socket = @stream_socket_client($remote, $errno, $errstr, 12, STREAM_CLIENT_CONNECT);
         if (!$socket) {
-            throw new RuntimeException("تعذر الاتصال بخادم SMTP ({$host}:{$port}): {$errstr}");
+            throw new RuntimeException("SMTP connection error ({$host}:{$port}): {$errstr}");
         }
         stream_set_timeout($socket, 12);
 
@@ -242,7 +244,7 @@ class AslyMailer
             }
             $code = (int)substr($response, 0, 3);
             if (!in_array($code, $codes, true)) {
-                throw new RuntimeException('رد غير متوقع من خادم البريد: ' . trim($response));
+                throw new RuntimeException('Unexpected SMTP response: ' . trim($response));
             }
             return $response;
         };
@@ -258,7 +260,7 @@ class AslyMailer
         if ($encryption === 'tls') {
             $cmd($socket, 'STARTTLS', [220]);
             if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                throw new RuntimeException('تعذر تفعيل تشفير TLS مع خادم البريد.');
+                throw new RuntimeException('Failed to enable STARTTLS encryption.');
             }
             $cmd($socket, 'EHLO aslystore.local', [250]);
         }

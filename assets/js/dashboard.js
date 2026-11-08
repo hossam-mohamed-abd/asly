@@ -1,6 +1,6 @@
 /**
  * ASLY | أصلي TECH STORE
- * Complete Dashboard Controller:
+ * Complete Bright Daylight Bilingual Dashboard Controller (EN LTR + AR RTL):
  * - Daily Sales & Net Profit Reports
  * - Camera 1D Elongated Barcode & 2D QR Scanner (Add Product + Quick Customer Price Check)
  * - Auto QR & Barcode Sticker Generator + Printer
@@ -13,9 +13,12 @@
   const CFG = window.ASLY_CFG || {};
   const BASE = CFG.baseUrl || '';
   const IS_ADMIN = !!CFG.isAdmin;
+  const EN = !!CFG.isEn;
+  const tr = (ar, en) => (EN ? en : ar);
 
   const apiUrl = (path) => `${BASE}/${path.replace(/^\/+/, '')}`;
-  const fmtMoney = (n) => `${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ج.م`;
+  const fmtMoney = (n) =>
+    `${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${EN ? 'EGP' : 'ج.م'}`;
 
   const esc = (str) => {
     const d = document.createElement('div');
@@ -30,6 +33,8 @@
     if (d.startsWith('01') && d.length === 11) return '2' + d;
     return d;
   };
+
+  const fallbackImg = () => CFG.store?.logoCardUrl || apiUrl('assets/brand/logo-card.jpg');
 
   function showToast(msg, isError = false) {
     const wrap = document.getElementById('toastContainer');
@@ -51,12 +56,11 @@
     const res = await fetch(apiUrl(path), Object.assign({}, options, { headers }));
     const data = await res.json();
     if (!data.ok) {
-      throw new Error(data.error || 'حدث خطأ أثناء تنفيذ العملية');
+      throw new Error(data.error || tr('حدث خطأ أثناء تنفيذ العملية', 'An error occurred'));
     }
     return data;
   }
 
-  // Subtle scan beep using Web Audio API
   function playScanBeep() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -73,7 +77,7 @@
   }
 
   // ============================================================
-  // QR & 1D Barcode Rendering Helpers
+  // QR & 1D Barcode Rendering Helpers (Bright Teal Ink — Zero Black!)
   // ============================================================
   function renderQrInto(el, text, cellSize = 4) {
     if (!el) return;
@@ -84,7 +88,7 @@
       qr.addData(String(text));
       qr.make();
       el.innerHTML = qr.createSvgTag({ cellSize, margin: 2, scalable: false });
-    } catch (e) {
+    } catch (_) {
       el.textContent = text;
     }
   }
@@ -96,7 +100,7 @@
     try {
       window.JsBarcode(svgEl, String(code), {
         format: 'CODE128',
-        lineColor: '#043538',
+        lineColor: '#0d9499',
         width: 1.7,
         height: 40,
         displayValue: false,
@@ -106,14 +110,14 @@
   }
 
   function printHtmlSnippet(title, bodyHtml) {
-    const win = window.open('', '_blank', 'width=760,height=680');
+    const win = window.open('', '_blank', 'width=780,height=700');
     if (!win) {
-      showToast('يرجى السماح بالنوافذ المنبثقة للطباعة', true);
+      showToast(tr('يرجى السماح بالنوافذ المنبثقة للطباعة', 'Please allow pop-ups to print'), true);
       return;
     }
-    win.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+    win.document.write(`<!DOCTYPE html><html dir="${EN ? 'ltr' : 'rtl'}" lang="${EN ? 'en' : 'ar'}"><head><meta charset="UTF-8"><title>${esc(title)}</title>
       <style>
-        body { font-family: Tahoma, Arial, sans-serif; direction: rtl; margin: 16px; color: #043538; }
+        body { font-family: Tahoma, Arial, sans-serif; direction: ${EN ? 'ltr' : 'rtl'}; margin: 16px; color: #1e293b; background: #ffffff; }
         @media print { body { margin: 4mm; } }
       </style>
     </head><body>${bodyHtml}<script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script></body></html>`);
@@ -123,25 +127,20 @@
   // ============================================================
   // Modals & Tab Navigation
   // ============================================================
-  window.openModal = (id) => {
-    const m = document.getElementById(id);
-    if (m) m.classList.add('open');
-  };
-
-  window.closeModal = (id) => {
-    const m = document.getElementById(id);
-    if (m) m.classList.remove('open');
-  };
+  window.openModal = (id) => document.getElementById(id)?.classList.add('open');
+  window.closeModal = (id) => document.getElementById(id)?.classList.remove('open');
 
   const tabTitles = {
-    'overview': IS_ADMIN ? 'لوحة المبيعات اليومية والأرباح الصافية' : 'ملخص المبيعات والتشغيل اليومي',
-    'quick-scanner': 'كاشف السعر السريع بالكاميرا (الباركود المطاول والـ QR)',
-    'pos': 'نقطة البيع وإصدار الفواتير الرسمية',
-    'add-product': 'إضافة منتج جديد (مسح الكود أو توليد QR تلقائي)',
-    'inventory': 'إدارة المخزون والأجهزة واستيكرات الأكواد',
-    'maintenance': 'إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل',
-    'staff': 'إدارة الموظفين وصلاحيات النظام',
-    'settings': 'الهوية البصرية وقنوات التواصل وإعدادات البريد',
+    'overview': IS_ADMIN
+      ? tr('لوحة المبيعات اليومية والأرباح الصافية', 'Daily Sales & Net Profit Overview')
+      : tr('ملخص المبيعات والتشغيل اليومي', 'Daily Sales & Operations'),
+    'quick-scanner': tr('كاشف السعر السريع بالكاميرا (الباركود المطاول والـ QR)', 'Quick Camera Price Checker (1D Barcode & QR)'),
+    'pos': tr('نقطة البيع وإصدار الفواتير الرسمية', 'Point of Sale & Official Invoicing'),
+    'add-product': tr('إضافة منتج جديد (مسح الكود أو توليد QR تلقائي)', 'Add Product (Scan Barcode or Generate Auto QR)'),
+    'inventory': tr('إدارة المخزون والأجهزة واستيكرات الأكواد', 'Inventory Catalog & Printable Stickers'),
+    'maintenance': tr('إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل', 'Interactive QR Repair Tickets & Email Alerts'),
+    'staff': tr('إدارة الموظفين وصلاحيات النظام', 'Staff Accounts & Role Permissions'),
+    'settings': tr('الهوية البصرية وقنوات التواصل وإعدادات البريد', 'Brand Identity, Contact Channels & SMTP'),
   };
 
   window.switchTab = async (tabName) => {
@@ -155,8 +154,7 @@
     const titleEl = document.getElementById('activePageTitle');
     if (titleEl && tabTitles[tabName]) titleEl.textContent = tabTitles[tabName];
 
-    const sb = document.getElementById('appSidebar');
-    if (sb) sb.classList.remove('open');
+    document.getElementById('appSidebar')?.classList.remove('open');
 
     if (tabName === 'overview') loadOverviewReport();
     if (tabName === 'pos') loadPosCatalog();
@@ -170,22 +168,19 @@
     btn.addEventListener('click', () => window.switchTab(btn.dataset.tab));
   });
 
-  const mobBtn = document.getElementById('btnMobileSidebar');
-  if (mobBtn) {
-    mobBtn.addEventListener('click', () => {
-      document.getElementById('appSidebar')?.classList.toggle('open');
-    });
-  }
+  document.getElementById('btnMobileSidebar')?.addEventListener('click', () => {
+    document.getElementById('appSidebar')?.classList.toggle('open');
+  });
 
   // ============================================================
-  // Camera Barcode & QR Scanner Manager (1D Elongated + 2D QR)
+  // Camera Barcode & QR Scanner Manager
   // ============================================================
   let activeScanners = {};
 
   async function startCameraScanner(mountId, onScanSuccess) {
     await stopCameraScanner(mountId);
     if (typeof window.Html5Qrcode === 'undefined') {
-      showToast('مكتبة الكاميرا غير محملة', true);
+      showToast(tr('مكتبة الكاميرا غير محملة', 'Camera library not loaded'), true);
       return false;
     }
 
@@ -229,9 +224,9 @@
     } catch (err) {
       delete activeScanners[mountId];
       if (mount) {
-        mount.innerHTML = `<div style="padding:18px;color:#fca5a5;font-size:.84rem;">
-          تعذر فتح الكاميرا مباشرة (${esc(err?.message || 'تأكد من صلاحية الكاميرا أو استخدام localhost / HTTPS')}).<br>
-          يمكنك استخدام زر <strong>«مسح من صورة باركود»</strong> أو إدخال/مسح الكود بالخانة بالأسفل.
+        mount.innerHTML = `<div style="padding:18px;color:#dc2626;font-size:0.84rem;">
+          ${tr('تعذر فتح الكاميرا مباشرة', 'Could not access camera directly')} (${esc(err?.message || 'HTTPS / localhost required')}).<br>
+          ${tr('استخدم مسح صورة الباركود أو أدخل الكود بالأسفل.', 'Use barcode image scan or enter code below.')}
         </div>`;
       }
       return false;
@@ -243,9 +238,7 @@
     if (!inst) return;
     delete activeScanners[mountId];
     try {
-      if (inst.isScanning) {
-        await inst.stop();
-      }
+      if (inst.isScanning) await inst.stop();
       inst.clear();
     } catch (_) {}
   }
@@ -271,13 +264,9 @@
   // ============================================================
   // TAB 1: OVERVIEW & DAILY SALES / REVENUE REPORT
   // ============================================================
-  let cachedInvoicesMap = {};
-
   async function loadOverviewReport() {
-    const fromEl = document.getElementById('repDateFrom');
-    const toEl = document.getElementById('repDateTo');
-    const dFrom = fromEl ? fromEl.value : '';
-    const dTo = toEl ? toEl.value : '';
+    const dFrom = document.getElementById('repDateFrom')?.value || '';
+    const dTo = document.getElementById('repDateTo')?.value || '';
 
     try {
       const data = await apiFetch(`api/pos.php?action=list&date_from=${encodeURIComponent(dFrom)}&date_to=${encodeURIComponent(dTo)}`);
@@ -289,78 +278,76 @@
           const cap = CFG.inventoryStats || {};
           kpiWrap.innerHTML = `
             <div class="kpi-card hero-kpi">
-              <div class="kpi-label">إجمالي النقدية الداخلة (مبيعات + صيانة)</div>
+              <div class="kpi-label">${tr('إجمالي النقدية الداخلة (مبيعات + صيانة)', 'Total Cash Inflow (Sales + Repairs)')}</div>
               <div class="kpi-value">${fmtMoney(s.combined_revenue)}</div>
-              <div class="kpi-sub">${s.invoices_count} فاتورة بيع + ${s.maintenance_delivered_count} جهاز صيانة مُسلّم</div>
+              <div class="kpi-sub">${s.invoices_count} ${tr('فاتورة بيع', 'invoices')} + ${s.maintenance_delivered_count} ${tr('صيانة مسلمة', 'repairs')}</div>
             </div>
             <div class="kpi-card" style="border-color:var(--db-gold-500);background:var(--db-gold-50);">
-              <div class="kpi-label" style="color:var(--db-gold-600);">صافي الربح الحقيقي للفترة</div>
-              <div class="kpi-value" style="color:#065f46;">${fmtMoney(s.combined_net_profit)}</div>
-              <div class="kpi-sub">ربح المبيعات: ${fmtMoney(s.sales_profit)} | الصيانة: ${fmtMoney(s.maintenance_profit)}</div>
+              <div class="kpi-label" style="color:var(--db-gold-600);">${tr('صافي الربح الحقيقي للفترة', 'True Net Profit')}</div>
+              <div class="kpi-value" style="color:#059669;">${fmtMoney(s.combined_net_profit)}</div>
+              <div class="kpi-sub">${tr('المبيعات:', 'Sales:')} ${fmtMoney(s.sales_profit)} | ${tr('الصيانة:', 'Repairs:')} ${fmtMoney(s.maintenance_profit)}</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">إيراد فواتير المبيعات</div>
+              <div class="kpi-label">${tr('إيراد فواتير المبيعات', 'Sales Revenue')}</div>
               <div class="kpi-value">${fmtMoney(s.sales_revenue)}</div>
-              <div class="kpi-sub">إجمالي القطع المباعة: ${s.items_sold_count} قطعة</div>
+              <div class="kpi-sub">${tr('القطع المباعة:', 'Units sold:')} ${s.items_sold_count}</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">إيراد الصيانة المسلمة</div>
+              <div class="kpi-label">${tr('إيراد الصيانة المسلمة', 'Delivered Repair Revenue')}</div>
               <div class="kpi-value">${fmtMoney(s.maintenance_revenue)}</div>
-              <div class="kpi-sub">تم تسليم وحذف بيانات ${s.maintenance_delivered_count} جهاز</div>
+              <div class="kpi-sub">${s.maintenance_delivered_count} ${tr('تذكرة ممسوحة البيانات', 'wiped tickets')}</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">رأس مال البضاعة الحالية بالمخزن</div>
+              <div class="kpi-label">${tr('رأس مال البضاعة بالمخزن', 'Current Stock Capital')}</div>
               <div class="kpi-value">${fmtMoney(cap.total_capital || 0)}</div>
-              <div class="kpi-sub">${cap.total_units || 0} قطعة بالمخزن (${cap.total_skus || 0} صنف)</div>
+              <div class="kpi-sub">${cap.total_units || 0} ${tr('قطعة', 'units')} (${cap.total_skus || 0} SKU)</div>
             </div>
           `;
         } else {
           kpiWrap.innerHTML = `
             <div class="kpi-card hero-kpi">
-              <div class="kpi-label">إجمالي الفواتير الصادرة بالفترة</div>
+              <div class="kpi-label">${tr('إجمالي الفواتير الصادرة بالفترة', 'Total Issued Invoices')}</div>
               <div class="kpi-value">${fmtMoney(s.sales_revenue)}</div>
-              <div class="kpi-sub">${s.invoices_count} فاتورة • ${s.items_sold_count} قطعة مباعة</div>
+              <div class="kpi-sub">${s.invoices_count} ${tr('فاتورة', 'invoices')} • ${s.items_sold_count} ${tr('قطعة مباعة', 'items')}</div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">كاشف السعر السريع</div>
-              <div class="kpi-value" style="font-size:1.15rem;">فحص بالكاميرا</div>
-              <div class="kpi-sub"><button class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">فتح الاسكانر الآن</button></div>
+              <div class="kpi-label">${tr('كاشف السعر السريع', 'Quick Price Scanner')}</div>
+              <div class="kpi-value" style="font-size:1.15rem;">${tr('فحص بالكاميرا', 'Camera Lookup')}</div>
+              <div class="kpi-sub"><button class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">${tr('فتح الاسكانر الآن', 'Open Scanner')}</button></div>
             </div>
             <div class="kpi-card">
-              <div class="kpi-label">نقطة البيع والفواتير</div>
-              <div class="kpi-value" style="font-size:1.15rem;">بيع وإصدار فاتورة</div>
-              <div class="kpi-sub"><button class="btn btn-teal btn-sm" onclick="switchTab('pos')">فتح نقطة البيع</button></div>
+              <div class="kpi-label">${tr('نقطة البيع والفواتير', 'POS & Invoicing')}</div>
+              <div class="kpi-value" style="font-size:1.15rem;">${tr('بيع وإصدار فاتورة', 'Issue Sale Invoice')}</div>
+              <div class="kpi-sub"><button class="btn btn-teal btn-sm" onclick="switchTab('pos')">${tr('فتح نقطة البيع', 'Open POS')}</button></div>
             </div>
           `;
         }
       }
 
       const invBody = document.getElementById('dailyInvoicesBody');
-      cachedInvoicesMap = {};
       if (invBody) {
         if (!data.invoices.length) {
-          invBody.innerHTML = `<tr><td colspan="${IS_ADMIN ? 9 : 7}" style="text-align:center;padding:26px;color:var(--db-muted);">لا توجد فواتير مبيعات مسجلة في هذه الفترة.</td></tr>`;
+          invBody.innerHTML = `<tr><td colspan="${IS_ADMIN ? 9 : 7}" style="text-align:center;padding:26px;color:var(--db-muted);">${tr('لا توجد فواتير مبيعات مسجلة في هذه الفترة.', 'No sales invoices recorded in this period.')}</td></tr>`;
         } else {
           invBody.innerHTML = data.invoices.map((inv) => {
-            cachedInvoicesMap[inv.id] = inv;
             const itemsSummary = (inv.items || []).map((i) => `${esc(i.product_name)} (×${i.quantity})`).join(' + ');
             return `
               <tr>
                 <td style="direction:ltr;font-weight:800;">${esc(inv.invoice_number)}</td>
-                <td style="direction:ltr;font-size:.8rem;">${esc(inv.created_at)}</td>
+                <td style="direction:ltr;font-size:0.8rem;">${esc(inv.created_at)}</td>
                 <td>
                   <strong>${esc(inv.customer_name)}</strong>
-                  ${inv.customer_phone ? `<div style="font-size:.76rem;color:var(--db-muted);direction:ltr;">${esc(inv.customer_phone)}</div>` : ''}
+                  ${inv.customer_phone ? `<div style="font-size:0.76rem;color:var(--db-muted);direction:ltr;">${esc(inv.customer_phone)}</div>` : ''}
                 </td>
-                <td style="max-width:260px;font-size:.84rem;">${itemsSummary}</td>
+                <td style="max-width:260px;font-size:0.84rem;">${itemsSummary}</td>
                 <td>${esc(inv.sold_by_name)}</td>
-                <td style="font-weight:900;color:var(--db-teal-900);">${fmtMoney(inv.total_amount)}</td>
+                <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(inv.total_amount)}</td>
                 ${IS_ADMIN ? `
                   <td style="color:var(--db-muted);">${fmtMoney(inv.total_cost)}</td>
                   <td style="font-weight:800;color:#059669;">+${fmtMoney(inv.total_profit)}</td>
                 ` : ''}
                 <td>
-                  <button type="button" class="btn btn-gold btn-sm" onclick="openSavedInvoice(${inv.id})">عرض / صورة / واتساب</button>
+                  <button type="button" class="btn btn-teal btn-sm" onclick="openSavedInvoice(${inv.id})">${tr('عرض / صورة / واتساب', 'View / PNG / WhatsApp')}</button>
                 </td>
               </tr>
             `;
@@ -372,14 +359,14 @@
         const mRevBody = document.getElementById('dailyMaintRevBody');
         if (mRevBody) {
           if (!data.maintenance_revenues.length) {
-            mRevBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--db-muted);">لا توجد أجهزة صيانة مسلمة في هذه الفترة.</td></tr>`;
+            mRevBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--db-muted);">${tr('لا توجد أجهزة صيانة مسلمة في هذه الفترة.', 'No delivered repair tickets in this period.')}</td></tr>`;
           } else {
             mRevBody.innerHTML = data.maintenance_revenues.map((mr) => `
               <tr>
                 <td style="direction:ltr;font-weight:800;">${esc(mr.ticket_code_ref)}</td>
                 <td style="direction:ltr;">${esc(mr.revenue_date)}</td>
                 <td>${esc(mr.device_category)}</td>
-                <td style="font-weight:900;color:var(--db-teal-900);">${fmtMoney(mr.amount_paid)}</td>
+                <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(mr.amount_paid)}</td>
                 <td>${fmtMoney(mr.parts_cost)}</td>
                 <td style="font-weight:800;color:#059669;">+${fmtMoney(mr.net_profit)}</td>
                 <td>${esc(mr.payment_method)}</td>
@@ -427,10 +414,10 @@
       if (data.is_maintenance_ticket && data.ticket) {
         resWrap.innerHTML = `
           <div class="price-reveal-card">
-            <span class="role-pill role-admin" style="margin-bottom:10px;">🛠️ تذكرة صيانة ممسوحة</span>
+            <span class="role-pill role-admin" style="margin-bottom:10px;">🛠️ ${tr('تذكرة صيانة ممسوحة', 'Scanned Repair Ticket')}</span>
             <h3 style="margin:6px 0;">${esc(data.ticket.device_model)} (${esc(data.ticket.ticket_code)})</h3>
-            <p>العميل: <strong>${esc(data.ticket.customer_name)}</strong></p>
-            <button type="button" class="btn btn-gold" onclick="switchTab('maintenance'); setTimeout(()=>openMaintTicket(${data.ticket.id}), 250);">فتح ملف الصيانة الآن</button>
+            <p>${tr('العميل:', 'Customer:')} <strong>${esc(data.ticket.customer_name)}</strong></p>
+            <button type="button" class="btn btn-teal" onclick="switchTab('maintenance'); setTimeout(()=>openMaintTicket(${data.ticket.id}), 250);">${tr('فتح ملف الصيانة الآن', 'Open Ticket Now')}</button>
           </div>
         `;
         return;
@@ -439,9 +426,9 @@
       if (!data.found) {
         resWrap.innerHTML = `
           <div class="card" style="border-color:#fca5a5;text-align:center;padding:34px;">
-            <h3 style="color:#b91c1c;margin:0 0 8px;">لم يتم العثور على منتج بالكود: <span style="direction:ltr;">${esc(data.scanned_code)}</span></h3>
-            <p style="color:var(--db-muted);margin:0 0 16px;">هذا الكود غير مسجل بالمخزن حتى الآن.</p>
-            ${IS_ADMIN ? `<button type="button" class="btn btn-gold" onclick="prefillNewProductCode('${esc(data.scanned_code)}')">➕ تسجيل كمنتج جديد بهذا الكود</button>` : ''}
+            <h3 style="color:#b91c1c;margin:0 0 8px;">${tr('لم يتم العثور على منتج بالكود:', 'No product found for code:')} <span style="direction:ltr;">${esc(data.scanned_code)}</span></h3>
+            <p style="color:var(--db-muted);margin:0 0 16px;">${tr('هذا الكود غير مسجل بالمخزن حتى الآن.', 'This code is not registered in inventory yet.')}</p>
+            ${IS_ADMIN ? `<button type="button" class="btn btn-teal" onclick="prefillNewProductCode('${esc(data.scanned_code)}')">➕ ${tr('تسجيل كمنتج جديد بهذا الكود', 'Register New Product with Code')}</button>` : ''}
           </div>
         `;
         return;
@@ -449,45 +436,48 @@
 
       const p = data.product;
       lastQuickProduct = p;
-      const img = p.image_path ? apiUrl(p.image_path) : apiUrl('assets/brand/official-banner.png');
+      const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
+      const prodTitle = p.display_name || p.name;
+      const prodSpecs = p.display_specs || p.specs || '';
+      const decoyBtnLabel = tr('👁️ اعرض سعر الشراء', '👁️ Show Purchase Price');
 
       resWrap.innerHTML = `
         <div class="price-reveal-card">
           <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-            <img src="${esc(img)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:14px;border:1.5px solid var(--db-border);">
+            <img src="${esc(img)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">
             <div style="flex:1;min-width:180px;">
               <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
-                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-900);font-size:.76rem;font-weight:800;">${esc(p.category_label)}</span>
-                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:.76rem;font-weight:800;">${esc(p.condition_label)}</span>
-                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? '#ecfdf5' : '#fef2f2'};color:${p.quantity > 0 ? '#065f46' : '#b91c1c'};font-size:.76rem;font-weight:800;">
-                  المتاح بالمخزن: ${p.quantity}
+                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>
+                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>
+                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? '#ecfdf5' : '#fef2f2'};color:${p.quantity > 0 ? '#059669' : '#b91c1c'};font-size:0.76rem;font-weight:800;">
+                  ${tr('المتاح:', 'In Stock:')} ${p.quantity}
                 </span>
               </div>
-              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-teal-900);">${esc(p.name)}</h3>
-              <div style="font-size:.82rem;color:var(--db-muted);">${esc(p.specs || '')}</div>
+              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>
+              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>
             </div>
           </div>
 
           <div class="big-sell-price-box">
-            <div class="lbl">سعر البيع للعميل</div>
+            <div class="lbl">${tr('سعر البيع للعميل', 'Customer Selling Price')}</div>
             <div class="val">${fmtMoney(p.sell_price)}</div>
           </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
             <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">
-              👁️ اعرض سعر الشراء
+              ${decoyBtnLabel}
             </button>
             ${p.quantity > 0 ? `
-              <button type="button" class="btn btn-gold" id="btnQuickSellNow" style="flex:1;min-width:180px;">
-                🛒 بيع هذه القطعة وإصدار فاتورة
+              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">
+                🛒 ${tr('بيع هذه القطعة وإصدار فاتورة', 'Sell Item & Issue Invoice')}
               </button>
             ` : ''}
           </div>
 
-          <!-- Decoy Box: Shows min_sell_price when clicking "اعرض سعر الشراء"! -->
+          <!-- Decoy Box: ALWAYS displays min_sell_price when clicking "اعرض سعر الشراء"! -->
           <div class="decoy-cost-box" id="decoyCostBox">
-            <div style="font-size:.8rem;color:var(--db-gold-600);font-weight:700;">سعر التكلفة المسجل بالنظام</div>
-            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-900);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>
+            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr('سعر التكلفة المسجل بالنظام', 'Registered System Floor Rate')}</div>
+            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>
           </div>
         </div>
       `;
@@ -496,7 +486,7 @@
         const box = document.getElementById('decoyCostBox');
         if (!box) return;
         const open = box.classList.toggle('visible');
-        ev.currentTarget.textContent = open ? '🙈 إخفاء السعر' : '👁️ اعرض سعر الشراء';
+        ev.currentTarget.textContent = open ? tr('🙈 إخفاء السعر', '🙈 Hide Price') : decoyBtnLabel;
       });
 
       document.getElementById('btnQuickSellNow')?.addEventListener('click', () => {
@@ -542,7 +532,7 @@
       document.getElementById('quickCodeInput').value = decoded;
       lookupQuickPrice(decoded);
     } catch (_) {
-      showToast('لم يتم التعرف على باركود واضح في الصورة المختارة', true);
+      showToast(tr('لم يتم التعرف على باركود واضح في الصورة', 'Could not detect a clear barcode in the selected image'), true);
     }
     e.target.value = '';
   });
@@ -575,22 +565,23 @@
     const grid = document.getElementById('posProductsGrid');
     if (!grid) return;
     if (!posProductsCache.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--db-muted);">لا توجد منتجات متاحة بالمخزن مطابقة للبحث.</div>`;
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--db-muted);">${tr('لا توجد منتجات متاحة بالمخزن مطابقة للبحث.', 'No matching in-stock products found.')}</div>`;
       return;
     }
     grid.innerHTML = posProductsCache.map((p) => {
-      const img = p.image_path ? apiUrl(p.image_path) : apiUrl('assets/brand/official-banner.png');
+      const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
+      const pName = p.display_name || p.name;
       return `
         <div class="pos-prod-tile" data-pid="${p.id}">
           <img src="${esc(img)}" alt="">
-          <strong style="font-size:.86rem;color:var(--db-teal-900);line-height:1.3;">${esc(p.name)}</strong>
-          <div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--db-muted);">
-            <span>متاح: ${p.quantity}</span>
+          <strong style="font-size:0.86rem;color:var(--db-text);line-height:1.3;">${esc(pName)}</strong>
+          <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:var(--db-muted);">
+            <span>${tr('متاح:', 'Qty:')} ${p.quantity}</span>
             <span style="direction:ltr;">${esc(p.barcode)}</span>
           </div>
           <div style="margin-top:auto;padding-top:6px;border-top:1px dashed var(--db-border);display:flex;justify-content:space-between;align-items:center;">
-            <strong style="color:var(--db-teal-800);font-size:.9rem;">${fmtMoney(p.sell_price)}</strong>
-            <span style="font-size:.72rem;color:var(--db-gold-600);font-weight:800;">+ أضف</span>
+            <strong style="color:var(--db-teal-800);font-size:0.9rem;">${fmtMoney(p.sell_price)}</strong>
+            <span style="font-size:0.74rem;color:var(--db-gold-600);font-weight:800;">+ ${tr('أضف', 'Add')}</span>
           </div>
         </div>
       `;
@@ -607,16 +598,17 @@
 
   function addToPosCart(product) {
     const existing = posCart.find((i) => i.product_id === product.id);
+    const pName = product.display_name || product.name;
     if (existing) {
       if (existing.quantity + 1 > product.quantity) {
-        showToast(`أقصى كمية متاحة من "${product.name}" هي ${product.quantity}`, true);
+        showToast(tr(`أقصى كمية متاحة من "${pName}" هي ${product.quantity}`, `Max available stock for "${pName}" is ${product.quantity}`), true);
         return;
       }
       existing.quantity += 1;
     } else {
       posCart.push({
         product_id: product.id,
-        name: product.name,
+        name: pName,
         barcode: product.barcode,
         max_qty: product.quantity,
         quantity: 1,
@@ -624,11 +616,11 @@
         min_sell_price: Number(product.min_sell_price),
         unit_sold_price: Number(product.sell_price),
         serial_imei: '',
-        warranty_text: product.warranty_default || 'ضمان الفحص والتجربة - أصلي تك ستور',
+        warranty_text: product.warranty_default || tr('ضمان الفحص والتجربة - أصلي تك ستور', 'Certified ASLY Testing Warranty'),
       });
     }
     renderPosCart();
-    showToast(`تمت إضافة "${product.name}" إلى الفاتورة`);
+    showToast(tr(`تمت إضافة "${pName}" إلى الفاتورة`, `Added "${pName}" to invoice`));
   }
 
   function renderPosCart() {
@@ -644,8 +636,8 @@
 
     if (!wrap) return;
     if (!posCart.length) {
-      wrap.innerHTML = `<div style="text-align:center;padding:28px 16px;background:#f8fbfb;border-radius:12px;border:1px dashed var(--db-border);color:var(--db-muted);font-size:.88rem;">السلة فارغة — اضغط على أي منتج من القائمة أو امسح الباركود لإضافته للفاتورة (سواء منتج واحد أو عدة منتجات).</div>`;
-      if (totalEl) totalEl.textContent = '0.00 ج.م';
+      wrap.innerHTML = `<div style="text-align:center;padding:28px 16px;background:var(--db-bg);border-radius:14px;border:1px dashed var(--db-border);color:var(--db-muted);font-size:0.88rem;">${tr('السلة فارغة — اضغط على أي منتج أو امسح الكود لإضافته للفاتورة (منتج واحد أو عدة منتجات).', 'Cart is empty — click any product or scan its barcode to add single or multiple items.')}</div>`;
+      if (totalEl) totalEl.textContent = fmtMoney(0);
       return;
     }
 
@@ -658,28 +650,28 @@
         <div class="pos-cart-item">
           <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px;">
             <div>
-              <strong style="color:var(--db-teal-900);font-size:.93rem;">${esc(item.name)}</strong>
-              <div style="font-size:.75rem;color:var(--db-muted);">سعر العرض: ${fmtMoney(item.sell_price)} | <strong style="color:#065f46;">أقل سعر مسموح: ${fmtMoney(item.min_sell_price)}</strong></div>
+              <strong style="color:var(--db-text);font-size:0.93rem;">${esc(item.name)}</strong>
+              <div style="font-size:0.75rem;color:var(--db-muted);">${tr('سعر العرض:', 'List:')} ${fmtMoney(item.sell_price)} | <strong style="color:#059669;">${tr('أقل سعر مسموح:', 'Min Floor:')} ${fmtMoney(item.min_sell_price)}</strong></div>
             </div>
-            <button type="button" class="btn btn-danger btn-sm" data-rm="${idx}">حذف</button>
+            <button type="button" class="btn btn-danger btn-sm" data-rm="${idx}">${tr('حذف', 'Remove')}</button>
           </div>
 
-          <div style="display:grid;grid-template-columns:90px 1fr;gap:10px;margin-bottom:8px;">
+          <div style="display:grid;grid-template-columns:95px 1fr;gap:10px;margin-bottom:8px;">
             <div>
-              <label style="font-size:.75rem;font-weight:700;">الكمية (متاح ${item.max_qty})</label>
+              <label style="font-size:0.75rem;font-weight:700;">${tr('الكمية', 'Qty')} (${item.max_qty})</label>
               <input type="number" min="1" max="${item.max_qty}" value="${item.quantity}" data-qty="${idx}" class="form-control" style="padding:7px 10px;">
             </div>
             <div>
-              <label style="font-size:.75rem;font-weight:700;">السعر المتفق عليه للقطعة *</label>
+              <label style="font-size:0.75rem;font-weight:700;">${tr('السعر الفعلي للقطعة *', 'Agreed Unit Price *')}</label>
               <input type="number" step="0.01" min="${item.min_sell_price}" value="${item.unit_sold_price}" data-price="${idx}" class="form-control ${belowMin ? 'price-error' : ''}" style="padding:7px 10px;font-weight:800;">
             </div>
           </div>
 
-          ${belowMin ? `<div style="color:#dc2626;font-size:.78rem;font-weight:800;margin-bottom:6px;">⛔ غير مسموح بالبيع بأقل من الحد الأدنى (${fmtMoney(item.min_sell_price)})!</div>` : ''}
+          ${belowMin ? `<div style="color:#dc2626;font-size:0.78rem;font-weight:800;margin-bottom:6px;">⛔ ${tr('غير مسموح بالبيع بأقل من الحد الأدنى', 'Cannot sell below minimum floor price')} (${fmtMoney(item.min_sell_price)})!</div>` : ''}
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <input type="text" placeholder="السيريال / IMEI (اختياري)" value="${esc(item.serial_imei)}" data-sn="${idx}" class="form-control" style="padding:6px 10px;font-size:.8rem;">
-            <input type="text" placeholder="الضمان بالفاتورة" value="${esc(item.warranty_text)}" data-war="${idx}" class="form-control" style="padding:6px 10px;font-size:.8rem;">
+            <input type="text" placeholder="${tr('السيريال / IMEI (اختياري)', 'Serial / IMEI (optional)')}" value="${esc(item.serial_imei)}" data-sn="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">
+            <input type="text" placeholder="${tr('الضمان بالفاتورة', 'Warranty note')}" value="${esc(item.warranty_text)}" data-war="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">
           </div>
         </div>
       `;
@@ -701,7 +693,7 @@
         if (v < 1) v = 1;
         if (v > it.max_qty) {
           v = it.max_qty;
-          showToast(`أقصى كمية متاحة هي ${it.max_qty}`, true);
+          showToast(tr(`أقصى كمية متاحة هي ${it.max_qty}`, `Max available quantity is ${it.max_qty}`), true);
         }
         it.quantity = v;
         renderPosCart();
@@ -736,7 +728,6 @@
       e.preventDefault();
       const val = e.target.value.trim();
       if (!val) return;
-      // Try exact barcode scan into cart
       try {
         const res = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(val)}`);
         if (res.found && res.product) {
@@ -763,7 +754,7 @@
         if (res.found && res.product) {
           addToPosCart(res.product);
         } else {
-          showToast(`الكود (${code}) غير مسجل بالمخزن`, true);
+          showToast(tr(`الكود (${code}) غير مسجل بالمخزن`, `Code (${code}) not found`), true);
         }
       } catch (err) {
         showToast(err.message, true);
@@ -775,19 +766,26 @@
 
   document.getElementById('btnCompleteSale')?.addEventListener('click', async () => {
     if (!posCart.length) {
-      showToast('أضف منتجاً واحداً على الأقل لإصدار الفاتورة', true);
+      showToast(tr('أضف منتجاً واحداً على الأقل لإصدار الفاتورة', 'Add at least one item to issue an invoice'), true);
       return;
     }
     const invalidItem = posCart.find((i) => i.unit_sold_price + 0.001 < i.min_sell_price);
     if (invalidItem) {
-      showToast(`مرفوض! سعر "${invalidItem.name}" أقل من الحد الأدنى المسموح (${fmtMoney(invalidItem.min_sell_price)})`, true);
+      showToast(
+        tr(
+          `مرفوض! سعر "${invalidItem.name}" أقل من الحد الأدنى المسموح (${fmtMoney(invalidItem.min_sell_price)})`,
+          `Rejected! "${invalidItem.name}" is priced below floor (${fmtMoney(invalidItem.min_sell_price)})`
+        ),
+        true
+      );
       renderPosCart();
       return;
     }
 
     const btn = document.getElementById('btnCompleteSale');
+    const origText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'جاري حفظ البيعة وإصدار الفاتورة...';
+    btn.textContent = tr('جاري حفظ البيعة وإصدار الفاتورة...', 'Saving sale & generating invoice...');
 
     try {
       const res = await apiFetch('api/pos.php', {
@@ -814,89 +812,88 @@
       showToast(err.message, true);
     } finally {
       btn.disabled = false;
-      btn.textContent = '✅ إتمام البيع وإصدار الفاتورة (صورة + واتساب + طباعة)';
+      btn.textContent = origText;
     }
   });
 
-  // Render Branded Invoice HTML inside Modal for PNG / WhatsApp / Print
+  // Bright Daylight Branded Invoice HTML inside Modal for PNG / WhatsApp / Print
   function openInvoicePreviewModal(invoice, items) {
     activeInvoiceData = { invoice, items };
     const st = CFG.store || {};
-    const payLabels = {
-      cash: 'نقدي (كاش)',
-      vodafone_cash: 'فودافون كاش / محفظة',
-      instapay: 'إنستا باي (InstaPay)',
-      card: 'بطاقة بنكية',
-    };
+    const payLabels = EN
+      ? { cash: 'Cash', vodafone_cash: 'Vodafone Cash / Wallet', instapay: 'InstaPay', card: 'Bank Card' }
+      : { cash: 'نقدي (كاش)', vodafone_cash: 'فودافون كاش / محفظة', instapay: 'إنستا باي (InstaPay)', card: 'بطاقة بنكية' };
+
+    const alignStart = EN ? 'left' : 'right';
+    const alignEnd = EN ? 'right' : 'left';
 
     const rowsHtml = (items || []).map((it, idx) => `
-      <tr style="background:${idx % 2 === 1 ? '#f8fbfb' : '#ffffff'};">
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;">${idx + 1}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;">
-          <strong>${esc(it.product_name)}</strong>
-          ${it.product_barcode ? `<div style="font-size:11px;color:#5c7678;direction:ltr;text-align:right;">${esc(it.product_barcode)}</div>` : ''}
+      <tr style="background:${idx % 2 === 1 ? '#faf9f6' : '#ffffff'};">
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;">${idx + 1}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;">
+          <strong style="color:#1e293b;">${esc(it.product_name)}</strong>
+          ${it.product_barcode ? `<div style="font-size:11px;color:#64748b;direction:ltr;text-align:${alignStart};">${esc(it.product_barcode)}</div>` : ''}
         </td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;font-size:12px;">
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;font-size:12px;">
           ${it.serial_imei ? `<div>S/N: ${esc(it.serial_imei)}</div>` : ''}
-          <div style="color:#065f46;font-weight:700;">${esc(it.warranty_text || '')}</div>
+          <div style="color:#0d9499;font-weight:700;">${esc(it.warranty_text || '')}</div>
         </td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;">${it.quantity}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;">${fmtMoney(it.unit_sold_price)}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #e3eded;font-weight:800;">${fmtMoney(it.subtotal)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;">${it.quantity}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;">${fmtMoney(it.unit_sold_price)}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #eaeef2;font-weight:800;color:#1e293b;">${fmtMoney(it.subtotal)}</td>
       </tr>
     `).join('');
 
     const capture = document.getElementById('modalInvoiceCapture');
     capture.innerHTML = `
-      <div style="background:linear-gradient(135deg,#043538,#085a5e);color:#fff;padding:22px 26px;border-bottom:4px solid #d49b27;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div style="background:linear-gradient(135deg,#effafa 0%,#ffffff 55%,#fffbf0 100%);padding:22px 26px;border-bottom:3px solid #e4b453;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
         <div>
-          <div style="font-size:24px;font-weight:900;letter-spacing:1px;">ASLY <span style="color:#f2c75c;">|</span> أصلي</div>
-          <div style="font-size:11px;color:#f2c75c;letter-spacing:4px;">TECH STORE</div>
-          <div style="font-size:12px;color:#d6ecec;margin-top:4px;">${esc(st.address || '')}</div>
+          <img src="${esc(st.logoUrl || '')}" alt="ASLY Tech Store" style="height:54px;object-fit:contain;">
+          <div style="font-size:12px;color:#64748b;margin-top:4px;">${esc(st.address || '')}</div>
         </div>
-        <div style="text-align:left;">
-          <div style="font-size:11px;color:#f2c75c;font-weight:800;">فاتورة مبيعات معتمدة</div>
-          <div style="font-size:19px;font-weight:900;direction:ltr;">${esc(invoice.invoice_number)}</div>
-          <div style="font-size:12px;color:#d6ecec;direction:ltr;">${esc(invoice.created_at)}</div>
+        <div style="text-align:${alignEnd};">
+          <div style="font-size:11px;color:#c58b24;font-weight:800;letter-spacing:1px;">${tr('فاتورة مبيعات معتمدة', 'OFFICIAL SALES INVOICE')}</div>
+          <div style="font-size:19px;font-weight:900;color:#0d9499;direction:ltr;">${esc(invoice.invoice_number)}</div>
+          <div style="font-size:12px;color:#64748b;direction:ltr;">${esc(invoice.created_at)}</div>
         </div>
       </div>
 
-      <div style="padding:22px 26px;color:#0d2628;">
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;background:#f3f9f9;padding:14px 16px;border-radius:10px;border:1px solid #dceaea;font-size:13px;margin-bottom:16px;">
-          <div><strong>العميل:</strong> ${esc(invoice.customer_name)}</div>
-          <div><strong>الهاتف:</strong> <span style="direction:ltr;display:inline-block;">${esc(invoice.customer_phone || '—')}</span></div>
-          <div><strong>طريقة الدفع:</strong> ${esc(payLabels[invoice.payment_method] || invoice.payment_method)}</div>
-          <div><strong>مسؤول المبيعات:</strong> ${esc(invoice.sold_by_name)}</div>
+      <div style="padding:22px 26px;color:#1e293b;background:#ffffff;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;background:#faf9f6;padding:14px 16px;border-radius:14px;border:1px solid #eaeef2;font-size:13px;margin-bottom:16px;">
+          <div><strong>${tr('العميل:', 'Customer:')}</strong> ${esc(invoice.customer_name)}</div>
+          <div><strong>${tr('الهاتف:', 'Phone:')}</strong> <span style="direction:ltr;display:inline-block;">${esc(invoice.customer_phone || '—')}</span></div>
+          <div><strong>${tr('طريقة الدفع:', 'Payment:')}</strong> ${esc(payLabels[invoice.payment_method] || invoice.payment_method)}</div>
+          <div><strong>${tr('مسؤول المبيعات:', 'Sales Rep:')}</strong> ${esc(invoice.sold_by_name)}</div>
         </div>
 
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
           <thead>
-            <tr style="background:#043538;color:#f2c75c;">
-              <th style="padding:10px 12px;text-align:right;">#</th>
-              <th style="padding:10px 12px;text-align:right;">المنتج / البيان</th>
-              <th style="padding:10px 12px;text-align:right;">السيريال / الضمان</th>
-              <th style="padding:10px 12px;text-align:right;">الكمية</th>
-              <th style="padding:10px 12px;text-align:right;">سعر الوحدة</th>
-              <th style="padding:10px 12px;text-align:right;">الإجمالي</th>
+            <tr style="background:#effafa;color:#0d9499;border-bottom:2px solid #d5f2f4;">
+              <th style="padding:10px 12px;text-align:${alignStart};">#</th>
+              <th style="padding:10px 12px;text-align:${alignStart};">${tr('المنتج / البيان', 'Product / Description')}</th>
+              <th style="padding:10px 12px;text-align:${alignStart};">${tr('السيريال / الضمان', 'Serial / Warranty')}</th>
+              <th style="padding:10px 12px;text-align:${alignStart};">${tr('الكمية', 'Qty')}</th>
+              <th style="padding:10px 12px;text-align:${alignStart};">${tr('سعر الوحدة', 'Unit Price')}</th>
+              <th style="padding:10px 12px;text-align:${alignStart};">${tr('الإجمالي', 'Subtotal')}</th>
             </tr>
           </thead>
           <tbody>${rowsHtml}</tbody>
         </table>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:2px solid #043538;">
-          <div style="max-width:410px;font-size:12px;color:#486365;">
-            ${invoice.notes ? `<div style="margin-bottom:4px;"><strong>ملاحظات:</strong> ${esc(invoice.notes)}</div>` : ''}
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-top:14px;border-top:2px solid #d5f2f4;">
+          <div style="max-width:410px;font-size:12px;color:#64748b;">
+            ${invoice.notes ? `<div style="margin-bottom:4px;color:#1e293b;"><strong>${tr('ملاحظات:', 'Notes:')}</strong> ${esc(invoice.notes)}</div>` : ''}
             <div>🛡️ ${esc(st.footerNote || '')}</div>
           </div>
-          <div style="background:#043538;color:#fff;padding:12px 22px;border-radius:10px;border:1.5px solid #d49b27;text-align:center;">
-            <div style="font-size:11px;color:#f2c75c;">الإجمالي المدفوع</div>
-            <div style="font-size:21px;font-weight:900;">${fmtMoney(invoice.total_amount)}</div>
+          <div style="background:linear-gradient(135deg,#effafa,#fffbf0);padding:12px 22px;border-radius:14px;border:1.5px solid #e4b453;text-align:center;">
+            <div style="font-size:11px;color:#c58b24;font-weight:800;">${tr('الإجمالي المدفوع', 'Total Paid')}</div>
+            <div style="font-size:21px;font-weight:900;color:#0d9499;">${fmtMoney(invoice.total_amount)}</div>
           </div>
         </div>
 
-        <div style="margin-top:16px;padding-top:10px;border-top:1px dashed #cbdcdc;display:flex;justify-content:space-between;font-size:12px;color:#526d70;">
-          <span><strong>${esc(st.nameAr)} (${esc(st.nameEn)})</strong></span>
-          <span style="direction:ltr;font-weight:800;color:#043538;">📞 ${esc(st.primaryPhone)}${st.secondaryPhone ? ' | ' + esc(st.secondaryPhone) : ''}</span>
+        <div style="margin-top:16px;padding-top:10px;border-top:1px dashed #d5f2f4;display:flex;justify-content:space-between;font-size:12px;color:#64748b;">
+          <span><strong style="color:#1e293b;">${esc(st.nameAr)} | ${esc(st.nameEn)}</strong></span>
+          <span style="direction:ltr;font-weight:800;color:#0d9499;">📞 ${esc(st.primaryPhone)}${st.secondaryPhone ? ' | ' + esc(st.secondaryPhone) : ''}</span>
         </div>
       </div>
     `;
@@ -921,18 +918,19 @@
   document.getElementById('btnModalInvoicePng')?.addEventListener('click', async (e) => {
     if (!activeInvoiceData) return;
     const btn = e.currentTarget;
+    const orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'جاري توليد الصورة...';
+    btn.textContent = '...';
     try {
       const canvas = await generateInvoiceCanvas();
       const a = document.createElement('a');
       a.download = `${activeInvoiceData.invoice.invoice_number}.png`;
       a.href = canvas.toDataURL('image/png');
       a.click();
-      showToast('تم تحميل صورة الفاتورة عالية الدقة بنجاح!');
+      showToast(tr('تم تحميل صورة الفاتورة عالية الدقة بنجاح!', 'Invoice PNG image downloaded!'));
     } finally {
       btn.disabled = false;
-      btn.textContent = '📥 تحميل الفاتورة كصورة (PNG)';
+      btn.textContent = orig;
     }
   });
 
@@ -940,8 +938,9 @@
     if (!activeInvoiceData) return;
     const { invoice, items } = activeInvoiceData;
     const btn = e.currentTarget;
+    const orig = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'جاري تجهيز الفاتورة لواتساب...';
+    btn.textContent = '...';
 
     try {
       const canvas = await generateInvoiceCanvas();
@@ -949,19 +948,13 @@
       const file = new File([blob], `${invoice.invoice_number}.png`, { type: 'image/png' });
 
       const lines = (items || []).map((i) => `• ${i.product_name} (×${i.quantity}) — ${fmtMoney(i.subtotal)}`).join('\n');
-      const textMsg =
-        `مرحباً أستاذ/ ${invoice.customer_name} 👋\n` +
-        `شكراً لتشريفكم *${CFG.store.nameAr} (${CFG.store.nameEn})*\n\n` +
-        `🧾 *فاتورة رقم:* ${invoice.invoice_number}\n` +
-        `${lines}\n` +
-        `💰 *الإجمالي المدفوع:* ${fmtMoney(invoice.total_amount)}\n\n` +
-        `🔗 رابط الفاتورة الرقمية للتحميل كصورة أو الطباعة:\n${invoice.public_url}`;
+      const textMsg = EN
+        ? `Hello ${invoice.customer_name} 👋\nThank you for choosing *${CFG.store.nameEn}*\n\n🧾 *Invoice:* ${invoice.invoice_number}\n${lines}\n💰 *Total Paid:* ${fmtMoney(invoice.total_amount)}\n\n🔗 Digital Invoice (PNG & Print):\n${invoice.public_url}`
+        : `مرحباً أستاذ/ ${invoice.customer_name} 👋\nشكراً لتشريفكم *${CFG.store.nameAr} (${CFG.store.nameEn})*\n\n🧾 *فاتورة رقم:* ${invoice.invoice_number}\n${lines}\n💰 *الإجمالي المدفوع:* ${fmtMoney(invoice.total_amount)}\n\n🔗 رابط الفاتورة الرقمية للتحميل كصورة أو الطباعة:\n${invoice.public_url}`;
 
-      // If running on mobile with native file share support, allow sharing the PNG directly!
       if (navigator.canShare && navigator.canShare({ files: [file] }) && !invoice.customer_phone) {
-        await navigator.share({ title: `فاتورة ${invoice.invoice_number}`, text: textMsg, files: [file] });
+        await navigator.share({ title: `Invoice ${invoice.invoice_number}`, text: textMsg, files: [file] });
       } else {
-        // Auto-save the PNG image so cashier can also drop it in chat + open direct WhatsApp chat to customer's number!
         const a = document.createElement('a');
         a.download = `${invoice.invoice_number}.png`;
         a.href = canvas.toDataURL('image/png');
@@ -969,27 +962,27 @@
 
         let waPhone = normalizeWa(invoice.customer_phone || '');
         if (!waPhone) {
-          const entered = prompt('أدخل رقم واتساب العميل لإرسال الفاتورة مباشرة:', '010');
+          const entered = prompt(tr('أدخل رقم واتساب العميل لإرسال الفاتورة مباشرة:', 'Enter customer WhatsApp number:'), '010');
           waPhone = normalizeWa(entered || '');
         }
         const waUrl = waPhone
           ? `https://wa.me/${waPhone}?text=${encodeURIComponent(textMsg)}`
           : `https://wa.me/?text=${encodeURIComponent(textMsg)}`;
         window.open(waUrl, '_blank');
-        showToast('تم تحميل صورة الفاتورة وفتح محادثة واتساب العميل!');
+        showToast(tr('تم تحميل صورة الفاتورة وفتح محادثة واتساب العميل!', 'Invoice PNG saved & WhatsApp chat opened!'));
       }
     } catch (err) {
-      showToast('تعذر المشاركة: ' + err.message, true);
+      showToast(err.message, true);
     } finally {
       btn.disabled = false;
-      btn.textContent = '💬 إرسال الفاتورة للعميل عبر واتساب';
+      btn.textContent = orig;
     }
   });
 
   document.getElementById('btnModalInvoicePrint')?.addEventListener('click', () => {
     const el = document.getElementById('modalInvoiceCapture');
     if (el && activeInvoiceData) {
-      printHtmlSnippet(`فاتورة ${activeInvoiceData.invoice.invoice_number}`, el.outerHTML);
+      printHtmlSnippet(`Invoice ${activeInvoiceData.invoice.invoice_number}`, el.outerHTML);
     }
   });
 
@@ -998,7 +991,7 @@
   // ============================================================
   function updateLiveStickerPreview() {
     const code = document.getElementById('prodBarcode')?.value.trim() || '';
-    const name = document.getElementById('prodName')?.value.trim() || 'منتج أصلي تك ستور';
+    const name = document.getElementById('prodName')?.value.trim() || document.getElementById('prodNameEn')?.value.trim() || 'ASLY TECH STORE';
     const nameEl = document.getElementById('stickerProdName');
     const txtEl = document.getElementById('stickerCodeText');
     if (nameEl) nameEl.textContent = name;
@@ -1016,14 +1009,17 @@
     if (sell > 0) {
       const pNormal = sell - buy;
       const pMin = minSell - buy;
-      hint.innerHTML = `📊 ربح البيع الأساسي: <strong>${fmtMoney(pNormal)}</strong> | صافي الربح عند أقل سعر مسموح: <strong>${fmtMoney(pMin)}</strong>`;
+      hint.innerHTML = tr(
+        `📊 ربح البيع الأساسي: <strong>${fmtMoney(pNormal)}</strong> | صافي الربح عند أقل سعر مسموح: <strong>${fmtMoney(pMin)}</strong>`,
+        `📊 List Profit: <strong>${fmtMoney(pNormal)}</strong> | Profit at Floor Price: <strong>${fmtMoney(pMin)}</strong>`
+      );
     } else {
       hint.textContent = '';
     }
   }
 
   if (IS_ADMIN) {
-    ['prodBarcode', 'prodName'].forEach((id) => {
+    ['prodBarcode', 'prodName', 'prodNameEn'].forEach((id) => {
       document.getElementById(id)?.addEventListener('input', updateLiveStickerPreview);
     });
     ['prodPurchasePrice', 'prodSellPrice', 'prodMinSellPrice'].forEach((id) => {
@@ -1038,7 +1034,7 @@
         document.getElementById('prodCodeType').value = 'qr';
         document.getElementById('existingProdAlert').style.display = 'none';
         updateLiveStickerPreview();
-        showToast(`تم توليد رمز QR جديد: ${res.code}`);
+        showToast(tr(`تم توليد رمز QR جديد: ${res.code}`, `Generated new QR code: ${res.code}`));
       } catch (err) {
         showToast(err.message, true);
       }
@@ -1049,18 +1045,17 @@
         document.getElementById('prodBarcode').value = code;
         document.getElementById('prodCodeType').value = code.startsWith('ASLY-') ? 'qr' : 'barcode';
         updateLiveStickerPreview();
-        // Check if this barcode already exists in DB!
         try {
           const check = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
           const alertEl = document.getElementById('existingProdAlert');
           if (check.found && check.product) {
             alertEl.style.display = 'block';
-            alertEl.innerHTML = `🔔 هذا الكود مسجل مسبقاً للمنتج: <strong>${esc(check.product.name)}</strong> (الكمية الحالية: ${check.product.quantity})
-              <button type="button" class="btn btn-teal btn-sm" style="margin-right:8px;" id="btnLoadScannedProd">تحميل بياناته للتعديل أو زيادة الكمية</button>`;
+            alertEl.innerHTML = `🔔 ${tr('هذا الكود مسجل مسبقاً للمنتج:', 'Already registered to:')} <strong>${esc(check.product.name)}</strong> (${check.product.quantity})
+              <button type="button" class="btn btn-teal btn-sm" style="margin-inline-start:8px;" id="btnLoadScannedProd">${tr('تعديل / زيادة الكمية', 'Load to Edit')}</button>`;
             document.getElementById('btnLoadScannedProd')?.addEventListener('click', () => populateProductForm(check.product));
           } else {
             alertEl.style.display = 'none';
-            showToast(`تم التقاط الكود (${code}) — أدخل بيانات المنتج وأسعاره للحفظ`);
+            showToast(tr(`تم التقاط الكود (${code})`, `Captured code (${code})`));
           }
         } catch (_) {}
       });
@@ -1075,16 +1070,16 @@
     document.getElementById('btnPrintCurrentSticker')?.addEventListener('click', () => {
       const code = document.getElementById('prodBarcode').value.trim();
       if (!code) {
-        showToast('ولّد أو امسح كود المنتج أولاً لطباعة الاستيكر', true);
+        showToast(tr('ولّد أو امسح كود المنتج أولاً لطباعة الاستيكر', 'Generate or scan a product code first'), true);
         return;
       }
-      printHtmlSnippet(`استيكر ${code}`, `<div style="text-align:center;width:240px;padding:10px;border:1px solid #000;border-radius:8px;">${document.getElementById('liveStickerBox').innerHTML}</div>`);
+      printHtmlSnippet(`Sticker ${code}`, `<div style="text-align:center;width:240px;padding:10px;border:1.5px solid #0d9499;border-radius:10px;">${document.getElementById('liveStickerBox').innerHTML}</div>`);
     });
 
     function resetProductForm() {
       document.getElementById('productSaveForm').reset();
       document.getElementById('prodId').value = '0';
-      document.getElementById('productFormHeading').textContent = '➕ تسجيل بيانات المنتج والأسعار الثلاثة';
+      document.getElementById('productFormHeading').textContent = tr('➕ تسجيل بيانات المنتج والأسعار الثلاثة', '➕ Register Product & 3-Tier Pricing');
       document.getElementById('existingProdAlert').style.display = 'none';
       document.getElementById('liveProfitHint').textContent = '';
       updateLiveStickerPreview();
@@ -1095,6 +1090,7 @@
       document.getElementById('prodBarcode').value = p.barcode || '';
       document.getElementById('prodCodeType').value = p.code_type || 'qr';
       document.getElementById('prodName').value = p.name || '';
+      if (document.getElementById('prodNameEn')) document.getElementById('prodNameEn').value = p.name_en || '';
       document.getElementById('prodCategory').value = p.category || 'laptops';
       document.getElementById('prodCondition').value = p.condition_status || 'new';
       document.getElementById('prodBrand').value = p.brand || '';
@@ -1105,10 +1101,12 @@
       document.getElementById('prodLowStock').value = p.low_stock_threshold ?? 2;
       document.getElementById('prodWarranty').value = p.warranty_default || '';
       document.getElementById('prodSpecs').value = p.specs || '';
+      if (document.getElementById('prodSpecsEn')) document.getElementById('prodSpecsEn').value = p.specs_en || '';
       document.getElementById('prodDescription').value = p.description || '';
+      if (document.getElementById('prodDescriptionEn')) document.getElementById('prodDescriptionEn').value = p.description_en || '';
       document.getElementById('prodShowLanding').checked = Number(p.show_on_landing) === 1;
       document.getElementById('prodFeatured').checked = Number(p.is_featured) === 1;
-      document.getElementById('productFormHeading').textContent = `✏️ تعديل بيانات المنتج: ${p.name}`;
+      document.getElementById('productFormHeading').textContent = `✏️ ${tr('تعديل بيانات المنتج:', 'Edit Product:')} ${p.display_name || p.name}`;
       document.getElementById('existingProdAlert').style.display = 'none';
       updateLiveStickerPreview();
       updateLiveProfitHint();
@@ -1154,41 +1152,42 @@
       inventoryCache = data.products || [];
 
       if (!inventoryCache.length) {
-        tbody.innerHTML = `<tr><td colspan="${IS_ADMIN ? 9 : 7}" style="text-align:center;padding:28px;color:var(--db-muted);">لا توجد منتجات مطابقة.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${IS_ADMIN ? 9 : 7}" style="text-align:center;padding:28px;color:var(--db-muted);">${tr('لا توجد منتجات مطابقة.', 'No matching products.')}</td></tr>`;
         return;
       }
 
       tbody.innerHTML = inventoryCache.map((p) => {
-        const img = p.image_path ? apiUrl(p.image_path) : apiUrl('assets/brand/official-banner.png');
+        const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
         const low = p.quantity <= p.low_stock_threshold;
+        const pTitle = p.display_name || p.name;
         return `
           <tr>
-            <td><img src="${esc(img)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:10px;border:1px solid var(--db-border);"></td>
+            <td><img src="${esc(img)}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>
             <td>
-              <strong>${esc(p.name)}</strong>
-              <div style="font-size:.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>
+              <strong>${esc(pTitle)}</strong>
+              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>
             </td>
             <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>
             <td>
-              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:.8rem;background:${low ? '#fef2f2' : '#ecfdf5'};color:${low ? '#dc2626' : '#059669'};">
+              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? '#fef2f2' : '#ecfdf5'};color:${low ? '#dc2626' : '#059669'};">
                 ${p.quantity} ${low ? '⚠️' : ''}
               </span>
             </td>
             ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ''}
-            <td style="font-weight:900;color:var(--db-teal-900);">${fmtMoney(p.sell_price)}</td>
-            <td style="font-weight:700;color:#065f46;">${fmtMoney(p.min_sell_price)}</td>
+            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>
+            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>
             ${IS_ADMIN ? `
               <td>
-                <input type="checkbox" ${p.show_on_landing ? 'checked' : ''} onchange="toggleLandingVis(${p.id}, this.checked)" title="إظهار / إخفاء باللاندينج بيدج">
+                <input type="checkbox" ${p.show_on_landing ? 'checked' : ''} onchange="toggleLandingVis(${p.id}, this.checked)">
               </td>
             ` : ''}
             <td>
               <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})">🏷️ الكود</button>
-                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})">🛒 بيع</button>` : ''}
+                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})">🏷️ ${tr('الكود', 'Sticker')}</button>
+                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})">🛒 ${tr('بيع', 'Sell')}</button>` : ''}
                 ${IS_ADMIN ? `
-                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">تعديل</button>
-                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">حذف</button>
+                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr('تعديل', 'Edit')}</button>
+                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr('حذف', 'Delete')}</button>
                 ` : ''}
               </div>
             </td>
@@ -1206,7 +1205,7 @@
   window.openStickerModal = (id) => {
     const p = inventoryCache.find((x) => x.id === id);
     if (!p) return;
-    document.getElementById('modalStickerName').textContent = p.name;
+    document.getElementById('modalStickerName').textContent = p.display_name || p.name;
     document.getElementById('modalStickerCode').textContent = p.barcode;
     renderQrInto(document.getElementById('modalStickerQr'), p.barcode, 4);
     renderBarcodeInto(document.getElementById('modalStickerBarcode'), p.barcode);
@@ -1214,7 +1213,7 @@
   };
 
   document.getElementById('btnPrintModalSticker')?.addEventListener('click', () => {
-    printHtmlSnippet('طباعة استيكر كود', `<div style="text-align:center;width:250px;padding:12px;border:1px solid #000;border-radius:8px;">${document.getElementById('modalStickerArea').innerHTML}</div>`);
+    printHtmlSnippet('Product Sticker', `<div style="text-align:center;width:250px;padding:12px;border:1.5px solid #0d9499;border-radius:10px;">${document.getElementById('modalStickerArea').innerHTML}</div>`);
   });
 
   window.sellFromInv = (id) => {
@@ -1246,7 +1245,7 @@
   };
 
   window.deleteProd = async (id) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المنتج نهائياً من المخزن؟')) return;
+    if (!confirm(tr('هل أنت متأكد من حذف هذا المنتج نهائياً من المخزن؟', 'Permanently delete this product from inventory?'))) return;
     try {
       const res = await apiFetch('api/products.php', { method: 'POST', json: { action: 'delete', id } });
       showToast(res.message);
@@ -1273,11 +1272,11 @@
       const navBadge = document.getElementById('maintNavBadge');
       if (navBadge) {
         navBadge.style.display = totalUnread > 0 ? 'inline-block' : 'none';
-        navBadge.textContent = `${totalUnread} جديد`;
+        navBadge.textContent = `${totalUnread} ${tr('جديد', 'new')}`;
       }
 
       if (!tickets.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--db-muted);">لا توجد أجهزة صيانة نشطة حالياً.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--db-muted);">${tr('لا توجد أجهزة صيانة نشطة حالياً.', 'No active repair tickets right now.')}</td></tr>`;
         return;
       }
 
@@ -1285,35 +1284,35 @@
         const wa = normalizeWa(t.customer_phone);
         return `
           <tr>
-            <td style="direction:ltr;font-weight:900;color:var(--db-teal-900);">${esc(t.ticket_code)}</td>
+            <td style="direction:ltr;font-weight:900;color:var(--db-teal-800);">${esc(t.ticket_code)}</td>
             <td>
               <strong>${esc(t.customer_name)}</strong>
               <div style="display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap;">
-                <a href="tel:${esc(t.customer_phone)}" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:.75rem;">📞 ${esc(t.customer_phone)}</a>
-                ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="btn btn-emerald btn-sm" style="padding:3px 8px;font-size:.75rem;">واتساب</a>` : ''}
-                ${t.customer_email ? `<span title="${esc(t.customer_email)}" style="font-size:.74rem;color:#059669;font-weight:700;">📧 إيميل مفعل</span>` : ''}
+                <a href="tel:${esc(t.customer_phone)}" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:0.75rem;">📞 ${esc(t.customer_phone)}</a>
+                ${wa ? `<a href="https://wa.me/${wa}" target="_blank" class="btn btn-emerald btn-sm" style="padding:3px 8px;font-size:0.75rem;">WhatsApp</a>` : ''}
+                ${t.customer_email ? `<span title="${esc(t.customer_email)}" style="font-size:0.74rem;color:#059669;font-weight:700;">📧 Email</span>` : ''}
               </div>
             </td>
             <td>
               <strong>${esc(t.device_model)}</strong>
-              <div style="font-size:.78rem;color:var(--db-muted);max-width:220px;">${esc(t.problem_description)}</div>
+              <div style="font-size:0.78rem;color:var(--db-muted);max-width:220px;">${esc(t.problem_description)}</div>
             </td>
             <td>
-              <span style="padding:4px 12px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);border:1px solid rgba(212,155,39,.4);font-weight:800;font-size:.78rem;">
+              <span style="padding:4px 12px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);border:1px solid rgba(228,180,83,0.45);font-weight:800;font-size:0.78rem;">
                 ${esc(t.stage_title)}
               </span>
             </td>
             <td>
               <div style="font-weight:800;">${fmtMoney(t.estimated_cost)}</div>
-              <div style="font-size:.75rem;color:var(--db-muted);">عربون: ${fmtMoney(t.deposit_paid)}</div>
+              <div style="font-size:0.75rem;color:var(--db-muted);">${tr('عربون:', 'Dep:')} ${fmtMoney(t.deposit_paid)}</div>
             </td>
             <td>
               ${t.unread_customer_notes > 0
-                ? `<span class="badge-alert">💬 ${t.unread_customer_notes} ملاحظة جديدة!</span>`
-                : `<span style="font-size:.78rem;color:var(--db-muted);">لا يوجد جديد</span>`}
+                ? `<span class="badge-alert">💬 ${t.unread_customer_notes} ${tr('ملاحظة!', 'new!')}</span>`
+                : `<span style="font-size:0.78rem;color:var(--db-muted);">—</span>`}
             </td>
             <td>
-              <button type="button" class="btn btn-gold btn-sm" onclick="openMaintTicket(${t.id})">إدارة المراحل / QR / تسليم</button>
+              <button type="button" class="btn btn-teal btn-sm" onclick="openMaintTicket(${t.id})">${tr('إدارة المراحل / QR / تسليم', 'Stages / QR / Deliver')}</button>
             </td>
           </tr>
         `;
@@ -1352,14 +1351,11 @@
       const stages = res.stages || {};
       const notes = res.notes || [];
       const wa = normalizeWa(t.customer_phone);
-      const waTrackMsg =
-        `مرحباً أستاذ/ ${t.customer_name} 👋\n` +
-        `تم تسجيل جهازكم (${t.device_model}) بقسم الصيانة في *${CFG.store.nameAr}*\n` +
-        `🔖 رقم التذكرة: ${t.ticket_code}\n` +
-        `📍 المرحلة الحالية: ${t.stage_title}\n\n` +
-        `يمكنك متابعة مراحل الصيانة لحظة بلحظة وإضافة أي ملاحظات عبر الرابط التالي:\n${t.tracking_url}`;
+      const waTrackMsg = EN
+        ? `Hello ${t.customer_name} 👋\nYour device (${t.device_model}) is registered at *${CFG.store.nameEn}* Repair Lab.\n🔖 Ticket: ${t.ticket_code}\n📍 Stage: ${t.stage_title}\n\nTrack live stages & reply here:\n${t.tracking_url}`
+        : `مرحباً أستاذ/ ${t.customer_name} 👋\nتم تسجيل جهازكم (${t.device_model}) بقسم الصيانة في *${CFG.store.nameAr}*\n🔖 رقم التذكرة: ${t.ticket_code}\n📍 المرحلة الحالية: ${t.stage_title}\n\nيمكنك متابعة مراحل الصيانة لحظة بلحظة وإضافة أي ملاحظات عبر الرابط التالي:\n${t.tracking_url}`;
 
-      document.getElementById('mdModalTitle').textContent = `🛠️ تذكرة صيانة ${t.ticket_code} — ${t.device_model}`;
+      document.getElementById('mdModalTitle').textContent = `🛠️ ${t.ticket_code} — ${t.device_model}`;
 
       const stageOptions = Object.entries(stages)
         .filter(([k]) => k !== 'delivered')
@@ -1367,100 +1363,96 @@
         .join('');
 
       const notesHtml = notes.map((n) => `
-        <div style="padding:10px 14px;border-radius:10px;margin-bottom:8px;background:${n.sender_type === 'admin' ? '#eef7f7' : '#fef9ec'};border-right:4px solid ${n.sender_type === 'admin' ? '#074f53' : '#d49b27'};">
-          <div style="display:flex;justify-content:space-between;font-size:.76rem;color:#475569;margin-bottom:4px;">
-            <strong>${n.sender_type === 'admin' ? '👨‍🔧 ' + esc(n.sender_name) : '👤 العميل: ' + esc(n.sender_name)} — [${esc(stages[n.stage_key]?.title || n.stage_key)}]</strong>
+        <div style="padding:10px 14px;border-radius:12px;margin-bottom:8px;background:${n.sender_type === 'admin' ? '#effafa' : '#fffbf0'};border-inline-start:4px solid ${n.sender_type === 'admin' ? '#14b4b8' : '#e4b453'};">
+          <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:#475569;margin-bottom:4px;">
+            <strong>${n.sender_type === 'admin' ? '👨‍🔧 ' + esc(n.sender_name) : '👤 ' + esc(n.sender_name)} — [${esc(stages[n.stage_key]?.title || n.stage_key)}]</strong>
             <span style="direction:ltr;">${esc(n.created_at)}</span>
           </div>
-          <div style="font-size:.88rem;">${esc(n.note_text)}</div>
+          <div style="font-size:0.88rem;color:#1e293b;">${esc(n.note_text)}</div>
         </div>
       `).join('');
 
       const body = document.getElementById('maintDetailBody');
       body.innerHTML = `
         <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:18px;margin-bottom:20px;">
-          <!-- Customer & Device Full Profile -->
-          <div style="background:#f8fbfb;padding:16px;border-radius:14px;border:1px solid var(--db-border);font-size:.88rem;">
+          <div style="background:var(--db-bg);padding:16px;border-radius:16px;border:1px solid var(--db-border);font-size:0.88rem;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--db-border);">
-              <strong style="font-size:1rem;color:var(--db-teal-900);">👤 ${esc(t.customer_name)}</strong>
-              <div style="display:flex;gap:6px;">
-                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm">📞 اتصال: ${esc(t.customer_phone)}</a>
-                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm">💬 إرسال رابط التتبع واتساب</a>` : ''}
+              <strong style="font-size:1rem;color:var(--db-text);">👤 ${esc(t.customer_name)}</strong>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm">📞 ${esc(t.customer_phone)}</a>
+                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm">💬 WhatsApp QR Link</a>` : ''}
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <div><strong>هاتف بديل:</strong> ${esc(t.customer_alt_phone || '—')}</div>
-              <div><strong>البريد الإلكتروني:</strong> ${esc(t.customer_email || 'غير مسجل')}</div>
-              <div><strong>تفاصيل العميل:</strong> ${esc(t.customer_details || '—')}</div>
-              <div><strong>باسورد الفحص:</strong> <span style="background:#fee2e2;color:#991b1b;padding:1px 8px;border-radius:6px;font-weight:800;">${esc(t.device_passcode || 'لا يوجد')}</span></div>
-              <div><strong>المواصفات:</strong> ${esc(t.device_specs || '—')}</div>
-              <div><strong>الحالة عند الاستلام:</strong> ${esc(t.physical_condition || '—')}</div>
+              <div><strong>${tr('هاتف بديل:', 'Alt Phone:')}</strong> ${esc(t.customer_alt_phone || '—')}</div>
+              <div><strong>Email:</strong> ${esc(t.customer_email || '—')}</div>
+              <div><strong>${tr('تفاصيل:', 'Details:')}</strong> ${esc(t.customer_details || '—')}</div>
+              <div><strong>${tr('باسورد الفحص:', 'Passcode:')}</strong> <span style="background:#fef2f2;color:#b91c1c;padding:1px 8px;border-radius:6px;font-weight:800;">${esc(t.device_passcode || '—')}</span></div>
+              <div><strong>${tr('المواصفات:', 'Specs:')}</strong> ${esc(t.device_specs || '—')}</div>
+              <div><strong>${tr('الحالة عند الاستلام:', 'Condition:')}</strong> ${esc(t.physical_condition || '—')}</div>
             </div>
-            <div style="margin-top:10px;padding:8px 12px;background:#fff;border-radius:8px;border:1px solid var(--db-border);">
-              <strong>العطل المسجل:</strong> ${esc(t.problem_description)}
+            <div style="margin-top:10px;padding:8px 12px;background:#fff;border-radius:10px;border:1px solid var(--db-border);">
+              <strong>${tr('العطل المسجل:', 'Reported Issue:')}</strong> ${esc(t.problem_description)}
             </div>
           </div>
 
-          <!-- Printable Customer QR Receipt Box -->
-          <div style="background:#ffffff;border:2px dashed var(--db-teal-800);border-radius:14px;padding:14px;text-align:center;" id="maintReceiptPrintArea">
-            <strong style="color:#043538;font-size:.9rem;">ASLY | أصلي TECH STORE</strong>
-            <div style="font-size:.76rem;color:#475569;">إيصال متابعة صيانة بالـ QR</div>
+          <div style="background:#ffffff;border:2px dashed var(--db-teal-700);border-radius:16px;padding:14px;text-align:center;" id="maintReceiptPrintArea">
+            <strong style="color:#0d9499;font-size:0.9rem;">ASLY | أصلي TECH STORE</strong>
+            <div style="font-size:0.76rem;color:#64748b;">${tr('إيصال متابعة صيانة بالـ QR', 'Live QR Repair Receipt')}</div>
             <div id="maintTicketQrMount" style="margin:8px auto;"></div>
-            <div style="font-family:monospace;font-weight:900;font-size:.95rem;color:#043538;">${esc(t.ticket_code)}</div>
-            <div style="font-size:.78rem;margin:4px 0;">${esc(t.device_model)}</div>
-            <div style="font-size:.74rem;color:#64748b;">امسح الرمز بكاميرا هاتفك لمتابعة المراحل</div>
+            <div style="font-family:monospace;font-weight:900;font-size:0.95rem;color:#1e293b;">${esc(t.ticket_code)}</div>
+            <div style="font-size:0.78rem;margin:4px 0;">${esc(t.device_model)}</div>
+            <div style="font-size:0.74rem;color:#64748b;">${tr('امسح الرمز بكاميرا هاتفك لمتابعة المراحل', 'Scan QR with phone camera for live status')}</div>
             <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;" class="no-print">
-              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt">🖨️ طباعة إيصال QR</button>
-              <a href="${esc(t.tracking_url)}" target="_blank" class="btn btn-ghost btn-sm">معاينة صفحة العميل</a>
+              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt">🖨️ ${tr('طباعة QR', 'Print QR')}</button>
+              <a href="${esc(t.tracking_url)}" target="_blank" class="btn btn-ghost btn-sm">${tr('معاينة صفحة العميل', 'Preview Portal')}</a>
             </div>
           </div>
         </div>
 
-        <!-- Stage Transition & Email Trigger -->
-        <div style="background:var(--db-teal-50);padding:16px;border-radius:14px;border:1px solid var(--db-border);margin-bottom:18px;">
-          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-900);">🔄 نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل ${t.customer_email ? '(سيُرسل بريد إلكتروني تلقائي للعميل 📧)' : ''}</strong>
+        <div style="background:var(--db-teal-50);padding:16px;border-radius:16px;border:1px solid var(--db-teal-100);margin-bottom:18px;">
+          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-800);">🔄 ${tr('نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل', 'Update Repair Stage / Add Engineer Note')} ${t.customer_email ? '📧' : ''}</strong>
           <form id="updateMaintStageForm" style="display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:end;">
             <div>
-              <label style="font-size:.78rem;font-weight:700;">المرحلة الحالية</label>
+              <label style="font-size:0.78rem;font-weight:700;">${tr('المرحلة الحالية', 'Stage')}</label>
               <select name="stage_key" class="form-control">${stageOptions}</select>
             </div>
             <div>
-              <label style="font-size:.78rem;font-weight:700;">ملاحظة أو تقرير المهندس على هذه المرحلة</label>
-              <input type="text" name="note_text" class="form-control" placeholder="اكتب ما تم إنجازه أو المطلوب من العميل...">
+              <label style="font-size:0.78rem;font-weight:700;">${tr('ملاحظة المهندس', 'Engineer Report / Note')}</label>
+              <input type="text" name="note_text" class="form-control" placeholder="${tr('اكتب ما تم إنجازه...', 'Write diagnostic/repair update...')}">
             </div>
-            <button type="submit" class="btn btn-teal">تحديث المرحلة وإشعار العميل</button>
+            <button type="submit" class="btn btn-teal">${tr('تحديث المرحلة', 'Update Stage')}</button>
           </form>
         </div>
 
-        <!-- Timeline Notes History -->
         <div style="margin-bottom:20px;">
-          <h4 style="margin:0 0 10px;color:var(--db-teal-900);">💬 سجل المراحل والتعليقات المتبادلة مع العميل</h4>
-          <div style="max-height:240px;overflow-y:auto;padding-left:4px;">${notesHtml || '<p style="color:var(--db-muted);">لا توجد ملاحظات بعد.</p>'}</div>
+          <h4 style="margin:0 0 10px;color:var(--db-text);">💬 ${tr('سجل المراحل والتعليقات المتبادلة', 'Stage History & Mutual Notes')}</h4>
+          <div style="max-height:240px;overflow-y:auto;">${notesHtml || `<p style="color:var(--db-muted);">—</p>`}</div>
         </div>
 
-        <!-- Final Handover & Data Wipe Box -->
-        <div style="background:linear-gradient(135deg,#043538,#064b4e);color:#fff;padding:18px 20px;border-radius:16px;border:2px solid var(--db-gold-500);">
-          <strong style="color:var(--db-gold-400);display:block;margin-bottom:6px;font-size:1rem;">✅ التسليم النهائي للجهاز (حفظ المبلغ المحصل في إيراد اليوم + مسح بيانات الجهاز نهائياً)</strong>
-          <p style="margin:0 0 12px;font-size:.8rem;color:#d6ecec;">بمجرد تأكيد التسليم، سيُسجّل المبلغ المدفوع في حسابات اليوم، وتُمسح كافة تفاصيل الجهاز والعميل والملاحظات نهائياً كما هو معتمد.</p>
+        <!-- Bright Daylight Final Handover & Data Wipe Box -->
+        <div style="background:linear-gradient(135deg,#effafa 0%,#fffbf0 100%);color:var(--db-text);padding:18px 20px;border-radius:18px;border:1.5px solid var(--db-gold-500);">
+          <strong style="color:var(--db-teal-800);display:block;margin-bottom:6px;font-size:1rem;">✅ ${tr('التسليم النهائي للجهاز (حفظ الإيراد + مسح بيانات الجهاز نهائياً)', 'Final Handover (Record Revenue + Permanently Wipe Device Data)')}</strong>
+          <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);">${tr('بمجرد تأكيد التسليم، يُسجّل المبلغ المدفوع في حسابات اليوم وتُمسح كافة تفاصيل الجهاز والعميل والملاحظات نهائياً.', 'Confirming delivery logs the paid amount into daily revenue and permanently deletes all personal device & customer records.')}</p>
           <form id="deliverWipeForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
             <div style="flex:1;min-width:150px;">
-              <label style="font-size:.78rem;color:#fde68a;display:block;margin-bottom:4px;">إجمالي المبلغ المحصل للصيانة (ج.م) *</label>
+              <label style="font-size:0.78rem;font-weight:800;display:block;margin-bottom:4px;">${tr('إجمالي المبلغ المحصل *', 'Final Paid Amount *')}</label>
               <input type="number" step="0.01" min="0" name="final_paid_amount" value="${t.estimated_cost}" class="form-control" required style="font-weight:900;">
             </div>
             ${IS_ADMIN ? `
             <div style="flex:1;min-width:140px;">
-              <label style="font-size:.78rem;color:#d6ecec;display:block;margin-bottom:4px;">تكلفة قطع الغيار الفعلية</label>
+              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr('تكلفة قطع الغيار الفعلية', 'Actual Parts Cost')}</label>
               <input type="number" step="0.01" min="0" name="parts_cost" value="${t.parts_cost || 0}" class="form-control">
             </div>` : ''}
             <div style="min-width:140px;">
-              <label style="font-size:.78rem;color:#d6ecec;display:block;margin-bottom:4px;">طريقة الدفع</label>
+              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr('طريقة الدفع', 'Payment Method')}</label>
               <select name="payment_method" class="form-control">
-                <option value="cash">نقدي (كاش)</option>
-                <option value="vodafone_cash">فودافون كاش</option>
-                <option value="instapay">إنستا باي</option>
+                <option value="cash">${tr('نقدي (كاش)', 'Cash')}</option>
+                <option value="vodafone_cash">${tr('فودافون كاش', 'Vodafone Cash')}</option>
+                <option value="instapay">InstaPay</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-gold">تسليم الجهاز ومسح بياناته</button>
+            <button type="submit" class="btn btn-gold">${tr('تسليم الجهاز ومسح بياناته', 'Deliver & Wipe Data')}</button>
           </form>
         </div>
       `;
@@ -1472,7 +1464,7 @@
       document.getElementById('btnPrintMaintReceipt')?.addEventListener('click', () => {
         const clone = document.getElementById('maintReceiptPrintArea').cloneNode(true);
         clone.querySelector('.no-print')?.remove();
-        printHtmlSnippet(`إيصال صيانة ${t.ticket_code}`, `<div style="text-align:center;width:270px;padding:14px;border:1.5px solid #043538;border-radius:10px;">${clone.innerHTML}</div>`);
+        printHtmlSnippet(`Receipt ${t.ticket_code}`, `<div style="text-align:center;width:270px;padding:14px;border:1.5px solid #0d9499;border-radius:12px;">${clone.innerHTML}</div>`);
       });
 
       document.getElementById('updateMaintStageForm')?.addEventListener('submit', async (ev) => {
@@ -1497,7 +1489,7 @@
 
       document.getElementById('deliverWipeForm')?.addEventListener('submit', async (ev) => {
         ev.preventDefault();
-        if (!confirm('تأكيد تسليم الجهاز للعميل؟ سيتم حفظ المبلغ المدفوع في إيرادات اليوم ومسح كافة بيانات التذكرة والجهاز نهائياً!')) return;
+        if (!confirm(tr('تأكيد تسليم الجهاز للعميل؟ سيتم حفظ المبلغ المدفوع في إيرادات اليوم ومسح كافة بيانات التذكرة نهائياً!', 'Confirm final delivery? Paid revenue will be recorded and all personal ticket records permanently wiped!'))) return;
         const fd = new FormData(ev.currentTarget);
         try {
           const r = await apiFetch('api/maintenance.php', {
@@ -1539,16 +1531,16 @@
           <td><strong>${esc(u.full_name)}</strong></td>
           <td style="direction:ltr;font-weight:700;">@${esc(u.username)}</td>
           <td>
-            <span class="role-pill ${u.role === 'admin' ? 'role-admin' : 'role-staff'}" style="background:${u.role === 'admin' ? '#fef9ec' : '#ecfdf5'};color:${u.role === 'admin' ? '#b45309' : '#065f46'};">
-              ${u.role === 'admin' ? '👑 مدير (Admin)' : '💼 موظف (Staff)'}
+            <span class="role-pill ${u.role === 'admin' ? 'role-admin' : 'role-staff'}">
+              ${u.role === 'admin' ? '👑 Admin' : '💼 Staff'}
             </span>
           </td>
           <td style="direction:ltr;">${esc(u.phone || '—')}</td>
-          <td>${Number(u.is_active) === 1 ? '<span style="color:#059669;font-weight:800;">نشط</span>' : '<span style="color:#dc2626;font-weight:800;">معطل</span>'}</td>
-          <td style="direction:ltr;font-size:.8rem;">${esc(u.created_at)}</td>
+          <td>${Number(u.is_active) === 1 ? `<span style="color:#059669;font-weight:800;">${tr('نشط', 'Active')}</span>` : `<span style="color:#dc2626;font-weight:800;">${tr('معطل', 'Disabled')}</span>`}</td>
+          <td style="direction:ltr;font-size:0.8rem;">${esc(u.created_at)}</td>
           <td>
-            <button type="button" class="btn btn-teal btn-sm" onclick="editUser(${u.id})">تعديل</button>
-            ${u.id !== CFG.user.id ? `<button type="button" class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">حذف</button>` : ''}
+            <button type="button" class="btn btn-teal btn-sm" onclick="editUser(${u.id})">${tr('تعديل', 'Edit')}</button>
+            ${u.id !== CFG.user.id ? `<button type="button" class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">${tr('حذف', 'Delete')}</button>` : ''}
           </td>
         </tr>
       `).join('');
@@ -1561,7 +1553,7 @@
     document.getElementById('btnAddUserModal')?.addEventListener('click', () => {
       document.getElementById('userSaveForm').reset();
       document.getElementById('uFormId').value = '0';
-      document.getElementById('uPassHint').textContent = '(مطلوبة - 6 أحرف على الأقل)';
+      document.getElementById('uPassHint').textContent = tr('(مطلوبة - 6 أحرف على الأقل)', '(Required — min 6 chars)');
       document.getElementById('uFormPassword').required = true;
       window.openModal('userModal');
     });
@@ -1574,7 +1566,7 @@
       document.getElementById('uFormUsername').value = u.username;
       document.getElementById('uFormPassword').value = '';
       document.getElementById('uFormPassword').required = false;
-      document.getElementById('uPassHint').textContent = '(اتركها فارغة لعدم التغيير)';
+      document.getElementById('uPassHint').textContent = tr('(اتركها فارغة لعدم التغيير)', '(Leave blank to keep unchanged)');
       document.getElementById('uFormRole').value = u.role;
       document.getElementById('uFormPhone').value = u.phone || '';
       document.getElementById('uFormActive').checked = Number(u.is_active) === 1;
@@ -1582,7 +1574,7 @@
     };
 
     window.deleteUser = async (id) => {
-      if (!confirm('حذف هذا الحساب نهائياً؟')) return;
+      if (!confirm(tr('حذف هذا الحساب نهائياً؟', 'Delete this account?'))) return;
       try {
         const res = await apiFetch('api/users.php', { method: 'POST', json: { action: 'delete', id } });
         showToast(res.message);
@@ -1631,12 +1623,12 @@
               <td><strong>${esc(ch.channel_type)}</strong></td>
               <td>${esc(ch.label)}</td>
               <td style="direction:ltr;font-weight:700;">${esc(ch.value)}</td>
-              <td style="direction:ltr;font-size:.78rem;max-width:190px;overflow:hidden;text-overflow:ellipsis;">${esc(ch.url || '')}</td>
+              <td style="direction:ltr;font-size:0.78rem;max-width:190px;overflow:hidden;text-overflow:ellipsis;">${esc(ch.url || '')}</td>
               <td>${ch.sort_order}</td>
-              <td>${Number(ch.is_active) === 1 ? '<span style="color:#059669;font-weight:800;">ظاهر</span>' : '<span style="color:#94a3b8;">مخفي</span>'}</td>
+              <td>${Number(ch.is_active) === 1 ? `<span style="color:#059669;font-weight:800;">${tr('ظاهر', 'Visible')}</span>` : `<span style="color:#94a3b8;">${tr('مخفي', 'Hidden')}</span>`}</td>
               <td>
-                <button type="button" class="btn btn-teal btn-sm" onclick="editChannel(${ch.id})">تعديل</button>
-                <button type="button" class="btn btn-danger btn-sm" onclick="deleteChannel(${ch.id})">حذف</button>
+                <button type="button" class="btn btn-teal btn-sm" onclick="editChannel(${ch.id})">${tr('تعديل', 'Edit')}</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="deleteChannel(${ch.id})">${tr('حذف', 'Delete')}</button>
               </td>
             </tr>
           `).join('');
@@ -1681,7 +1673,7 @@
     };
 
     window.deleteChannel = async (id) => {
-      if (!confirm('حذف وسيلة التواصل هذه؟')) return;
+      if (!confirm(tr('حذف وسيلة التواصل هذه؟', 'Delete this contact channel?'))) return;
       try {
         const res = await apiFetch('api/settings.php', { method: 'POST', json: { action: 'delete_channel', id } });
         showToast(res.message);
@@ -1710,7 +1702,7 @@
     document.getElementById('btnSendTestEmail')?.addEventListener('click', async () => {
       const to = document.getElementById('testEmailRecipient').value.trim();
       if (!to) {
-        showToast('أدخل بريداً إلكترونياً للتجربة أولاً', true);
+        showToast(tr('أدخل بريداً إلكترونياً للتجربة أولاً', 'Enter a recipient email first'), true);
         return;
       }
       try {
@@ -1728,17 +1720,17 @@
         const body = document.getElementById('emailLogsBody');
         body.innerHTML = logs.length
           ? logs.map((l) => `
-              <details style="border:1px solid var(--db-border);border-radius:12px;padding:12px 16px;margin-bottom:10px;background:#fafdfd;">
-                <summary style="cursor:pointer;font-weight:800;color:var(--db-teal-900);">
-                  📧 إلى: ${esc(l.recipient_email)} — ${esc(l.subject)} <span style="font-size:.75rem;color:#059669;">[${esc(l.status)} • ${esc(l.created_at)}]</span>
+              <details style="border:1px solid var(--db-border);border-radius:14px;padding:12px 16px;margin-bottom:10px;background:var(--db-bg);">
+                <summary style="cursor:pointer;font-weight:800;color:var(--db-text);">
+                  📧 ${esc(l.recipient_email)} — ${esc(l.subject)} <span style="font-size:0.75rem;color:#059669;">[${esc(l.status)} • ${esc(l.created_at)}]</span>
                 </summary>
                 <div style="margin-top:12px;border-top:1px solid var(--db-border);padding-top:12px;">
-                  ${l.error_message ? `<div style="color:#dc2626;margin-bottom:8px;">خطأ SMTP: ${esc(l.error_message)}</div>` : ''}
-                  <iframe srcdoc="${esc(l.body_preview || '')}" style="width:100%;height:340px;border:1px solid #dce8e8;border-radius:8px;background:#fff;"></iframe>
+                  ${l.error_message ? `<div style="color:#dc2626;margin-bottom:8px;">SMTP Error: ${esc(l.error_message)}</div>` : ''}
+                  <iframe srcdoc="${esc(l.body_preview || '')}" style="width:100%;height:340px;border:1px solid var(--db-border);border-radius:10px;background:#fff;"></iframe>
                 </div>
               </details>
             `).join('')
-          : '<p style="text-align:center;color:var(--db-muted);padding:24px;">لا توجد رسائل مسجلة بعد.</p>';
+          : `<p style="text-align:center;color:var(--db-muted);padding:24px;">${tr('لا توجد رسائل مسجلة بعد.', 'No email logs yet.')}</p>`;
         window.openModal('emailLogsModal');
       } catch (err) {
         showToast(err.message, true);
@@ -1746,7 +1738,6 @@
     });
   }
 
-  // Initial Boot
   document.addEventListener('DOMContentLoaded', () => {
     renderPosCart();
     loadOverviewReport();

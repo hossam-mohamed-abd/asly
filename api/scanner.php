@@ -67,8 +67,11 @@ if ($action === 'lookup') {
 
     $cats = getCategoryMeta();
     $conds = getConditionMeta();
-    $product['category_label'] = $cats[$product['category']]['ar'] ?? $product['category'];
-    $product['condition_label'] = $conds[$product['condition_status']]['ar'] ?? $product['condition_status'];
+    $langKey = isEn() ? 'en' : 'ar';
+    $product['category_label'] = $cats[$product['category']][$langKey] ?? $product['category'];
+    $product['condition_label'] = $conds[$product['condition_status']][$langKey] ?? $product['condition_status'];
+    $product['display_name'] = pickLangField($product, 'name');
+    $product['display_specs'] = pickLangField($product, 'specs');
 
     // Decoy "Show Purchase Price" button ALWAYS displays min_sell_price in Quick Scanner!
     $product['display_floor_price'] = (float)$product['min_sell_price'];

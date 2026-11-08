@@ -1,7 +1,7 @@
 <?php
 /**
  * ASLY | أصلي TECH STORE
- * PDO Database Connection Manager (MySQL / phpMyAdmin on XAMPP)
+ * PDO Database Connection Manager (MySQL / phpMyAdmin on XAMPP + Preview SQLite)
  */
 
 declare(strict_types=1);
@@ -33,6 +33,8 @@ class Database
             self::$pdo->exec('PRAGMA foreign_keys = ON;');
             if ($isNew) {
                 self::initializeSqliteSchema(self::$pdo);
+            } else {
+                self::ensureProductColumnsSqlite(self::$pdo);
             }
             return self::$pdo;
         }
@@ -49,13 +51,13 @@ class Database
         try {
             self::$pdo = new PDO($dsnWithDb, DB_USER, DB_PASS, $options);
             self::$pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
-            // Ensure tables exist if database was created empty in phpMyAdmin
             $check = self::$pdo->query("SHOW TABLES LIKE 'users'")->fetchColumn();
             if (!$check) {
                 self::importMysqlDump(self::$pdo);
+            } else {
+                self::ensureProductColumnsMysql(self::$pdo);
             }
         } catch (PDOException $e) {
-            // Unknown database (error 1049): auto-create database & tables on XAMPP seamlessly!
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
                 $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', DB_HOST, DB_PORT, DB_CHARSET);
                 $rootPdo = new PDO($dsnServer, DB_USER, DB_PASS, $options);
@@ -72,6 +74,44 @@ class Database
         return self::$pdo;
     }
 
+    private static function ensureProductColumnsMysql(PDO $pdo): void
+    {
+        $cols = [];
+        foreach ($pdo->query("SHOW COLUMNS FROM `products`")->fetchAll() as $c) {
+            $cols[$c['Field']] = true;
+        }
+        $alterations = [
+            'name_en'              => "ALTER TABLE `products` ADD COLUMN `name_en` VARCHAR(200) DEFAULT NULL AFTER `name`",
+            'specs_en'             => "ALTER TABLE `products` ADD COLUMN `specs_en` TEXT DEFAULT NULL AFTER `specs`",
+            'description_en'       => "ALTER TABLE `products` ADD COLUMN `description_en` TEXT DEFAULT NULL AFTER `description`",
+            'secondary_image_path' => "ALTER TABLE `products` ADD COLUMN `secondary_image_path` VARCHAR(255) DEFAULT NULL AFTER `image_path`",
+        ];
+        foreach ($alterations as $col => $sql) {
+            if (!isset($cols[$col])) {
+                $pdo->exec($sql);
+            }
+        }
+    }
+
+    private static function ensureProductColumnsSqlite(PDO $pdo): void
+    {
+        $cols = [];
+        foreach ($pdo->query("PRAGMA table_info(products)")->fetchAll() as $c) {
+            $cols[$c['name']] = true;
+        }
+        $alterations = [
+            'name_en'              => "ALTER TABLE products ADD COLUMN name_en TEXT DEFAULT NULL",
+            'specs_en'             => "ALTER TABLE products ADD COLUMN specs_en TEXT DEFAULT NULL",
+            'description_en'       => "ALTER TABLE products ADD COLUMN description_en TEXT DEFAULT NULL",
+            'secondary_image_path' => "ALTER TABLE products ADD COLUMN secondary_image_path TEXT DEFAULT NULL",
+        ];
+        foreach ($alterations as $col => $sql) {
+            if (!isset($cols[$col])) {
+                $pdo->exec($sql);
+            }
+        }
+    }
+
     public static function importMysqlDump(PDO $pdo): void
     {
         $sqlFile = APP_ROOT . '/database/asly_store.sql';
@@ -79,7 +119,6 @@ class Database
             return;
         }
         $sql = (string)file_get_contents($sqlFile);
-        // Remove SQL single-line comments and split cleanly by statement semicolon (UTF-8 safe!)
         $lines = preg_split('/\r\n|\r|\n/', $sql) ?: [];
         $cleanLines = [];
         foreach ($lines as $line) {
@@ -132,12 +171,16 @@ class Database
                 barcode TEXT NOT NULL UNIQUE,
                 code_type TEXT NOT NULL DEFAULT 'qr',
                 name TEXT NOT NULL,
+                name_en TEXT DEFAULT NULL,
                 category TEXT NOT NULL DEFAULT 'laptops',
                 condition_status TEXT NOT NULL DEFAULT 'new',
                 brand TEXT DEFAULT NULL,
                 specs TEXT DEFAULT NULL,
+                specs_en TEXT DEFAULT NULL,
                 description TEXT DEFAULT NULL,
+                description_en TEXT DEFAULT NULL,
                 image_path TEXT DEFAULT NULL,
+                secondary_image_path TEXT DEFAULT NULL,
                 purchase_price REAL NOT NULL DEFAULT 0,
                 sell_price REAL NOT NULL DEFAULT 0,
                 min_sell_price REAL NOT NULL DEFAULT 0,
@@ -245,7 +288,6 @@ class Database
             );
         ");
 
-        // Reuse seed INSERT statements from asly_store.sql converting INSERT IGNORE -> INSERT OR IGNORE
         $sqlFile = APP_ROOT . '/database/asly_store.sql';
         if (is_file($sqlFile)) {
             $sql = (string)file_get_contents($sqlFile);
