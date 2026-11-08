@@ -732,7 +732,9 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
       }
     };
   </script>
+  <script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js')) ?>"></script>
   <script src="<?= e(appUrl('assets/vendor/html5-qrcode.min.js')) ?>"></script>
+  <script src="<?= e(appUrl('assets/js/turbo-scanner.js')) ?>"></script>
   <script src="<?= e(appUrl('assets/js/landing.js')) ?>"></script>
 </body>
 </html>

@@ -233,60 +233,24 @@
   document.getElementById("btnMobileSidebar")?.addEventListener("click", () => {
     document.getElementById("appSidebar")?.classList.toggle("open");
   });
-  let activeScanners = {};
   async function startCameraScanner(mountId, onScanSuccess) {
     await stopCameraScanner(mountId);
-    if (typeof window.Html5Qrcode === "undefined") {
-      showToast(tr("مكتبة الكاميرا غير محملة", "Camera library not loaded"), true);
-      return false;
-    }
-    const mount = document.getElementById(mountId);
-    if (mount) mount.innerHTML = "";
-    const formats = window.Html5QrcodeSupportedFormats ? [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E, Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.ITF ] : undefined;
-    const html5Qr = new Html5Qrcode(mountId, formats ? {
-      formatsToSupport: formats
-    } : undefined);
-    activeScanners[mountId] = html5Qr;
-    let lastCode = "";
-    let lastTime = 0;
-    try {
-      await html5Qr.start({
-        facingMode: "environment"
-      }, {
-        fps: 12,
-        qrbox: {
-          width: 250,
-          height: 150
-        }
-      }, decodedText => {
-        const now = Date.now();
-        if (decodedText === lastCode && now - lastTime < 2200) return;
-        lastCode = decodedText;
-        lastTime = now;
-        playScanBeep();
+    if (window.AslyTurboScanner) {
+      return await window.AslyTurboScanner.start(mountId, decodedText => {
+        if (mountId !== "posCameraReader") playScanBeep();
         onScanSuccess(decodedText.trim());
-      }, () => {});
-      return true;
-    } catch (err) {
-      delete activeScanners[mountId];
-      if (mount) {
-        mount.innerHTML = `<div style="padding:18px;color:#dc2626;font-size:0.84rem;">\n          ${tr("تعذر فتح الكاميرا مباشرة", "Could not access camera directly")} (${esc(err?.message || "HTTPS / localhost required")}).<br>\n          ${tr("استخدم مسح صورة الباركود أو أدخل الكود بالأسفل.", "Use barcode image scan or enter code below.")}\n        </div>`;
-      }
-      return false;
+      }, { isEn: EN });
     }
+    return false;
   }
   async function stopCameraScanner(mountId) {
-    const inst = activeScanners[mountId];
-    if (!inst) return;
-    delete activeScanners[mountId];
-    try {
-      if (inst.isScanning) await inst.stop();
-      inst.clear();
-    } catch (_) {}
+    if (window.AslyTurboScanner) {
+      await window.AslyTurboScanner.stop(mountId);
+    }
   }
   async function stopAllCameras() {
-    for (const id of Object.keys(activeScanners)) {
-      await stopCameraScanner(id);
+    if (window.AslyTurboScanner) {
+      await window.AslyTurboScanner.stopAll();
     }
     const bStopQuick = document.getElementById("btnStopQuickCam");
     const bStartQuick = document.getElementById("btnStartQuickCam");
@@ -418,14 +382,14 @@
   document.getElementById("btnStopQuickCam")?.addEventListener("click", () => stopAllCameras());
   document.getElementById("quickScanFile")?.addEventListener("change", async e => {
     const file = e.target.files?.[0];
-    if (!file || typeof window.Html5Qrcode === "undefined") return;
+    if (!file || !window.AslyTurboScanner) return;
     try {
-      const tempScanner = new Html5Qrcode("quickCameraReader");
-      const decoded = await tempScanner.scanFile(file, true);
+      const decoded = await window.AslyTurboScanner.scanFile(file);
       playScanBeep();
       document.getElementById("quickCodeInput").value = decoded;
       lookupQuickPrice(decoded);
     } catch (_) {
+      playScanErrorTone();
       showToast(tr("لم يتم التعرف على باركود واضح في الصورة", "Could not detect a clear barcode in the selected image"), true);
     }
     e.target.value = "";
@@ -865,10 +829,9 @@
   });
   document.getElementById("posScanFile")?.addEventListener("change", async e => {
     const file = e.target.files?.[0];
-    if (!file || typeof window.Html5Qrcode === "undefined") return;
+    if (!file || !window.AslyTurboScanner) return;
     try {
-      const tempScanner = new Html5Qrcode("posCameraReader");
-      const decoded = await tempScanner.scanFile(file, true);
+      const decoded = await window.AslyTurboScanner.scanFile(file);
       await lookupAndAddPosCode(decoded);
     } catch (_) {
       playScanErrorTone();

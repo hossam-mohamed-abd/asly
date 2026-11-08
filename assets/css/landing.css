@@ -1121,6 +1121,104 @@ html[lang="en"] .section-title {
   animation: popReveal 0.35s var(--ease-spring);
 }
 
+.turbo-cam-shell {
+  position: relative;
+  width: 100%;
+  height: 290px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #eef6f7;
+  border: 2px solid var(--teal);
+}
+
+.turbo-cam-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform-origin: center center;
+  transition: transform 0.22s ease;
+}
+
+.turbo-cam-reticle {
+  position: absolute;
+  inset: 12% 10%;
+  pointer-events: none;
+}
+
+.tc-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #10b981;
+  border-style: solid;
+}
+
+.tc-tl { top: 0; left: 0; border-width: 3px 0 0 3px; border-top-left-radius: 10px; }
+.tc-tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-top-right-radius: 10px; }
+.tc-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-bottom-left-radius: 10px; }
+.tc-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-bottom-right-radius: 10px; }
+
+.turbo-laser-line {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  animation: pubLaserSweep 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes pubLaserSweep {
+  0% { top: 15%; }
+  100% { top: 85%; }
+}
+
+.turbo-cam-badge {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.turbo-cam-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.turbo-ctrl-btn {
+  border: 1px solid #d5e8ea;
+  background: #ffffff;
+  color: var(--ink-1);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.turbo-ctrl-btn.active {
+  background: var(--teal-deep);
+  color: #ffffff;
+  border-color: transparent;
+}
+
 @keyframes popReveal {
   from { opacity: 0; transform: translateY(10px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }

@@ -131,14 +131,8 @@
     }
   }
   async function stopLandingQr() {
-    if (html5Qr) {
-      try {
-        if (html5Qr.isScanning) {
-          await html5Qr.stop();
-        }
-        html5Qr.clear();
-      } catch (_) {}
-      html5Qr = null;
+    if (window.AslyTurboScanner) {
+      await window.AslyTurboScanner.stop("landingQrReader");
     }
     if (qrModal) qrModal.classList.remove("open");
   }
@@ -146,22 +140,10 @@
     openQrBtn.addEventListener("click", async () => {
       qrModal.classList.add("open");
       if (qrStatus) qrStatus.textContent = "";
-      if (typeof window.Html5Qrcode === "undefined") return;
-      try {
-        html5Qr = new window.Html5Qrcode("landingQrReader");
-        await html5Qr.start({
-          facingMode: "environment"
-        }, {
-          fps: 10,
-          qrbox: {
-            width: 220,
-            height: 220
-          }
-        }, decoded => handleDecodedQr(decoded), () => {});
-      } catch (_) {
-        if (qrStatus) {
-          qrStatus.textContent = cfg.lang === "en" ? "Camera unavailable — choose a receipt photo instead." : "الكاميرا غير متاحة — يمكنك اختيار صورة الإيصال مباشرة.";
-        }
+      if (!window.AslyTurboScanner) return;
+      const ok = await window.AslyTurboScanner.start("landingQrReader", decoded => handleDecodedQr(decoded), { isEn: cfg.lang === "en" });
+      if (!ok && qrStatus) {
+        qrStatus.textContent = cfg.lang === "en" ? "Camera unavailable — choose a receipt photo instead." : "الكاميرا غير متاحة — يمكنك اختيار صورة الإيصال مباشرة.";
       }
     });
   }
@@ -176,11 +158,10 @@
   if (qrFileInput) {
     qrFileInput.addEventListener("change", async e => {
       const file = e.target.files && e.target.files[0];
-      if (!file || typeof window.Html5Qrcode === "undefined") return;
+      if (!file || !window.AslyTurboScanner) return;
       try {
-        if (html5Qr && html5Qr.isScanning) await html5Qr.stop();
-        const fileQr = new window.Html5Qrcode("landingQrReader");
-        const decoded = await fileQr.scanFile(file, true);
+        await window.AslyTurboScanner.stop("landingQrReader");
+        const decoded = await window.AslyTurboScanner.scanFile(file);
         handleDecodedQr(decoded);
       } catch (_) {
         if (qrStatus) {

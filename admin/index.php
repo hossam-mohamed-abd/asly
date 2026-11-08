@@ -1369,7 +1369,9 @@ $jsConfig = [
 <script src="<?= e(appUrl('assets/vendor/qrcode.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/qrcode_UTF8.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/JsBarcode.all.min.js')) ?>"></script>
+<script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/html5-qrcode.min.js')) ?>"></script>
+<script src="<?= e(appUrl('assets/js/turbo-scanner.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/html2canvas.min.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/js/dashboard.js')) ?>"></script>
 </body>
