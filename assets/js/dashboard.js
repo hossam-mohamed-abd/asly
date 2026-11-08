@@ -21,7 +21,13 @@
     if (d.startsWith("01") && d.length === 11) return "2" + d;
     return d;
   };
-  const fallbackImg = () => CFG.store?.logoCardUrl || apiUrl("assets/brand/logo-card.jpg");
+  const INLINE_FALLBACK_SVG = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#effafa"/><stop offset="100%" stop-color="#fffbf0"/></linearGradient></defs><rect width="240" height="180" rx="18" fill="url(#g)"/><rect x="8" y="8" width="224" height="164" rx="14" fill="none" stroke="#14b4b8" stroke-opacity="0.22" stroke-width="1.5"/><text x="120" y="92" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#0d9499">ASLY</text><text x="120" y="116" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="11" fill="#c58b24" letter-spacing="2">TECH STORE</text></svg>');
+  const fallbackImg = () => CFG.store?.logoCardUrl || INLINE_FALLBACK_SVG;
+  window.aslyImgErr = el => {
+    if (!el) return;
+    el.onerror = null;
+    el.src = INLINE_FALLBACK_SVG;
+  };
   function showToast(msg, isError = false) {
     const wrap = document.getElementById("toastContainer");
     if (!wrap) return;
@@ -374,7 +380,7 @@
       const prodSpecs = p.display_specs || p.specs || "";
       const decoyBtnHtml = `<i class="fa-solid fa-eye"></i> ${tr("اعرض سعر الشراء", "Show Purchase Price")}`;
       const hideBtnHtml = `<i class="fa-solid fa-eye-slash"></i> ${tr("إخفاء السعر", "Hide Price")}`;
-      resWrap.innerHTML = `\n        <div class="price-reveal-card">\n          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">\n            <img src="${esc(img)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">\n            <div style="flex:1;min-width:180px;">\n              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? "#ecfdf5" : "#fef2f2"};color:${p.quantity > 0 ? "#059669" : "#b91c1c"};font-size:0.76rem;font-weight:800;">\n                  ${tr("المتاح:", "In Stock:")} ${p.quantity}\n                </span>\n              </div>\n              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>\n              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>\n            </div>\n          </div>\n\n          <div class="big-sell-price-box">\n            <div class="lbl">${tr("سعر البيع للعميل", "Customer Selling Price")}</div>\n            <div class="val">${fmtMoney(p.sell_price)}</div>\n          </div>\n\n          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n            <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">\n              ${decoyBtnHtml}\n            </button>\n            ${p.quantity > 0 ? `\n              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">\n                <i class="fa-solid fa-cart-plus"></i> ${tr("بيع هذه القطعة وإصدار فاتورة", "Sell Item & Issue Invoice")}\n              </button>\n            ` : ""}\n          </div>\n\n          <div class="decoy-cost-box" id="decoyCostBox">\n            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr("سعر التكلفة المسجل بالنظام", "Registered System Floor Rate")}</div>\n            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>\n          </div>\n        </div>\n      `;
+      resWrap.innerHTML = `\n        <div class="price-reveal-card">\n          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">\n            <img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">\n            <div style="flex:1;min-width:180px;">\n              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? "#ecfdf5" : "#fef2f2"};color:${p.quantity > 0 ? "#059669" : "#b91c1c"};font-size:0.76rem;font-weight:800;">\n                  ${tr("المتاح:", "In Stock:")} ${p.quantity}\n                </span>\n              </div>\n              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>\n              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>\n            </div>\n          </div>\n\n          <div class="big-sell-price-box">\n            <div class="lbl">${tr("سعر البيع للعميل", "Customer Selling Price")}</div>\n            <div class="val">${fmtMoney(p.sell_price)}</div>\n          </div>\n\n          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n            <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">\n              ${decoyBtnHtml}\n            </button>\n            ${p.quantity > 0 ? `\n              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">\n                <i class="fa-solid fa-cart-plus"></i> ${tr("بيع هذه القطعة وإصدار فاتورة", "Sell Item & Issue Invoice")}\n              </button>\n            ` : ""}\n          </div>\n\n          <div class="decoy-cost-box" id="decoyCostBox">\n            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr("سعر التكلفة المسجل بالنظام", "Registered System Floor Rate")}</div>\n            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>\n          </div>\n        </div>\n      `;
       document.getElementById("btnShowDecoyCost")?.addEventListener("click", ev => {
         const box = document.getElementById("decoyCostBox");
         if (!box) return;
@@ -440,42 +446,91 @@
     }
   }
   window.scrollToPosInvoice = scrollToPosInvoice;
+  function resetPosScanFeedbackIdle() {
+    const box = document.getElementById("posScanFeedbackBox");
+    const camLog = document.getElementById("posCameraLiveLog");
+    const hud = document.getElementById("globalScanHud");
+    if (box) {
+      box.className = "pos-scan-feedback";
+      box.innerHTML = `<div class="pos-scan-idle-row">
+        <span class="pos-scan-icon-orb"><i class="fa-solid fa-qrcode"></i></span>
+        <div style="flex:1;min-width:180px;">
+          <strong>${tr("جاهز للإضافة الفورية بالباركود أو الـ QR", "Instant Barcode & QR Addition Ready")}</strong>
+          <div style="font-size:0.79rem;color:var(--db-muted);">${tr("امسح الكود بمسدس الباركود في أي مكان بالصفحة أو بالكاميرا أو اضغط على المنتج — سيظهر تأكيد الإضافة والكمية والإجمالي هنا فوراً.", "Scan anywhere with your barcode gun, use camera scan, or click any product below — confirmation appears right here.")}</div>
+        </div>
+      </div>`;
+    }
+    if (camLog) {
+      camLog.className = "pos-cam-live-log";
+      camLog.innerHTML = `<i class="fa-solid fa-crosshairs" style="color:var(--db-teal-700);"></i>
+        <span>${tr("وجّه الكاميرا نحو الباركود أو الـ QR — ستُضاف القطع فوراً للفاتورة مع تنبيه صوتي وعداد مباشر", "Point camera at barcode/QR — items add immediately with sound & live counter")}</span>`;
+    }
+    if (hud) {
+      hud.classList.remove("visible");
+    }
+  }
   function renderPosScanFeedbackSuccess(product, itemInCart) {
     const box = document.getElementById("posScanFeedbackBox");
     const camLog = document.getElementById("posCameraLiveLog");
     const totalItems = posCart.reduce((a, i) => a + i.quantity, 0);
     const grandTotal = posCart.reduce((a, i) => a + i.unit_sold_price * i.quantity, 0);
-    const pName = product.display_name || product.name;
-    const img = product.image_path ? apiUrl(product.image_path) : fallbackImg();
+    const pName = product.display_name || product.name || itemInCart.name;
+    const rawImg = product.image_path || itemInCart.image_path || "";
+    const img = rawImg ? apiUrl(rawImg) : fallbackImg();
+    const bCode = product.barcode || itemInCart.barcode || "";
     if (box) {
       box.className = "pos-scan-feedback is-added";
       void box.offsetWidth;
       box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:12px;min-width:210px;flex:1;">
-          <img src="${esc(img)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:12px;border:2px solid #10b981;background:#fff;flex-shrink:0;">
+          <img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:12px;border:2px solid #10b981;background:#fff;flex-shrink:0;">
           <div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
-              <span style="background:#10b981;color:#fff;font-size:0.74rem;font-weight:900;padding:2px 10px;border-radius:999px;"><i class="fa-solid fa-circle-check"></i> ${tr("تمت الإضافة للفاتورة", "Added to Invoice")}</span>
+              <span style="background:#10b981;color:#fff;font-size:0.74rem;font-weight:900;padding:2px 10px;border-radius:999px;"><i class="fa-solid fa-circle-check"></i> ${tr("مضاف حالياً بالفاتورة", "In Active Invoice")}</span>
               <span style="background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:900;padding:2px 9px;border-radius:999px;">${tr("الكمية بالفاتورة:", "In Cart:")} ×${itemInCart.quantity}</span>
             </div>
             <strong style="font-size:0.96rem;color:var(--db-text);display:block;">${esc(pName)}</strong>
-            <span style="font-size:0.78rem;color:var(--db-muted);">${tr("سعر الوحدة:", "Unit:")} <strong style="color:var(--db-teal-800);">${fmtMoney(itemInCart.unit_sold_price)}</strong> • <span style="direction:ltr;display:inline-block;">${esc(product.barcode || "")}</span></span>
+            <span style="font-size:0.78rem;color:var(--db-muted);">${tr("سعر الوحدة:", "Unit:")} <strong style="color:var(--db-teal-800);">${fmtMoney(itemInCart.unit_sold_price)}</strong>${bCode ? ` • <span style="direction:ltr;display:inline-block;">${esc(bCode)}</span>` : ""}</span>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div style="text-align:end;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="text-align:end;margin-inline-end:4px;">
             <div style="font-size:0.74rem;color:var(--db-muted);font-weight:700;">${tr("إجمالي الفاتورة الآن", "Invoice Total")} (${totalItems})</div>
             <strong style="font-size:1.12rem;color:#047857;">${fmtMoney(grandTotal)}</strong>
           </div>
           <button type="button" class="btn btn-teal btn-sm" onclick="scrollToPosInvoice()"><i class="fa-solid fa-file-invoice-dollar"></i> ${tr("عرض الفاتورة", "View Invoice")}</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="removePosItemByPid(${Number(itemInCart.product_id)})"><i class="fa-solid fa-trash-can"></i> ${tr("حذف", "Remove")}</button>
         </div>
       </div>`;
     }
     if (camLog) {
       camLog.className = "pos-cam-live-log added";
-      camLog.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${tr("تمت إضافة", "Added")} <strong>${esc(pName)}</strong> (×${itemInCart.quantity}) — ${tr("إجمالي الفاتورة:", "Total:")} <strong>${fmtMoney(grandTotal)}</strong> (${totalItems} ${tr("قطع", "items")})</span>`;
+      camLog.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${tr("بالفاتورة الآن:", "In Invoice:")} <strong>${esc(pName)}</strong> (×${itemInCart.quantity}) — ${tr("الإجمالي:", "Total:")} <strong>${fmtMoney(grandTotal)}</strong> (${totalItems} ${tr("قطع", "items")})</span>`;
     }
   }
+  function syncPosFeedbackWithCart() {
+    if (!posCart.length) {
+      lastAddedPosProductId = null;
+      resetPosScanFeedbackIdle();
+      return;
+    }
+    let activeItem = posCart.find(i => Number(i.product_id) === Number(lastAddedPosProductId));
+    if (!activeItem) {
+      activeItem = posCart[posCart.length - 1];
+      lastAddedPosProductId = Number(activeItem.product_id);
+      document.getElementById("globalScanHud")?.classList.remove("visible");
+    }
+    const cachedProd = posProductsCache.find(p => Number(p.id) === Number(activeItem.product_id)) || activeItem;
+    renderPosScanFeedbackSuccess(cachedProd, activeItem);
+  }
+  window.removePosItemByPid = pid => {
+    const idx = posCart.findIndex(i => Number(i.product_id) === Number(pid));
+    if (idx === -1) return;
+    posCart.splice(idx, 1);
+    renderPosCart(false);
+    renderPosGrid();
+    syncPosFeedbackWithCart();
+  };
   function renderPosScanFeedbackError(titleMsg, subMsg, unknownCode = "") {
     const box = document.getElementById("posScanFeedbackBox");
     const camLog = document.getElementById("posCameraLiveLog");
@@ -522,7 +577,7 @@
       return `
         <div class="pos-prod-tile ${inCartItem ? "in-cart" : ""}" data-pid="${p.id}">
           ${inCartItem ? `<span class="pos-tile-cart-badge"><i class="fa-solid fa-check"></i> ${tr("بالفاتورة", "In Cart")} ×${inCartItem.quantity}</span>` : ""}
-          <img src="${esc(img)}" alt="">
+          <img src="${esc(img)}" onerror="aslyImgErr(this)" alt="">
           <strong style="font-size:0.86rem;color:var(--db-text);line-height:1.3;">${esc(pName)}</strong>
           <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:var(--db-muted);">
             <span>${tr("متاح:", "Qty:")} ${p.quantity}</span>
@@ -575,6 +630,7 @@
         product_id: Number(product.id),
         name: pName,
         barcode: product.barcode,
+        image_path: product.image_path || "",
         max_qty: availQty,
         quantity: 1,
         sell_price: Number(product.sell_price),
@@ -682,6 +738,7 @@
         posCart.splice(Number(b.dataset.rm), 1);
         renderPosCart(false);
         renderPosGrid();
+        syncPosFeedbackWithCart();
       });
     });
     wrap.querySelectorAll("[data-qty]").forEach(inp => {
@@ -696,6 +753,7 @@
         it.quantity = v;
         renderPosCart(false);
         renderPosGrid();
+        syncPosFeedbackWithCart();
       });
     });
     wrap.querySelectorAll("[data-price]").forEach(inp => {
@@ -708,8 +766,12 @@
         const totalSum = posCart.reduce((a, c) => a + c.unit_sold_price * c.quantity, 0);
         if (totalEl) totalEl.textContent = fmtMoney(totalSum);
         if (floatTotal) floatTotal.textContent = fmtMoney(totalSum);
+        syncPosFeedbackWithCart();
       });
-      inp.addEventListener("blur", () => renderPosCart(false));
+      inp.addEventListener("blur", () => {
+        renderPosCart(false);
+        syncPosFeedbackWithCart();
+      });
     });
     wrap.querySelectorAll("[data-sn]").forEach(inp => {
       inp.addEventListener("input", () => {
@@ -789,6 +851,7 @@
     lastAddedPosProductId = null;
     renderPosCart(false);
     renderPosGrid();
+    syncPosFeedbackWithCart();
   });
   document.getElementById("btnPosJumpToCartFromCam")?.addEventListener("click", scrollToPosInvoice);
   document.getElementById("btnFloatingJumpInvoice")?.addEventListener("click", scrollToPosInvoice);
@@ -843,10 +906,12 @@
       });
       showToast(res.message);
       posCart = [];
+      lastAddedPosProductId = null;
       document.getElementById("posCustomerName").value = "";
       document.getElementById("posCustomerPhone").value = "";
       document.getElementById("posInvoiceNotes").value = "";
-      renderPosCart();
+      renderPosCart(false);
+      syncPosFeedbackWithCart();
       loadPosCatalog();
       openInvoicePreviewModal(res.invoice, res.items);
     } catch (err) {
@@ -1116,7 +1181,7 @@
         const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
         const low = p.quantity <= p.low_stock_threshold;
         const pTitle = p.display_name || p.name;
-        return `\n          <tr>\n            <td><img src="${esc(img)}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
+        return `\n          <tr>\n            <td><img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
       }).join("");
     } catch (err) {
       showToast(err.message, true);
