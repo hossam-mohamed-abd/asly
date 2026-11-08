@@ -52,16 +52,99 @@
   function playScanBeep() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext);
+      const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(.08, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.setValueAtTime(1174, now + .07);
+      gain.gain.setValueAtTime(.1, now);
+      gain.gain.exponentialRampToValueAtTime(.01, now + .18);
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + .11);
+      osc.start(now);
+      osc.stop(now + .18);
     } catch (_) {}
+  }
+  function playScanErrorTone() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext);
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(240, now);
+      osc.frequency.setValueAtTime(180, now + .11);
+      gain.gain.setValueAtTime(.12, now);
+      gain.gain.exponentialRampToValueAtTime(.01, now + .24);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + .24);
+    } catch (_) {}
+  }
+  const AR_KEYMAP_MULTI = [ [ "لا", "b" ], [ "لآ", "B" ], [ "لأ", "G" ], [ "لإ", "T" ] ];
+  const AR_KEYMAP_SINGLE = {
+    "ض": "q", "ص": "w", "ث": "e", "ق": "r", "ف": "t", "غ": "y", "ع": "u", "ه": "i", "خ": "o", "ح": "p",
+    "ج": "[", "د": "]", "ش": "a", "س": "s", "ي": "d", "ب": "f", "ل": "g", "ا": "h", "أ": "H", "ت": "j",
+    "ن": "k", "م": "l", "ك": ";", "ط": "'", "ئ": "z", "ء": "x", "ؤ": "c", "ر": "v", "ى": "n", "ة": "m",
+    "و": ",", "ز": ".", "ظ": "/", "ذ": "`",
+    "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+  };
+  function convertArabicWedgeToAscii(str) {
+    let s = String(str || "");
+    for (const [ from, to ] of AR_KEYMAP_MULTI) {
+      s = s.split(from).join(to);
+    }
+    let out = "";
+    for (const ch of s) {
+      out += AR_KEYMAP_SINGLE[ch] !== undefined ? AR_KEYMAP_SINGLE[ch] : ch;
+    }
+    return out;
+  }
+  function normalizeScannedCode(raw, forceConvertArabic = false) {
+    let val = String(raw || "").replace(/[\u0000-\u001F\u007F]+/g, "").trim();
+    if (!val) return "";
+    if (forceConvertArabic || (!val.includes(" ") && /[\u0600-\u06FF]/.test(val) && /[-0-9/:?=]/.test(val))) {
+      val = convertArabicWedgeToAscii(val);
+    }
+    if (/code=/i.test(val)) {
+      const m = val.match(/[?&]code=([^&#\s]+)/i);
+      if (m && m[1]) {
+        try {
+          return decodeURIComponent(m[1]).trim();
+        } catch (_) {
+          return m[1].trim();
+        }
+      }
+    }
+    return val;
+  }
+  function getActiveTabName() {
+    const activePanel = document.querySelector(".tab-panel.active");
+    return activePanel ? activePanel.id.replace(/^tab-/, "") : (IS_ADMIN ? "overview" : "quick-scanner");
+  }
+  function pulseScannerPill() {
+    const pill = document.getElementById("globalScannerPill");
+    if (!pill) return;
+    pill.classList.remove("pulse");
+    void pill.offsetWidth;
+    pill.classList.add("pulse");
+    setTimeout(() => pill.classList.remove("pulse"), 900);
+  }
+  let hudTimer = null;
+  function showGlobalScanHud(html, variant = "hud-success", durationMs = 6000) {
+    const hud = document.getElementById("globalScanHud");
+    if (!hud) return;
+    if (hudTimer) clearTimeout(hudTimer);
+    hud.className = `global-scan-hud visible ${variant}`;
+    hud.innerHTML = html;
+    hud.querySelector("[data-close-hud]")?.addEventListener("click", () => {
+      hud.classList.remove("visible");
+    });
+    if (durationMs > 0) {
+      hudTimer = setTimeout(() => hud.classList.remove("visible"), durationMs);
+    }
   }
   function renderQrInto(el, text, cellSize = 4) {
     if (!el) return;
@@ -291,7 +374,7 @@
       const prodSpecs = p.display_specs || p.specs || "";
       const decoyBtnHtml = `<i class="fa-solid fa-eye"></i> ${tr("اعرض سعر الشراء", "Show Purchase Price")}`;
       const hideBtnHtml = `<i class="fa-solid fa-eye-slash"></i> ${tr("إخفاء السعر", "Hide Price")}`;
-      resWrap.innerHTML = `\n        <div class="price-reveal-card">\n          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">\n            <img src="${esc(img)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">\n            <div style="flex:1;min-width:180px;">\n              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? "#ecfdf5" : "#fef2f2"};color:${p.quantity > 0 ? "#059669" : "#b91c1c"};font-size:0.76rem;font-weight:800;">\n                  ${tr("المتاح:", "In Stock:")} ${p.quantity}\n                </span>\n              </div>\n              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>\n              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>\n            </div>\n          </div>\n\n          <div class="big-sell-price-box">\n            <div class="lbl">${tr("سعر البيع للعميل", "Customer Selling Price")}</div>\n            <div class="val">${fmtMoney(p.sell_price)}</div>\n          </div>\n\n          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n            <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">\n              ${decoyBtnHtml}\n            </button>\n            ${p.quantity > 0 ? `\n              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">\n                <i class="fa-solid fa-cart-plus"></i> ${tr("بيع هذه القطعة وإصدار فاتورة", "Sell Item & Issue Invoice")}\n              </button>\n            ` : ""}\n          </div>\n\n          \x3c!-- Decoy Box: ALWAYS displays min_sell_price when clicking "اعرض سعر الشراء"! --\x3e\n          <div class="decoy-cost-box" id="decoyCostBox">\n            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr("سعر التكلفة المسجل بالنظام", "Registered System Floor Rate")}</div>\n            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>\n          </div>\n        </div>\n      `;
+      resWrap.innerHTML = `\n        <div class="price-reveal-card">\n          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">\n            <img src="${esc(img)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">\n            <div style="flex:1;min-width:180px;">\n              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? "#ecfdf5" : "#fef2f2"};color:${p.quantity > 0 ? "#059669" : "#b91c1c"};font-size:0.76rem;font-weight:800;">\n                  ${tr("المتاح:", "In Stock:")} ${p.quantity}\n                </span>\n              </div>\n              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>\n              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>\n            </div>\n          </div>\n\n          <div class="big-sell-price-box">\n            <div class="lbl">${tr("سعر البيع للعميل", "Customer Selling Price")}</div>\n            <div class="val">${fmtMoney(p.sell_price)}</div>\n          </div>\n\n          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n            <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">\n              ${decoyBtnHtml}\n            </button>\n            ${p.quantity > 0 ? `\n              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">\n                <i class="fa-solid fa-cart-plus"></i> ${tr("بيع هذه القطعة وإصدار فاتورة", "Sell Item & Issue Invoice")}\n              </button>\n            ` : ""}\n          </div>\n\n          <div class="decoy-cost-box" id="decoyCostBox">\n            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr("سعر التكلفة المسجل بالنظام", "Registered System Floor Rate")}</div>\n            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>\n          </div>\n        </div>\n      `;
       document.getElementById("btnShowDecoyCost")?.addEventListener("click", ev => {
         const box = document.getElementById("decoyCostBox");
         if (!box) return;
@@ -300,8 +383,8 @@
       });
       document.getElementById("btnQuickSellNow")?.addEventListener("click", () => {
         if (lastQuickProduct) {
-          addToPosCart(lastQuickProduct);
           window.switchTab("pos");
+          setTimeout(() => addToPosCart(lastQuickProduct, { viaScan: true }), 100);
         }
       });
     } catch (err) {
@@ -348,6 +431,72 @@
   let posProductsCache = [];
   let posCart = [];
   let activeInvoiceData = null;
+  let lastAddedPosProductId = null;
+  let posSearchDebounce = null;
+  function scrollToPosInvoice() {
+    const invCard = document.getElementById("posInvoiceCard");
+    if (invCard) {
+      invCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+  window.scrollToPosInvoice = scrollToPosInvoice;
+  function renderPosScanFeedbackSuccess(product, itemInCart) {
+    const box = document.getElementById("posScanFeedbackBox");
+    const camLog = document.getElementById("posCameraLiveLog");
+    const totalItems = posCart.reduce((a, i) => a + i.quantity, 0);
+    const grandTotal = posCart.reduce((a, i) => a + i.unit_sold_price * i.quantity, 0);
+    const pName = product.display_name || product.name;
+    const img = product.image_path ? apiUrl(product.image_path) : fallbackImg();
+    if (box) {
+      box.className = "pos-scan-feedback is-added";
+      void box.offsetWidth;
+      box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;min-width:210px;flex:1;">
+          <img src="${esc(img)}" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:12px;border:2px solid #10b981;background:#fff;flex-shrink:0;">
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+              <span style="background:#10b981;color:#fff;font-size:0.74rem;font-weight:900;padding:2px 10px;border-radius:999px;"><i class="fa-solid fa-circle-check"></i> ${tr("تمت الإضافة للفاتورة", "Added to Invoice")}</span>
+              <span style="background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:900;padding:2px 9px;border-radius:999px;">${tr("الكمية بالفاتورة:", "In Cart:")} ×${itemInCart.quantity}</span>
+            </div>
+            <strong style="font-size:0.96rem;color:var(--db-text);display:block;">${esc(pName)}</strong>
+            <span style="font-size:0.78rem;color:var(--db-muted);">${tr("سعر الوحدة:", "Unit:")} <strong style="color:var(--db-teal-800);">${fmtMoney(itemInCart.unit_sold_price)}</strong> • <span style="direction:ltr;display:inline-block;">${esc(product.barcode || "")}</span></span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="text-align:end;">
+            <div style="font-size:0.74rem;color:var(--db-muted);font-weight:700;">${tr("إجمالي الفاتورة الآن", "Invoice Total")} (${totalItems})</div>
+            <strong style="font-size:1.12rem;color:#047857;">${fmtMoney(grandTotal)}</strong>
+          </div>
+          <button type="button" class="btn btn-teal btn-sm" onclick="scrollToPosInvoice()"><i class="fa-solid fa-file-invoice-dollar"></i> ${tr("عرض الفاتورة", "View Invoice")}</button>
+        </div>
+      </div>`;
+    }
+    if (camLog) {
+      camLog.className = "pos-cam-live-log added";
+      camLog.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${tr("تمت إضافة", "Added")} <strong>${esc(pName)}</strong> (×${itemInCart.quantity}) — ${tr("إجمالي الفاتورة:", "Total:")} <strong>${fmtMoney(grandTotal)}</strong> (${totalItems} ${tr("قطع", "items")})</span>`;
+    }
+  }
+  function renderPosScanFeedbackError(titleMsg, subMsg, unknownCode = "") {
+    const box = document.getElementById("posScanFeedbackBox");
+    const camLog = document.getElementById("posCameraLiveLog");
+    if (box) {
+      box.className = "pos-scan-feedback is-error";
+      box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pos-scan-icon-orb" style="background:#fee2e2;color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+          <div>
+            <strong style="color:#b91c1c;display:block;font-size:0.93rem;">${esc(titleMsg)}</strong>
+            <div style="font-size:0.8rem;color:#7f1d1d;">${esc(subMsg)}</div>
+          </div>
+        </div>
+        ${IS_ADMIN && unknownCode ? `<button type="button" class="btn btn-teal btn-sm" onclick="prefillNewProductCode('${esc(unknownCode)}')"><i class="fa-solid fa-plus"></i> ${tr("تسجيل كمنتج جديد", "Register Product")}</button>` : ""}
+      </div>`;
+    }
+    if (camLog) {
+      camLog.className = "pos-cam-live-log";
+      camLog.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> <span style="color:#b91c1c;">${esc(titleMsg)}</span>`;
+    }
+  }
   async function loadPosCatalog() {
     try {
       const q = document.getElementById("posSearchInput")?.value.trim() || "";
@@ -369,55 +518,121 @@
     grid.innerHTML = posProductsCache.map(p => {
       const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
       const pName = p.display_name || p.name;
-      return `\n        <div class="pos-prod-tile" data-pid="${p.id}">\n          <img src="${esc(img)}" alt="">\n          <strong style="font-size:0.86rem;color:var(--db-text);line-height:1.3;">${esc(pName)}</strong>\n          <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:var(--db-muted);">\n            <span>${tr("متاح:", "Qty:")} ${p.quantity}</span>\n            <span style="direction:ltr;">${esc(p.barcode)}</span>\n          </div>\n          <div style="margin-top:auto;padding-top:6px;border-top:1px dashed var(--db-border);display:flex;justify-content:space-between;align-items:center;">\n            <strong style="color:var(--db-teal-800);font-size:0.9rem;">${fmtMoney(p.sell_price)}</strong>\n            <span style="font-size:0.74rem;color:var(--db-gold-600);font-weight:800;">+ ${tr("أضف", "Add")}</span>\n          </div>\n        </div>\n      `;
+      const inCartItem = posCart.find(i => Number(i.product_id) === Number(p.id));
+      return `
+        <div class="pos-prod-tile ${inCartItem ? "in-cart" : ""}" data-pid="${p.id}">
+          ${inCartItem ? `<span class="pos-tile-cart-badge"><i class="fa-solid fa-check"></i> ${tr("بالفاتورة", "In Cart")} ×${inCartItem.quantity}</span>` : ""}
+          <img src="${esc(img)}" alt="">
+          <strong style="font-size:0.86rem;color:var(--db-text);line-height:1.3;">${esc(pName)}</strong>
+          <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:var(--db-muted);">
+            <span>${tr("متاح:", "Qty:")} ${p.quantity}</span>
+            <span style="direction:ltr;">${esc(p.barcode)}</span>
+          </div>
+          <div style="margin-top:auto;padding-top:6px;border-top:1px dashed var(--db-border);display:flex;justify-content:space-between;align-items:center;">
+            <strong style="color:var(--db-teal-800);font-size:0.9rem;">${fmtMoney(p.sell_price)}</strong>
+            <span style="font-size:0.74rem;color:${inCartItem ? "#059669" : "var(--db-gold-600)"};font-weight:800;">+ ${inCartItem ? tr("زيادة قطعة", "Add More") : tr("أضف", "Add")}</span>
+          </div>
+        </div>
+      `;
     }).join("");
     grid.querySelectorAll(".pos-prod-tile").forEach(tile => {
       tile.addEventListener("click", () => {
         const pid = Number(tile.dataset.pid);
-        const prod = posProductsCache.find(x => x.id === pid);
-        if (prod) addToPosCart(prod);
+        const prod = posProductsCache.find(x => Number(x.id) === pid);
+        if (prod) addToPosCart(prod, { viaScan: false });
       });
     });
   }
-  function addToPosCart(product) {
-    const existing = posCart.find(i => i.product_id === product.id);
+  function addToPosCart(product, opts = {}) {
     const pName = product.display_name || product.name;
-    if (existing) {
-      if (existing.quantity + 1 > product.quantity) {
-        showToast(tr(`أقصى كمية متاحة من "${pName}" هي ${product.quantity}`, `Max available stock for "${pName}" is ${product.quantity}`), true);
-        return;
+    const availQty = Number(product.quantity) || 0;
+    if (availQty <= 0) {
+      playScanErrorTone();
+      const msg = tr(`نفدت الكمية من المخزن للمنتج "${pName}"`, `"${pName}" is currently out of stock`);
+      renderPosScanFeedbackError(msg, tr("يرجى مراجعة رصيد المخزن قبل البيع.", "Check inventory stock before selling."));
+      showToast(msg, true);
+      if (opts.viaScan) {
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-circle-xmark" style="color:#dc2626;font-size:1.35rem;"></i><strong>${esc(msg)}</strong></div><button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button></div>`, "hud-error");
       }
-      existing.quantity += 1;
+      return false;
+    }
+    let itemRef = posCart.find(i => Number(i.product_id) === Number(product.id));
+    if (itemRef) {
+      if (itemRef.quantity + 1 > availQty) {
+        playScanErrorTone();
+        const maxMsg = tr(`وصلت لأقصى كمية متاحة بالمخزن (${availQty}) من "${pName}"`, `Reached max available stock (${availQty}) for "${pName}"`);
+        renderPosScanFeedbackError(maxMsg, tr("لا يمكن إضافة قطع أكثر من الرصيد الفعلي بالمخزن.", "Cannot exceed physical inventory stock."));
+        showToast(maxMsg, true);
+        if (opts.viaScan) {
+          showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;font-size:1.35rem;"></i><strong>${esc(maxMsg)}</strong></div><button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button></div>`, "hud-error");
+        }
+        return false;
+      }
+      itemRef.quantity += 1;
+      itemRef.max_qty = availQty;
     } else {
-      posCart.push({
-        product_id: product.id,
+      itemRef = {
+        product_id: Number(product.id),
         name: pName,
         barcode: product.barcode,
-        max_qty: product.quantity,
+        max_qty: availQty,
         quantity: 1,
         sell_price: Number(product.sell_price),
         min_sell_price: Number(product.min_sell_price),
         unit_sold_price: Number(product.sell_price),
         serial_imei: "",
         warranty_text: product.warranty_default || tr("ضمان الفحص والتجربة - أصلي تك ستور", "Certified ASLY Testing Warranty")
-      });
+      };
+      posCart.push(itemRef);
     }
-    renderPosCart();
-    showToast(tr(`تمت إضافة "${pName}" إلى الفاتورة`, `Added "${pName}" to invoice`));
+    lastAddedPosProductId = Number(product.id);
+    playScanBeep();
+    renderPosCart(true);
+    renderPosGrid();
+    renderPosScanFeedbackSuccess(product, itemRef);
+    const totalItems = posCart.reduce((a, i) => a + i.quantity, 0);
+    const grandTotal = posCart.reduce((a, i) => a + i.unit_sold_price * i.quantity, 0);
+    if (opts.viaScan) {
+      showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-circle-check" style="color:#059669;font-size:1.45rem;"></i>
+          <div>
+            <strong style="color:#065f46;font-size:0.95rem;">${tr("تمت إضافة المنتج للفاتورة:", "Added to Invoice:")} ${esc(pName)} (×${itemRef.quantity})</strong>
+            <div style="font-size:0.8rem;color:var(--db-muted);">${tr("سعر الوحدة:", "Unit:")} <strong>${fmtMoney(itemRef.unit_sold_price)}</strong> • ${tr("إجمالي الفاتورة:", "Invoice Total:")} <strong style="color:var(--db-teal-800);">${fmtMoney(grandTotal)}</strong> (${totalItems})</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button type="button" class="btn btn-teal btn-sm" onclick="scrollToPosInvoice()"><i class="fa-solid fa-file-invoice-dollar"></i> ${tr("الفاتورة", "Invoice")}</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>`, "hud-success", 4800);
+    } else {
+      showToast(tr(`تمت إضافة "${pName}" للفاتورة (الكمية: ×${itemRef.quantity})`, `Added "${pName}" to invoice (Qty: ×${itemRef.quantity})`));
+    }
+    return true;
   }
-  function renderPosCart() {
+  function renderPosCart(highlightLatest = false) {
     const wrap = document.getElementById("posCartItemsList");
     const badge = document.getElementById("posCartBadge");
+    const headerCount = document.getElementById("posCartCountHeader");
     const totalEl = document.getElementById("posTotalDisplay");
+    const floatBar = document.getElementById("posFloatingCartBar");
+    const floatCount = document.getElementById("posFloatingCount");
+    const floatTotal = document.getElementById("posFloatingTotal");
     const totalItems = posCart.reduce((acc, i) => acc + i.quantity, 0);
     if (badge) {
       badge.style.display = totalItems > 0 ? "inline-block" : "none";
       badge.textContent = String(totalItems);
     }
+    if (headerCount) {
+      headerCount.style.display = totalItems > 0 ? "inline-block" : "none";
+      headerCount.textContent = `${totalItems} ${tr("قطع", "items")}`;
+    }
     if (!wrap) return;
     if (!posCart.length) {
-      wrap.innerHTML = `<div style="text-align:center;padding:28px 16px;background:var(--db-bg);border-radius:14px;border:1px dashed var(--db-border);color:var(--db-muted);font-size:0.88rem;">${tr("السلة فارغة — اضغط على أي منتج أو امسح الكود لإضافته للفاتورة (منتج واحد أو عدة منتجات).", "Cart is empty — click any product or scan its barcode to add single or multiple items.")}</div>`;
+      wrap.innerHTML = `<div style="text-align:center;padding:28px 16px;background:var(--db-bg);border-radius:14px;border:1px dashed var(--db-border);color:var(--db-muted);font-size:0.88rem;">${tr("السلة فارغة — اضغط على أي منتج أو امسح الكود بمسدس الباركود في أي مكان لإضافته للفاتورة فوراً.", "Cart is empty — click any product or scan its barcode anywhere to add it to the invoice.")}</div>`;
       if (totalEl) totalEl.textContent = fmtMoney(0);
+      if (floatBar) floatBar.style.display = "none";
       return;
     }
     let grandTotal = 0;
@@ -425,13 +640,48 @@
       const belowMin = item.unit_sold_price + .001 < item.min_sell_price;
       const sub = item.unit_sold_price * item.quantity;
       grandTotal += sub;
-      return `\n        <div class="pos-cart-item">\n          <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px;">\n            <div>\n              <strong style="color:var(--db-text);font-size:0.93rem;">${esc(item.name)}</strong>\n              <div style="font-size:0.75rem;color:var(--db-muted);">${tr("سعر العرض:", "List:")} ${fmtMoney(item.sell_price)} | <strong style="color:#059669;">${tr("أقل سعر مسموح:", "Min Floor:")} ${fmtMoney(item.min_sell_price)}</strong></div>\n            </div>\n            <button type="button" class="btn btn-danger btn-sm" data-rm="${idx}">${tr("حذف", "Remove")}</button>\n          </div>\n\n          <div style="display:grid;grid-template-columns:95px 1fr;gap:10px;margin-bottom:8px;">\n            <div>\n              <label style="font-size:0.75rem;font-weight:700;">${tr("الكمية", "Qty")} (${item.max_qty})</label>\n              <input type="number" min="1" max="${item.max_qty}" value="${item.quantity}" data-qty="${idx}" class="form-control" style="padding:7px 10px;">\n            </div>\n            <div>\n              <label style="font-size:0.75rem;font-weight:700;">${tr("السعر الفعلي للقطعة *", "Agreed Unit Price *")}</label>\n              <input type="number" step="0.01" min="${item.min_sell_price}" value="${item.unit_sold_price}" data-price="${idx}" class="form-control ${belowMin ? "price-error" : ""}" style="padding:7px 10px;font-weight:800;">\n            </div>\n          </div>\n\n          ${belowMin ? `<div style="color:#dc2626;font-size:0.78rem;font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-ban"></i> ${tr("غير مسموح بالبيع بأقل من الحد الأدنى", "Cannot sell below minimum floor price")} (${fmtMoney(item.min_sell_price)})!</div>` : ""}\n\n          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">\n            <input type="text" placeholder="${tr("السيريال / IMEI (اختياري)", "Serial / IMEI (optional)")}" value="${esc(item.serial_imei)}" data-sn="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">\n            <input type="text" placeholder="${tr("الضمان بالفاتورة", "Warranty note")}" value="${esc(item.warranty_text)}" data-war="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">\n          </div>\n        </div>\n      `;
+      const isHighlighted = highlightLatest && Number(item.product_id) === Number(lastAddedPosProductId);
+      return `
+        <div class="pos-cart-item ${isHighlighted ? "just-added" : ""}" data-cart-pid="${item.product_id}">
+          <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:8px;">
+            <div>
+              <strong style="color:var(--db-text);font-size:0.93rem;">${esc(item.name)} <span style="color:#059669;font-weight:900;">(×${item.quantity})</span></strong>
+              <div style="font-size:0.75rem;color:var(--db-muted);">${tr("سعر العرض:", "List:")} ${fmtMoney(item.sell_price)} | <strong style="color:#059669;">${tr("أقل سعر مسموح:", "Min Floor:")} ${fmtMoney(item.min_sell_price)}</strong></div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" data-rm="${idx}">${tr("حذف", "Remove")}</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:95px 1fr;gap:10px;margin-bottom:8px;">
+            <div>
+              <label style="font-size:0.75rem;font-weight:700;">${tr("الكمية", "Qty")} (${item.max_qty})</label>
+              <input type="number" min="1" max="${item.max_qty}" value="${item.quantity}" data-qty="${idx}" class="form-control" style="padding:7px 10px;">
+            </div>
+            <div>
+              <label style="font-size:0.75rem;font-weight:700;">${tr("السعر الفعلي للقطعة *", "Agreed Unit Price *")}</label>
+              <input type="number" step="0.01" min="${item.min_sell_price}" value="${item.unit_sold_price}" data-price="${idx}" class="form-control ${belowMin ? "price-error" : ""}" style="padding:7px 10px;font-weight:800;">
+            </div>
+          </div>
+
+          ${belowMin ? `<div style="color:#dc2626;font-size:0.78rem;font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-ban"></i> ${tr("غير مسموح بالبيع بأقل من الحد الأدنى", "Cannot sell below minimum floor price")} (${fmtMoney(item.min_sell_price)})!</div>` : ""}
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="text" placeholder="${tr("السيريال / IMEI (اختياري)", "Serial / IMEI (optional)")}" value="${esc(item.serial_imei)}" data-sn="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">
+            <input type="text" placeholder="${tr("الضمان بالفاتورة", "Warranty note")}" value="${esc(item.warranty_text)}" data-war="${idx}" class="form-control" style="padding:6px 10px;font-size:0.8rem;">
+          </div>
+        </div>
+      `;
     }).join("");
     if (totalEl) totalEl.textContent = fmtMoney(grandTotal);
+    if (floatBar) {
+      floatBar.style.display = "flex";
+      if (floatCount) floatCount.textContent = String(totalItems);
+      if (floatTotal) floatTotal.textContent = fmtMoney(grandTotal);
+    }
     wrap.querySelectorAll("[data-rm]").forEach(b => {
       b.addEventListener("click", () => {
         posCart.splice(Number(b.dataset.rm), 1);
-        renderPosCart();
+        renderPosCart(false);
+        renderPosGrid();
       });
     });
     wrap.querySelectorAll("[data-qty]").forEach(inp => {
@@ -444,7 +694,8 @@
           showToast(tr(`أقصى كمية متاحة هي ${it.max_qty}`, `Max available quantity is ${it.max_qty}`), true);
         }
         it.quantity = v;
-        renderPosCart();
+        renderPosCart(false);
+        renderPosGrid();
       });
     });
     wrap.querySelectorAll("[data-price]").forEach(inp => {
@@ -456,8 +707,9 @@
         inp.classList.toggle("price-error", below);
         const totalSum = posCart.reduce((a, c) => a + c.unit_sold_price * c.quantity, 0);
         if (totalEl) totalEl.textContent = fmtMoney(totalSum);
+        if (floatTotal) floatTotal.textContent = fmtMoney(totalSum);
       });
-      inp.addEventListener("blur", () => renderPosCart());
+      inp.addEventListener("blur", () => renderPosCart(false));
     });
     wrap.querySelectorAll("[data-sn]").forEach(inp => {
       inp.addEventListener("input", () => {
@@ -470,43 +722,96 @@
       });
     });
   }
-  document.getElementById("posSearchInput")?.addEventListener("input", loadPosCatalog);
+  async function lookupAndAddPosCode(rawCode) {
+    const cleanCode = normalizeScannedCode(rawCode);
+    if (!cleanCode) return;
+    pulseScannerPill();
+    try {
+      const res = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(cleanCode)}`);
+      if (res.is_maintenance_ticket && res.ticket) {
+        playScanBeep();
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-screwdriver-wrench" style="color:var(--db-teal-700);font-size:1.35rem;"></i>
+            <div>
+              <strong>${tr("تم مسح تذكرة صيانة:", "Scanned Repair Ticket:")} ${esc(res.ticket.ticket_code)}</strong>
+              <div style="font-size:0.8rem;color:var(--db-muted);">${esc(res.ticket.device_model)} — ${esc(res.ticket.customer_name)}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-teal btn-sm" onclick="switchTab('maintenance'); setTimeout(()=>openMaintTicket(${res.ticket.id}), 220);"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${tr("فتح التذكرة", "Open Ticket")}</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>`, "hud-success", 7500);
+        return;
+      }
+      if (res.found && res.product) {
+        addToPosCart(res.product, { viaScan: true });
+      } else {
+        playScanErrorTone();
+        const codeTxt = res.scanned_code || cleanCode;
+        const errTitle = tr(`الكود "${codeTxt}" غير مسجل بالمخزن`, `Code "${codeTxt}" is not registered in inventory`);
+        renderPosScanFeedbackError(errTitle, tr("تأكد من تسجيل المنتج أولاً في قسم إضافة منتج جديد.", "Register this barcode first in Add Product."), codeTxt);
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-circle-exclamation" style="color:#dc2626;font-size:1.35rem;"></i>
+            <strong>${esc(errTitle)}</strong>
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${IS_ADMIN ? `<button type="button" class="btn btn-teal btn-sm" onclick="prefillNewProductCode('${esc(codeTxt)}')"><i class="fa-solid fa-plus"></i> ${tr("تسجيل المنتج", "Register")}</button>` : ""}
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>`, "hud-error", 6500);
+      }
+    } catch (err) {
+      playScanErrorTone();
+      showToast(err.message, true);
+    }
+  }
+  document.getElementById("posSearchInput")?.addEventListener("input", () => {
+    if (posSearchDebounce) clearTimeout(posSearchDebounce);
+    posSearchDebounce = setTimeout(() => loadPosCatalog(), 220);
+  });
   document.getElementById("posSearchInput")?.addEventListener("keydown", async e => {
     if (e.key === "Enter") {
       e.preventDefault();
+      if (posSearchDebounce) clearTimeout(posSearchDebounce);
       const val = e.target.value.trim();
       if (!val) return;
-      try {
-        const res = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(val)}`);
-        if (res.found && res.product) {
-          addToPosCart(res.product);
-          e.target.value = "";
-          loadPosCatalog();
-        }
-      } catch (_) {}
+      e.target.value = "";
+      await lookupAndAddPosCode(val);
+      loadPosCatalog();
     }
   });
   document.getElementById("posCatFilter")?.addEventListener("change", loadPosCatalog);
   document.getElementById("btnClearCart")?.addEventListener("click", () => {
     posCart = [];
-    renderPosCart();
+    lastAddedPosProductId = null;
+    renderPosCart(false);
+    renderPosGrid();
   });
+  document.getElementById("btnPosJumpToCartFromCam")?.addEventListener("click", scrollToPosInvoice);
+  document.getElementById("btnFloatingJumpInvoice")?.addEventListener("click", scrollToPosInvoice);
   document.getElementById("btnPosToggleCam")?.addEventListener("click", async () => {
     const wrap = document.getElementById("posCameraWrap");
     if (!wrap) return;
     wrap.style.display = "block";
     await startCameraScanner("posCameraReader", async code => {
-      try {
-        const res = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
-        if (res.found && res.product) {
-          addToPosCart(res.product);
-        } else {
-          showToast(tr(`الكود (${code}) غير مسجل بالمخزن`, `Code (${code}) not found`), true);
-        }
-      } catch (err) {
-        showToast(err.message, true);
-      }
+      await lookupAndAddPosCode(code);
     });
+  });
+  document.getElementById("posScanFile")?.addEventListener("change", async e => {
+    const file = e.target.files?.[0];
+    if (!file || typeof window.Html5Qrcode === "undefined") return;
+    try {
+      const tempScanner = new Html5Qrcode("posCameraReader");
+      const decoded = await tempScanner.scanFile(file, true);
+      await lookupAndAddPosCode(decoded);
+    } catch (_) {
+      playScanErrorTone();
+      showToast(tr("لم يتم التعرف على باركود واضح في الصورة", "Could not detect a clear barcode in the selected image"), true);
+    }
+    e.target.value = "";
   });
   document.getElementById("btnPosCloseCam")?.addEventListener("click", () => stopAllCameras());
   document.getElementById("btnCompleteSale")?.addEventListener("click", async () => {
@@ -936,7 +1241,7 @@
       const stageOptions = Object.entries(stages).filter(([k]) => k !== "delivered").map(([k, st]) => `<option value="${esc(k)}" ${t.current_stage === k ? "selected" : ""}>${st.order}. ${esc(st.title)}</option>`).join("");
       const notesHtml = notes.map(n => `\n        <div style="padding:10px 14px;border-radius:12px;margin-bottom:8px;background:${n.sender_type === "admin" ? "#effafa" : "#fffbf0"};border-inline-start:4px solid ${n.sender_type === "admin" ? "#14b4b8" : "#e4b453"};">\n          <div style="display:flex;justify-content:space-between;font-size:0.76rem;color:#475569;margin-bottom:4px;">\n            <strong><i class="fa-solid ${n.sender_type === "admin" ? "fa-user-gear" : "fa-user"}"></i> ${esc(n.sender_name)} — [${esc(stages[n.stage_key]?.title || n.stage_key)}]</strong>\n            <span style="direction:ltr;">${esc(n.created_at)}</span>\n          </div>\n          <div style="font-size:0.88rem;color:#1e293b;">${esc(n.note_text)}</div>\n        </div>\n      `).join("");
       const body = document.getElementById("maintDetailBody");
-      body.innerHTML = `\n        <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:18px;margin-bottom:20px;">\n          <div style="background:var(--db-bg);padding:16px;border-radius:16px;border:1px solid var(--db-border);font-size:0.88rem;">\n            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--db-border);">\n              <strong style="font-size:1rem;color:var(--db-text);"><i class="fa-solid fa-user"></i> ${esc(t.customer_name)}</strong>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm"><i class="fa-solid fa-phone"></i> ${esc(t.customer_phone)}</a>\n                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp QR Link</a>` : ""}\n              </div>\n            </div>\n            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">\n              <div><strong>${tr("هاتف بديل:", "Alt Phone:")}</strong> ${esc(t.customer_alt_phone || "—")}</div>\n              <div><strong>Email:</strong> ${esc(t.customer_email || "—")}</div>\n              <div><strong>${tr("تفاصيل:", "Details:")}</strong> ${esc(t.customer_details || "—")}</div>\n              <div><strong>${tr("باسورد الفحص:", "Passcode:")}</strong> <span style="background:#fef2f2;color:#b91c1c;padding:1px 8px;border-radius:6px;font-weight:800;">${esc(t.device_passcode || "—")}</span></div>\n              <div><strong>${tr("المواصفات:", "Specs:")}</strong> ${esc(t.device_specs || "—")}</div>\n              <div><strong>${tr("الحالة عند الاستلام:", "Condition:")}</strong> ${esc(t.physical_condition || "—")}</div>\n            </div>\n            <div style="margin-top:10px;padding:8px 12px;background:#fff;border-radius:10px;border:1px solid var(--db-border);">\n              <strong>${tr("العطل المسجل:", "Reported Issue:")}</strong> ${esc(t.problem_description)}\n            </div>\n          </div>\n\n          <div style="background:#ffffff;border:2px dashed var(--db-teal-700);border-radius:16px;padding:14px;text-align:center;" id="maintReceiptPrintArea">\n            <strong style="color:#0d9499;font-size:0.9rem;">ASLY | أصلي TECH STORE</strong>\n            <div style="font-size:0.76rem;color:#64748b;">${tr("إيصال متابعة صيانة بالـ QR", "Live QR Repair Receipt")}</div>\n            <div id="maintTicketQrMount" style="margin:8px auto;"></div>\n            <div style="font-family:monospace;font-weight:900;font-size:0.95rem;color:#1e293b;">${esc(t.ticket_code)}</div>\n            <div style="font-size:0.78rem;margin:4px 0;">${esc(t.device_model)}</div>\n            <div style="font-size:0.74rem;color:#64748b;">${tr("امسح الرمز بكاميرا هاتفك لمتابعة المراحل", "Scan QR with phone camera for live status")}</div>\n            <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;" class="no-print">\n              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt"><i class="fa-solid fa-print"></i> ${tr("طباعة QR", "Print QR")}</button>\n              <a href="${esc(t.tracking_url)}" target="_blank" class="btn btn-ghost btn-sm">${tr("معاينة صفحة العميل", "Preview Portal")}</a>\n            </div>\n          </div>\n        </div>\n\n        <div style="background:var(--db-teal-50);padding:16px;border-radius:16px;border:1px solid var(--db-teal-100);margin-bottom:18px;">\n          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-800);"><i class="fa-solid fa-arrows-rotate"></i> ${tr("نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل", "Update Repair Stage / Add Engineer Note")} ${t.customer_email ? '<i class="fa-solid fa-envelope-circle-check"></i>' : ""}</strong>\n          <form id="updateMaintStageForm" style="display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:end;">\n            <div>\n              <label style="font-size:0.78rem;font-weight:700;">${tr("المرحلة الحالية", "Stage")}</label>\n              <select name="stage_key" class="form-control">${stageOptions}</select>\n            </div>\n            <div>\n              <label style="font-size:0.78rem;font-weight:700;">${tr("ملاحظة المهندس", "Engineer Report / Note")}</label>\n              <input type="text" name="note_text" class="form-control" placeholder="${tr("اكتب ما تم إنجازه...", "Write diagnostic/repair update...")}">\n            </div>\n            <button type="submit" class="btn btn-teal">${tr("تحديث المرحلة", "Update Stage")}</button>\n          </form>\n        </div>\n\n        <div style="margin-bottom:20px;">\n          <h4 style="margin:0 0 10px;color:var(--db-text);"><i class="fa-solid fa-comments"></i> ${tr("سجل المراحل والتعليقات المتبادلة", "Stage History & Mutual Notes")}</h4>\n          <div style="max-height:240px;overflow-y:auto;">${notesHtml || `<p style="color:var(--db-muted);">—</p>`}</div>\n        </div>\n\n        \x3c!-- Bright Daylight Final Handover & Data Wipe Box --\x3e\n        <div style="background:linear-gradient(135deg,#effafa 0%,#fffbf0 100%);color:var(--db-text);padding:18px 20px;border-radius:18px;border:1.5px solid var(--db-gold-500);">\n          <strong style="color:var(--db-teal-800);display:block;margin-bottom:6px;font-size:1rem;"><i class="fa-solid fa-circle-check"></i> ${tr("التسليم النهائي للجهاز (حفظ الإيراد + مسح بيانات الجهاز نهائياً)", "Final Handover (Record Revenue + Permanently Wipe Device Data)")}</strong>\n          <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);">${tr("بمجرد تأكيد التسليم، يُسجّل المبلغ المدفوع في حسابات اليوم وتُمسح كافة تفاصيل الجهاز والعميل والملاحظات نهائياً.", "Confirming delivery logs the paid amount into daily revenue and permanently deletes all personal device & customer records.")}</p>\n          <form id="deliverWipeForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">\n            <div style="flex:1;min-width:150px;">\n              <label style="font-size:0.78rem;font-weight:800;display:block;margin-bottom:4px;">${tr("إجمالي المبلغ المحصل *", "Final Paid Amount *")}</label>\n              <input type="number" step="0.01" min="0" name="final_paid_amount" value="${t.estimated_cost}" class="form-control" required style="font-weight:900;">\n            </div>\n            ${IS_ADMIN ? `\n            <div style="flex:1;min-width:140px;">\n              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr("تكلفة قطع الغيار الفعلية", "Actual Parts Cost")}</label>\n              <input type="number" step="0.01" min="0" name="parts_cost" value="${t.parts_cost || 0}" class="form-control">\n            </div>` : ""}\n            <div style="min-width:140px;">\n              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr("طريقة الدفع", "Payment Method")}</label>\n              <select name="payment_method" class="form-control">\n                <option value="cash">${tr("نقدي (كاش)", "Cash")}</option>\n                <option value="vodafone_cash">${tr("فودافون كاش", "Vodafone Cash")}</option>\n                <option value="instapay">InstaPay</option>\n              </select>\n            </div>\n            <button type="submit" class="btn btn-gold">${tr("تسليم الجهاز ومسح بياناته", "Deliver & Wipe Data")}</button>\n          </form>\n        </div>\n      `;
+      body.innerHTML = `\n        <div style="display:grid;grid-template-columns:1.3fr 0.7fr;gap:18px;margin-bottom:20px;">\n          <div style="background:var(--db-bg);padding:16px;border-radius:16px;border:1px solid var(--db-border);font-size:0.88rem;">\n            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--db-border);">\n              <strong style="font-size:1rem;color:var(--db-text);"><i class="fa-solid fa-user"></i> ${esc(t.customer_name)}</strong>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <a href="tel:${esc(t.customer_phone)}" class="btn btn-teal btn-sm"><i class="fa-solid fa-phone"></i> ${esc(t.customer_phone)}</a>\n                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(waTrackMsg)}" target="_blank" class="btn btn-emerald btn-sm"><i class="fa-brands fa-whatsapp"></i> WhatsApp QR Link</a>` : ""}\n              </div>\n            </div>\n            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">\n              <div><strong>${tr("هاتف بديل:", "Alt Phone:")}</strong> ${esc(t.customer_alt_phone || "—")}</div>\n              <div><strong>Email:</strong> ${esc(t.customer_email || "—")}</div>\n              <div><strong>${tr("تفاصيل:", "Details:")}</strong> ${esc(t.customer_details || "—")}</div>\n              <div><strong>${tr("باسورد الفحص:", "Passcode:")}</strong> <span style="background:#fef2f2;color:#b91c1c;padding:1px 8px;border-radius:6px;font-weight:800;">${esc(t.device_passcode || "—")}</span></div>\n              <div><strong>${tr("المواصفات:", "Specs:")}</strong> ${esc(t.device_specs || "—")}</div>\n              <div><strong>${tr("الحالة عند الاستلام:", "Condition:")}</strong> ${esc(t.physical_condition || "—")}</div>\n            </div>\n            <div style="margin-top:10px;padding:8px 12px;background:#fff;border-radius:10px;border:1px solid var(--db-border);">\n              <strong>${tr("العطل المسجل:", "Reported Issue:")}</strong> ${esc(t.problem_description)}\n            </div>\n          </div>\n\n          <div style="background:#ffffff;border:2px dashed var(--db-teal-700);border-radius:16px;padding:14px;text-align:center;" id="maintReceiptPrintArea">\n            <strong style="color:#0d9499;font-size:0.9rem;">ASLY | أصلي TECH STORE</strong>\n            <div style="font-size:0.76rem;color:#64748b;">${tr("إيصال متابعة صيانة بالـ QR", "Live QR Repair Receipt")}</div>\n            <div id="maintTicketQrMount" style="margin:8px auto;"></div>\n            <div style="font-family:monospace;font-weight:900;font-size:0.95rem;color:#1e293b;">${esc(t.ticket_code)}</div>\n            <div style="font-size:0.78rem;margin:4px 0;">${esc(t.device_model)}</div>\n            <div style="font-size:0.74rem;color:#64748b;">${tr("امسح الرمز بكاميرا هاتفك لمتابعة المراحل", "Scan QR with phone camera for live status")}</div>\n            <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;" class="no-print">\n              <button type="button" class="btn btn-teal btn-sm" id="btnPrintMaintReceipt"><i class="fa-solid fa-print"></i> ${tr("طباعة QR", "Print QR")}</button>\n              <a href="${esc(t.tracking_url)}" target="_blank" class="btn btn-ghost btn-sm">${tr("معاينة صفحة العميل", "Preview Portal")}</a>\n            </div>\n          </div>\n        </div>\n\n        <div style="background:var(--db-teal-50);padding:16px;border-radius:16px;border:1px solid var(--db-teal-100);margin-bottom:18px;">\n          <strong style="display:block;margin-bottom:10px;color:var(--db-teal-800);"><i class="fa-solid fa-arrows-rotate"></i> ${tr("نقل الجهاز لمرحلة جديدة / إضافة ملاحظة للعميل", "Update Repair Stage / Add Engineer Note")} ${t.customer_email ? '<i class="fa-solid fa-envelope-circle-check"></i>' : ""}</strong>\n          <form id="updateMaintStageForm" style="display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:end;">\n            <div>\n              <label style="font-size:0.78rem;font-weight:700;">${tr("المرحلة الحالية", "Stage")}</label>\n              <select name="stage_key" class="form-control">${stageOptions}</select>\n            </div>\n            <div>\n              <label style="font-size:0.78rem;font-weight:700;">${tr("ملاحظة المهندس", "Engineer Report / Note")}</label>\n              <input type="text" name="note_text" class="form-control" placeholder="${tr("اكتب ما تم إنجازه...", "Write diagnostic/repair update...")}">\n            </div>\n            <button type="submit" class="btn btn-teal">${tr("تحديث المرحلة", "Update Stage")}</button>\n          </form>\n        </div>\n\n        <div style="margin-bottom:20px;">\n          <h4 style="margin:0 0 10px;color:var(--db-text);"><i class="fa-solid fa-comments"></i> ${tr("سجل المراحل والتعليقات المتبادلة", "Stage History & Mutual Notes")}</h4>\n          <div style="max-height:240px;overflow-y:auto;">${notesHtml || `<p style="color:var(--db-muted);">—</p>`}</div>\n        </div>\n\n        <div style="background:linear-gradient(135deg,#effafa 0%,#fffbf0 100%);color:var(--db-text);padding:18px 20px;border-radius:18px;border:1.5px solid var(--db-gold-500);">\n          <strong style="color:var(--db-teal-800);display:block;margin-bottom:6px;font-size:1rem;"><i class="fa-solid fa-circle-check"></i> ${tr("التسليم النهائي للجهاز (حفظ الإيراد + مسح بيانات الجهاز نهائياً)", "Final Handover (Record Revenue + Permanently Wipe Device Data)")}</strong>\n          <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);">${tr("بمجرد تأكيد التسليم، يُسجّل المبلغ المدفوع في حسابات اليوم وتُمسح كافة تفاصيل الجهاز والعميل والملاحظات نهائياً.", "Confirming delivery logs the paid amount into daily revenue and permanently deletes all personal device & customer records.")}</p>\n          <form id="deliverWipeForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">\n            <div style="flex:1;min-width:150px;">\n              <label style="font-size:0.78rem;font-weight:800;display:block;margin-bottom:4px;">${tr("إجمالي المبلغ المحصل *", "Final Paid Amount *")}</label>\n              <input type="number" step="0.01" min="0" name="final_paid_amount" value="${t.estimated_cost}" class="form-control" required style="font-weight:900;">\n            </div>\n            ${IS_ADMIN ? `\n            <div style="flex:1;min-width:140px;">\n              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr("تكلفة قطع الغيار الفعلية", "Actual Parts Cost")}</label>\n              <input type="number" step="0.01" min="0" name="parts_cost" value="${t.parts_cost || 0}" class="form-control">\n            </div>` : ""}\n            <div style="min-width:140px;">\n              <label style="font-size:0.78rem;font-weight:700;display:block;margin-bottom:4px;">${tr("طريقة الدفع", "Payment Method")}</label>\n              <select name="payment_method" class="form-control">\n                <option value="cash">${tr("نقدي (كاش)", "Cash")}</option>\n                <option value="vodafone_cash">${tr("فودافون كاش", "Vodafone Cash")}</option>\n                <option value="instapay">InstaPay</option>\n              </select>\n            </div>\n            <button type="submit" class="btn btn-gold">${tr("تسليم الجهاز ومسح بياناته", "Deliver & Wipe Data")}</button>\n          </form>\n        </div>\n      `;
       renderQrInto(document.getElementById("maintTicketQrMount"), t.tracking_url, 3);
       window.openModal("maintDetailModal");
       loadMaintenanceList();
@@ -1176,8 +1481,224 @@
       }
     });
   }
+  async function checkBarcodeForAddProduct(rawCode) {
+    const code = normalizeScannedCode(rawCode, true);
+    if (!code) return;
+    const inp = document.getElementById("prodBarcode");
+    if (inp) inp.value = code;
+    const typeEl = document.getElementById("prodCodeType");
+    if (typeEl) typeEl.value = code.toUpperCase().startsWith("ASLY-") ? "qr" : "barcode";
+    updateLiveStickerPreview();
+    pulseScannerPill();
+    try {
+      const check = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
+      const alertEl = document.getElementById("existingProdAlert");
+      if (check.found && check.product) {
+        playScanBeep();
+        if (alertEl) {
+          alertEl.style.display = "block";
+          alertEl.innerHTML = `<i class="fa-solid fa-bell"></i> ${tr("هذا الكود مسجل مسبقاً للمنتج:", "Already registered to:")} <strong>${esc(check.product.name)}</strong> (${check.product.quantity})
+            <button type="button" class="btn btn-teal btn-sm" style="margin-inline-start:8px;" id="btnLoadScannedProd">${tr("تعديل / زيادة الكمية", "Load to Edit")}</button>`;
+          document.getElementById("btnLoadScannedProd")?.addEventListener("click", () => window.populateProductForm(check.product));
+        }
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-bell" style="color:var(--db-gold-600);font-size:1.3rem;"></i><strong>${tr("الكود مسجل مسبقاً:", "Code already exists:")} ${esc(check.product.name)}</strong></div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="btn btn-teal btn-sm" id="hudBtnEditExisting">${tr("تحميل للتعديل", "Load to Edit")}</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>`, "hud-success", 6500);
+        document.getElementById("hudBtnEditExisting")?.addEventListener("click", () => window.populateProductForm(check.product));
+      } else {
+        playScanBeep();
+        if (alertEl) alertEl.style.display = "none";
+        document.getElementById("prodName")?.focus();
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-circle-check" style="color:#059669;font-size:1.35rem;"></i><strong>${tr("تم التقاط كود المنتج الجديد:", "Captured new product code:")} <span style="direction:ltr;display:inline-block;">${esc(code)}</span></strong></div>
+          <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+        </div>`, "hud-success", 4500);
+      }
+    } catch (_) {}
+  }
+  document.getElementById("prodBarcode")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      checkBarcodeForAddProduct(e.target.value);
+    }
+  });
+  let lastGlobalProductScanned = null;
+  window.quickSellGlobalScanned = () => {
+    if (!lastGlobalProductScanned) return;
+    window.switchTab("pos");
+    setTimeout(() => {
+      addToPosCart(lastGlobalProductScanned, { viaScan: true });
+    }, 120);
+  };
+  window.quickInspectGlobalScanned = code => {
+    window.switchTab("quick-scanner");
+    const inp = document.getElementById("quickCodeInput");
+    if (inp) inp.value = code;
+    lookupQuickPrice(code);
+  };
+  async function handleAnywhereScan(rawScan) {
+    const code = normalizeScannedCode(rawScan, true);
+    if (!code || code.length < 3) return;
+    pulseScannerPill();
+    const tab = getActiveTabName();
+    if (tab === "pos") {
+      await lookupAndAddPosCode(code);
+      return;
+    }
+    if (tab === "add-product" && IS_ADMIN) {
+      await checkBarcodeForAddProduct(code);
+      return;
+    }
+    if (tab === "quick-scanner") {
+      playScanBeep();
+      const qInp = document.getElementById("quickCodeInput");
+      if (qInp) qInp.value = code;
+      await lookupQuickPrice(code);
+      showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-barcode" style="color:#059669;font-size:1.3rem;"></i><strong>${tr("تم فحص الكود:", "Scanned Code:")} <span style="direction:ltr;display:inline-block;">${esc(code)}</span></strong></div>
+        <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+      </div>`, "hud-success", 3600);
+      return;
+    }
+    try {
+      const res = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
+      if (res.is_maintenance_ticket && res.ticket) {
+        playScanBeep();
+        await window.switchTab("maintenance");
+        await window.openMaintTicket(res.ticket.id);
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-screwdriver-wrench" style="color:#059669;font-size:1.35rem;"></i><strong>${tr("تم فتح تذكرة الصيانة مباشرة:", "Opened Repair Ticket:")} ${esc(res.ticket.ticket_code)} (${esc(res.ticket.device_model)})</strong></div>
+          <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+        </div>`, "hud-success", 5000);
+        return;
+      }
+      if (res.found && res.product) {
+        playScanBeep();
+        const p = res.product;
+        lastGlobalProductScanned = p;
+        const pName = p.display_name || p.name;
+        if (tab === "inventory" && IS_ADMIN) {
+          const invInp = document.getElementById("invSearch");
+          if (invInp) invInp.value = p.barcode;
+          loadInventoryTable();
+        }
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-circle-check" style="color:#059669;font-size:1.45rem;"></i>
+            <div>
+              <strong style="font-size:0.95rem;color:var(--db-text);">${esc(pName)}</strong>
+              <div style="font-size:0.8rem;color:var(--db-muted);">${tr("سعر البيع:", "Selling Price:")} <strong style="color:var(--db-teal-800);font-size:0.95rem;">${fmtMoney(p.sell_price)}</strong> • ${tr("المتاح:", "Stock:")} <strong>${p.quantity}</strong></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            ${p.quantity > 0 ? `<button type="button" class="btn btn-teal btn-sm" onclick="quickSellGlobalScanned()"><i class="fa-solid fa-cart-plus"></i> ${tr("إضافة للفاتورة الآن", "Add to Invoice")}</button>` : ""}
+            <button type="button" class="btn btn-gold btn-sm" onclick="quickInspectGlobalScanned('${esc(p.barcode)}')"><i class="fa-solid fa-magnifying-glass"></i> ${tr("كاشف السعر", "Price View")}</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>`, "hud-success", 8000);
+      } else {
+        playScanErrorTone();
+        const cTxt = res.scanned_code || code;
+        showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-circle-exclamation" style="color:#dc2626;font-size:1.35rem;"></i>
+            <strong>${tr("الكود الممسوح غير مسجل بالمخزن:", "Scanned code not registered:")} <span style="direction:ltr;display:inline-block;">${esc(cTxt)}</span></strong>
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${IS_ADMIN ? `<button type="button" class="btn btn-teal btn-sm" onclick="prefillNewProductCode('${esc(cTxt)}')"><i class="fa-solid fa-plus"></i> ${tr("تسجيل كمنتج جديد", "Register Product")}</button>` : ""}
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>`, "hud-error", 6500);
+      }
+    } catch (err) {
+      playScanErrorTone();
+      showToast(err.message, true);
+    }
+  }
+  function initGlobalAnywhereScanner() {
+    const dedicatedScanIds = new Set([ "posSearchInput", "quickCodeInput", "prodBarcode" ]);
+    let freeBuf = "";
+    let freeLastTs = 0;
+    let freeFirstTs = 0;
+    let fieldBurst = "";
+    let fieldLastTs = 0;
+    let fieldTarget = null;
+
+    window.addEventListener("keydown", e => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const now = performance.now();
+      const target = e.target;
+      const tag = target && target.tagName ? target.tagName.toUpperCase() : "";
+      const isTextInput = (tag === "INPUT" && ![ "checkbox", "radio", "file", "button", "submit", "reset", "range", "color" ].includes((target.type || "").toLowerCase()) && !target.readOnly) || tag === "TEXTAREA" || (target && target.isContentEditable);
+
+      if (!isTextInput) {
+        if (e.key === "Enter" || e.key === "Tab") {
+          if (freeBuf.length >= 3 && now - freeLastTs < 250 && now - freeFirstTs < 2200) {
+            e.preventDefault();
+            e.stopPropagation();
+            const captured = freeBuf;
+            freeBuf = "";
+            handleAnywhereScan(captured);
+          } else {
+            freeBuf = "";
+          }
+          return;
+        }
+        if (e.key.length === 1) {
+          if (now - freeLastTs > 150) {
+            freeBuf = e.key;
+            freeFirstTs = now;
+          } else {
+            freeBuf += e.key;
+          }
+          freeLastTs = now;
+        }
+        return;
+      }
+
+      if (target && dedicatedScanIds.has(target.id)) {
+        return;
+      }
+      if (target && (target.type || "").toLowerCase() === "password") {
+        return;
+      }
+
+      if (e.key === "Enter") {
+        if (fieldTarget === target && fieldBurst.length >= 5 && now - fieldLastTs <= 65) {
+          e.preventDefault();
+          e.stopPropagation();
+          const scanned = fieldBurst;
+          fieldBurst = "";
+          if (typeof target.value === "string" && target.value.endsWith(scanned)) {
+            target.value = target.value.slice(0, target.value.length - scanned.length);
+            target.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          handleAnywhereScan(scanned);
+        } else {
+          fieldBurst = "";
+        }
+        return;
+      }
+      if (e.key.length === 1) {
+        if (fieldTarget === target && now - fieldLastTs <= 45) {
+          fieldBurst += e.key;
+        } else {
+          fieldTarget = target;
+          fieldBurst = e.key;
+        }
+        fieldLastTs = now;
+      } else if (e.key !== "Shift") {
+        fieldBurst = "";
+      }
+    }, true);
+  }
   document.addEventListener("DOMContentLoaded", () => {
-    renderPosCart();
+    renderPosCart(false);
+    initGlobalAnywhereScanner();
     if (IS_ADMIN) {
       loadOverviewReport();
     } else {

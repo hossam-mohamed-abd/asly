@@ -201,4 +201,49 @@
   document.querySelectorAll(".mobile-nav-item").forEach(link => {
     link.addEventListener("click", () => mobileModal && mobileModal.classList.remove("open"));
   });
+  const arMulti = [ [ "لا", "b" ], [ "لآ", "B" ], [ "لأ", "G" ], [ "لإ", "T" ] ];
+  const arSingle = {
+    "ض": "q", "ص": "w", "ث": "e", "ق": "r", "ف": "t", "غ": "y", "ع": "u", "ه": "i", "خ": "o", "ح": "p",
+    "ش": "a", "س": "s", "ي": "d", "ب": "f", "ل": "g", "ا": "h", "ت": "j", "ن": "k", "م": "l", "ك": ";",
+    "ئ": "z", "ء": "x", "ؤ": "c", "ر": "v", "ى": "n", "ة": "m", "و": ",", "ز": ".", "ظ": "/",
+    "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9"
+  };
+  function cleanWedge(raw) {
+    let s = String(raw || "").trim();
+    for (const [ f, t ] of arMulti) s = s.split(f).join(t);
+    let out = "";
+    for (const ch of s) out += arSingle[ch] !== undefined ? arSingle[ch] : ch;
+    const m = out.match(/[?&]code=([^&#\s]+)/i);
+    if (m && m[1]) {
+      try { return decodeURIComponent(m[1]).trim(); } catch (_) { return m[1].trim(); }
+    }
+    return out;
+  }
+  let pubScanBuf = "";
+  let pubLastTs = 0;
+  window.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : "";
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    const now = performance.now();
+    if (e.key === "Enter") {
+      if (pubScanBuf.length >= 4 && now - pubLastTs < 250) {
+        e.preventDefault();
+        const code = cleanWedge(pubScanBuf);
+        pubScanBuf = "";
+        if (ticketInput) {
+          ticketInput.value = code.toUpperCase();
+          document.getElementById("repair-portal")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          inspectTicketInline(code);
+        }
+      } else {
+        pubScanBuf = "";
+      }
+      return;
+    }
+    if (e.key.length === 1) {
+      pubScanBuf = now - pubLastTs > 150 ? e.key : pubScanBuf + e.key;
+      pubLastTs = now;
+    }
+  }, true);
 })();

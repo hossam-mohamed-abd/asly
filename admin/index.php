@@ -191,6 +191,11 @@ $jsConfig = [
       </div>
 
       <div class="quick-bar-btns">
+        <span class="scanner-ready-pill" id="globalScannerPill" title="<?= $en ? 'Scan any barcode or QR anywhere on the page without clicking an input' : 'امسح أي باركود أو QR بمسدس الباركود في أي مكان بالصفحة مباشرة دون الضغط داخل أي حقل' ?>">
+          <span class="scanner-live-dot"></span>
+          <i class="fa-solid fa-barcode"></i>
+          <span><?= $en ? 'Anywhere Scanner Active' : 'الماسح الذكي نشط بأي مكان' ?></span>
+        </span>
         <button type="button" class="btn btn-gold btn-sm" onclick="switchTab('quick-scanner')">
           <i class="fa-solid fa-barcode"></i> <?= $en ? 'Quick Price Scanner' : 'كاشف السعر السريع' ?>
         </button>
@@ -210,6 +215,8 @@ $jsConfig = [
         </a>
       </div>
     </header>
+
+    <div id="globalScanHud" class="global-scan-hud" aria-live="polite"></div>
 
     <div class="content-wrap">
 
@@ -346,12 +353,35 @@ $jsConfig = [
           <div class="card">
             <div class="card-header">
               <h3><i class="fa-solid fa-boxes-stacked" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Select Products or Scan into Invoice' : 'اختر المنتجات أو امسح الكود للإضافة للفاتورة' ?></h3>
-              <button type="button" class="btn btn-teal btn-sm" id="btnPosToggleCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan with Camera' : 'مسح بالكاميرا للفاتورة' ?></button>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-teal btn-sm" id="btnPosToggleCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan with Camera' : 'مسح بالكاميرا للفاتورة' ?></button>
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
+                  <i class="fa-solid fa-image"></i> <?= $en ? 'Scan Image' : 'مسح صورة كود' ?>
+                  <input type="file" id="posScanFile" accept="image/*" style="display:none;">
+                </label>
+              </div>
             </div>
 
             <div id="posCameraWrap" style="display:none;margin-bottom:16px;" class="camera-viewport-box">
               <div id="posCameraReader" class="reader-mount" style="min-height:210px;"></div>
-              <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Close Camera' : 'إغلاق الكاميرا' ?></button>
+              <div id="posCameraLiveLog" class="pos-cam-live-log">
+                <i class="fa-solid fa-crosshairs" style="color:var(--db-teal-700);"></i>
+                <span><?= $en ? 'Point camera at barcode/QR — items add immediately with sound & live counter' : 'وجّه الكاميرا نحو الباركود أو الـ QR — ستُضاف القطع فوراً للفاتورة مع تنبيه صوتي وعداد مباشر' ?></span>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
+                <button type="button" class="btn btn-gold btn-sm" id="btnPosJumpToCartFromCam"><i class="fa-solid fa-file-invoice-dollar"></i> <?= $en ? 'Review Invoice' : 'مراجعة الفاتورة الحالية' ?></button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnPosCloseCam"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Close Camera' : 'إغلاق الكاميرا' ?></button>
+              </div>
+            </div>
+
+            <div id="posScanFeedbackBox" class="pos-scan-feedback" aria-live="assertive">
+              <div class="pos-scan-idle-row">
+                <span class="pos-scan-icon-orb"><i class="fa-solid fa-qrcode"></i></span>
+                <div style="flex:1;min-width:180px;">
+                  <strong><?= $en ? 'Instant Barcode & QR Addition Ready' : 'جاهز للإضافة الفورية بالباركود أو الـ QR' ?></strong>
+                  <div style="font-size:0.79rem;color:var(--db-muted);"><?= $en ? 'Scan anywhere with your barcode gun, use camera scan, or click any product below — confirmation appears right here.' : 'امسح الكود بمسدس الباركود في أي مكان بالصفحة أو بالكاميرا أو اضغط على المنتج — سيظهر تأكيد الإضافة والكمية والإجمالي هنا فوراً.' ?></div>
+                </div>
+              </div>
             </div>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
@@ -368,9 +398,12 @@ $jsConfig = [
             <div class="pos-products-grid" id="posProductsGrid"></div>
           </div>
 
-          <div class="card" style="border:1.5px solid var(--db-teal-100);">
+          <div class="card" id="posInvoiceCard" style="border:1.5px solid var(--db-teal-100);">
             <div class="card-header">
-              <h3><i class="fa-solid fa-file-invoice-dollar" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Active Sales Invoice' : 'فاتورة البيع الحالية' ?></h3>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <h3><i class="fa-solid fa-file-invoice-dollar" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Active Sales Invoice' : 'فاتورة البيع الحالية' ?></h3>
+                <span id="posCartCountHeader" class="pos-header-qty-pill" style="display:none;">0</span>
+              </div>
               <button type="button" class="btn btn-danger btn-sm" id="btnClearCart"><i class="fa-solid fa-trash-can"></i> <?= $en ? 'Clear Cart' : 'إفراغ السلة' ?></button>
             </div>
 
@@ -413,6 +446,19 @@ $jsConfig = [
             </button>
           </div>
 
+        </div>
+
+        <div id="posFloatingCartBar" class="pos-floating-bar" style="display:none;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="pos-floating-badge" id="posFloatingCount">0</span>
+            <div>
+              <div style="font-size:0.76rem;color:var(--db-muted);font-weight:700;"><?= $en ? 'Items in Active Invoice' : 'القطع المضافة للفاتورة الحالية' ?></div>
+              <strong id="posFloatingTotal" style="font-size:1.05rem;color:var(--db-teal-800);">0.00 <?= e(t('currency')) ?></strong>
+            </div>
+          </div>
+          <button type="button" class="btn btn-teal btn-sm" id="btnFloatingJumpInvoice">
+            <i class="fa-solid fa-arrow-down"></i> <?= $en ? 'Go to Invoice' : 'عرض وإتمام الفاتورة' ?>
+          </button>
         </div>
       </section>
 
