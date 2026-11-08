@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+*.sqlite
+*.sqlite-journal
+*.log
+.env
