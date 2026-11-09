@@ -499,12 +499,31 @@ $jsConfig = [
           </div>
 
           <div class="card">
+            <div id="prodFormGate" class="prod-scan-gate">
+              <span class="prod-scan-gate-orb"><i class="fa-solid fa-barcode"></i></span>
+              <h4><?= $en ? 'Scan the product code first' : 'امسح كود المنتج الأول' ?></h4>
+              <p><?= $en ? 'The form opens only after a scan. If the code already exists you will be offered a quantity top-up instead of a duplicate product.' : 'النموذج يفتح بعد المسح فقط. لو الكود موجود بالفعل هيتعرض عليك زيادة الكمية بدل تكرار المنتج.' ?></p>
+              <div class="prod-scan-gate-actions">
+                <button type="button" class="btn btn-teal btn-sm" id="btnGateStartCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
+                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateQrFromGate"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Generate QR' : 'توليد QR' ?></button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnSkipScan"><i class="fa-solid fa-keyboard"></i> <?= $en ? 'Enter Manually' : 'إدخال يدوي' ?></button>
+              </div>
+            </div>
+
+            <div id="prodFormWrap" style="display:none;">
             <div class="card-header">
               <h3 id="productFormHeading"><i class="fa-solid fa-plus-circle" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Register Product & 3-Tier Pricing' : 'تسجيل بيانات المنتج والأسعار الثلاثة' ?></h3>
               <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm"><i class="fa-solid fa-rotate-left"></i> <?= $en ? 'Reset Form' : 'تفريغ النموذج' ?></button>
             </div>
 
             <div id="existingProdAlert" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:14px;background:var(--db-gold-50);border:1.5px solid var(--db-gold-500);color:var(--db-text);font-weight:700;font-size:0.88rem;"></div>
+
+            <div id="scanQtyBar" class="scan-qty-bar" style="display:none;">
+              <label for="scanQtyInput"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add to stock' : 'زيادة الكمية' ?></label>
+              <input type="number" min="1" step="1" value="1" id="scanQtyInput" class="scan-qty-input">
+              <span class="scan-qty-hint"><?= $en ? 'Current:' : 'المتاح:' ?> <strong id="scanQtyExisting">0</strong> — <?= $en ? 'press Enter to add & rescan' : 'اضغط Enter للإضافة والمسح التالي' ?></span>
+              <button type="button" class="btn btn-teal btn-sm" id="btnAddAnotherScan"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan next item' : 'مسح العنصر التالي' ?></button>
+            </div>
 
             <form id="productSaveForm" enctype="multipart/form-data">
               <input type="hidden" name="id" id="prodId" value="0">
@@ -609,7 +628,18 @@ $jsConfig = [
               <div class="form-grid" style="margin-bottom:16px;">
                 <div class="form-group">
                   <label><i class="fa-solid fa-image" style="color:var(--db-teal-700);margin-inline-end:5px;"></i><?= $en ? 'Product Image (Internal POS & Scanner)' : 'صورة المنتج (تظهر بالاسكان ونقطة البيع)' ?></label>
-                  <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
+                  <div class="img-capture-row">
+                    <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
+                    <input type="file" id="prodImageCapture" accept="image/*" capture="environment" style="display:none;">
+                    <div class="img-capture-actions">
+                      <button type="button" class="btn btn-teal btn-sm" id="btnCaptureProdImage"><i class="fa-solid fa-camera"></i> <?= $en ? 'Take Photo Now' : 'صور بالكاميرا الآن' ?></button>
+                    </div>
+                    <div class="img-capture-preview" id="prodImagePreview">
+                      <img alt="" id="prodImagePreviewThumb">
+                      <span style="flex:1;font-size:0.78rem;color:var(--db-muted);" id="prodImagePreviewName"></span>
+                      <button type="button" id="btnClearProdImage"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Remove' : 'حذف' ?></button>
+                    </div>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label><?= $en ? 'Internal Notes / Description' : 'ملاحظات أو وصف المنتج' ?></label>
@@ -621,6 +651,7 @@ $jsConfig = [
                 <i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Product & Update Code' : 'حفظ المنتج وتحديث المخزن والكود' ?>
               </button>
             </form>
+            </div>
           </div>
 
         </div>

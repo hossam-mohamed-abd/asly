@@ -233,13 +233,19 @@
   document.getElementById("btnMobileSidebar")?.addEventListener("click", () => {
     document.getElementById("appSidebar")?.classList.toggle("open");
   });
-  async function startCameraScanner(mountId, onScanSuccess) {
+  function camToast(mountId, message, variant, holdMs) {
+    if (window.AslyTurboScanner && typeof window.AslyTurboScanner.toast === "function") {
+      return window.AslyTurboScanner.toast(mountId, message, variant, holdMs);
+    }
+    return false;
+  }
+  async function startCameraScanner(mountId, onScanSuccess, extraOpts = {}) {
     await stopCameraScanner(mountId);
     if (window.AslyTurboScanner) {
       return await window.AslyTurboScanner.start(mountId, decodedText => {
         if (mountId !== "posCameraReader") playScanBeep();
         onScanSuccess(decodedText.trim());
-      }, { isEn: EN });
+      }, Object.assign({ isEn: EN }, extraOpts));
     }
     return false;
   }
@@ -247,6 +253,18 @@
     if (window.AslyTurboScanner) {
       await window.AslyTurboScanner.stop(mountId);
     }
+  }
+  function resetScanButtons() {
+    const pairs = [
+      ["btnStartQuickCam", "btnStopQuickCam"],
+      ["btnStartAddCam", "btnStopAddCam"]
+    ];
+    pairs.forEach(([startId, stopId]) => {
+      const bStart = document.getElementById(startId);
+      const bStop = document.getElementById(stopId);
+      if (bStart) bStart.style.display = "inline-flex";
+      if (bStop) bStop.style.display = "none";
+    });
   }
   async function stopAllCameras() {
     if (window.AslyTurboScanner) {
@@ -325,17 +343,17 @@
   });
   let lastQuickProduct = null;
   async function lookupQuickPrice(code) {
-    if (!code) return;
+    if (!code) return { ok: false, message: "" };
     const resWrap = document.getElementById("quickScanResult");
     try {
       const data = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
       if (data.is_maintenance_ticket && data.ticket) {
         resWrap.innerHTML = `\n          <div class="price-reveal-card">\n            <span class="role-pill role-admin" style="margin-bottom:10px;"><i class="fa-solid fa-screwdriver-wrench"></i> ${tr("تذكرة صيانة ممسوحة", "Scanned Repair Ticket")}</span>\n            <h3 style="margin:6px 0;">${esc(data.ticket.device_model)} (${esc(data.ticket.ticket_code)})</h3>\n            <p>${tr("العميل:", "Customer:")} <strong>${esc(data.ticket.customer_name)}</strong></p>\n            <button type="button" class="btn btn-teal" onclick="switchTab('maintenance'); setTimeout(()=>openMaintTicket(${data.ticket.id}), 250);">${tr("فتح ملف الصيانة الآن", "Open Ticket Now")}</button>\n          </div>\n        `;
-        return;
+        return { ok: true, kind: "ticket", label: data.ticket.ticket_code };
       }
       if (!data.found) {
         resWrap.innerHTML = `\n          <div class="card" style="border-color:#fca5a5;text-align:center;padding:34px;">\n            <h3 style="color:#b91c1c;margin:0 0 8px;">${tr("لم يتم العثور على منتج بالكود:", "No product found for code:")} <span style="direction:ltr;">${esc(data.scanned_code)}</span></h3>\n            <p style="color:var(--db-muted);margin:0 0 16px;">${tr("هذا الكود غير مسجل بالمخزن حتى الآن.", "This code is not registered in inventory yet.")}</p>\n            ${IS_ADMIN ? `<button type="button" class="btn btn-teal" onclick="prefillNewProductCode('${esc(data.scanned_code)}')"><i class="fa-solid fa-plus"></i> ${tr("تسجيل كمنتج جديد بهذا الكود", "Register New Product with Code")}</button>` : ""}\n          </div>\n        `;
-        return;
+        return { ok: false, message: tr("الكود غير مسجل بالمخزن", "Code is not registered in inventory") };
       }
       const p = data.product;
       lastQuickProduct = p;
@@ -357,8 +375,10 @@
           setTimeout(() => addToPosCart(lastQuickProduct, { viaScan: true }), 100);
         }
       });
+      return { ok: true, kind: "product", label: prodTitle };
     } catch (err) {
       showToast(err.message, true);
+      return { ok: false, message: err.message };
     }
   }
   window.prefillNewProductCode = code => {
@@ -369,10 +389,29 @@
       updateLiveStickerPreview();
     }
   };
+  async function runQuickScan(code) {
+    const clean = (code || "").trim();
+    if (!clean) return;
+    camToast("quickCameraReader", tr("جاري قراءة الكود...", "Reading code..."), "info", 1400);
+    document.getElementById("quickCodeInput").value = clean;
+    const outcome = await lookupQuickPrice(clean);
+    if (outcome && outcome.ok) {
+      stopCameraScanner("quickCameraReader");
+      resetScanButtons();
+    } else {
+      camToast(
+        "quickCameraReader",
+        outcome && outcome.message
+          ? outcome.message
+          : tr("الكود غير مسجل — جرّب تاني", "Code not registered — try again"),
+        "err",
+        3600
+      );
+    }
+  }
   document.getElementById("btnStartQuickCam")?.addEventListener("click", async () => {
-    const ok = await startCameraScanner("quickCameraReader", code => {
-      document.getElementById("quickCodeInput").value = code;
-      lookupQuickPrice(code);
+    const ok = await startCameraScanner("quickCameraReader", code => { runQuickScan(code); }, {
+      onClose: () => resetScanButtons()
     });
     if (ok) {
       document.getElementById("btnStartQuickCam").style.display = "none";
@@ -458,6 +497,11 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="scan-qty-bar" style="margin-top:0;padding:6px 10px;">
+            <label for="posScanQty">${tr("الكمية", "Qty")}</label>
+            <input type="number" min="1" max="${Number(itemInCart.max_qty) || 99}" step="1" value="1" id="posScanQty" class="scan-qty-input" data-pid="${Number(itemInCart.product_id)}">
+            <span class="scan-qty-hint">${tr("Enter تضيف وتكمل المسح", "Enter adds & keeps scanning")}</span>
+          </div>
           <div style="text-align:end;margin-inline-end:4px;">
             <div style="font-size:0.74rem;color:var(--db-muted);font-weight:700;">${tr("إجمالي الفاتورة الآن", "Invoice Total")} (${totalItems})</div>
             <strong style="font-size:1.12rem;color:#047857;">${fmtMoney(grandTotal)}</strong>
@@ -466,6 +510,30 @@
           <button type="button" class="btn btn-danger btn-sm" onclick="removePosItemByPid(${Number(itemInCart.product_id)})"><i class="fa-solid fa-trash-can"></i> ${tr("حذف", "Remove")}</button>
         </div>
       </div>`;
+    }
+    const qtyField = document.getElementById("posScanQty");
+    if (qtyField) {
+      qtyField.addEventListener("keydown", async ev => {
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        const want = Math.max(1, parseInt(qtyField.value, 10) || 1);
+        const pid = Number(qtyField.getAttribute("data-pid"));
+        const prod = posProductsCache.find(x => Number(x.id) === pid) || product;
+        const added = addToPosCart(prod, { qty: want, viaScan: true });
+        if (added) {
+          camToast("posCameraReader", tr("تمت الإضافة — جاهز للمسح التالي", "Added — ready for next scan"), "ok", 2200);
+          const nextQty = document.getElementById("posScanQty");
+          if (nextQty) {
+            nextQty.value = "1";
+            nextQty.focus();
+            nextQty.select();
+          }
+        }
+      });
+      window.setTimeout(() => {
+        qtyField.focus();
+        qtyField.select();
+      }, 120);
     }
     if (camLog) {
       camLog.className = "pos-cam-live-log added";
@@ -563,6 +631,7 @@
     });
   }
   function addToPosCart(product, opts = {}) {
+    const addQty = Math.max(1, parseInt(opts.qty, 10) || 1);
     const pName = product.display_name || product.name;
     const availQty = Number(product.quantity) || 0;
     if (availQty <= 0) {
@@ -577,7 +646,7 @@
     }
     let itemRef = posCart.find(i => Number(i.product_id) === Number(product.id));
     if (itemRef) {
-      if (itemRef.quantity + 1 > availQty) {
+      if (itemRef.quantity + addQty > availQty) {
         playScanErrorTone();
         const maxMsg = tr(`وصلت لأقصى كمية متاحة بالمخزن (${availQty}) من "${pName}"`, `Reached max available stock (${availQty}) for "${pName}"`);
         renderPosScanFeedbackError(maxMsg, tr("لا يمكن إضافة قطع أكثر من الرصيد الفعلي بالمخزن.", "Cannot exceed physical inventory stock."));
@@ -587,7 +656,7 @@
         }
         return false;
       }
-      itemRef.quantity += 1;
+      itemRef.quantity += addQty;
       itemRef.max_qty = availQty;
     } else {
       itemRef = {
@@ -596,7 +665,7 @@
         barcode: product.barcode,
         image_path: product.image_path || "",
         max_qty: availQty,
-        quantity: 1,
+        quantity: addQty,
         sell_price: Number(product.sell_price),
         min_sell_price: Number(product.min_sell_price),
         unit_sold_price: Number(product.sell_price),
@@ -825,6 +894,8 @@
     wrap.style.display = "block";
     await startCameraScanner("posCameraReader", async code => {
       await lookupAndAddPosCode(code);
+    }, {
+      onClose: () => { wrap.style.display = "none"; }
     });
   });
   document.getElementById("posScanFile")?.addEventListener("change", async e => {
@@ -1038,27 +1109,189 @@
     });
     document.getElementById("btnStartAddCam")?.addEventListener("click", async () => {
       const ok = await startCameraScanner("addProdCameraReader", async code => {
-        document.getElementById("prodBarcode").value = code;
-        document.getElementById("prodCodeType").value = code.startsWith("ASLY-") ? "qr" : "barcode";
-        updateLiveStickerPreview();
-        try {
-          const check = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
-          const alertEl = document.getElementById("existingProdAlert");
-          if (check.found && check.product) {
-            alertEl.style.display = "block";
-            alertEl.innerHTML = `<i class="fa-solid fa-bell"></i> ${tr("هذا الكود مسجل مسبقاً للمنتج:", "Already registered to:")} <strong>${esc(check.product.name)}</strong> (${check.product.quantity})\n              <button type="button" class="btn btn-teal btn-sm" style="margin-inline-start:8px;" id="btnLoadScannedProd">${tr("تعديل / زيادة الكمية", "Load to Edit")}</button>`;
-            document.getElementById("btnLoadScannedProd")?.addEventListener("click", () => populateProductForm(check.product));
-          } else {
-            alertEl.style.display = "none";
-            showToast(tr(`تم التقاط الكود (${code})`, `Captured code (${code})`));
-          }
-        } catch (_) {}
+        await handleAddProductScan(code);
+      }, {
+        onClose: () => resetScanButtons()
       });
       if (ok) {
         document.getElementById("btnStartAddCam").style.display = "none";
         document.getElementById("btnStopAddCam").style.display = "inline-flex";
       }
     });
+    const prodGate = document.getElementById("prodFormGate");
+    const prodFormWrap = document.getElementById("prodFormWrap");
+    const scanQtyBar = document.getElementById("scanQtyBar");
+    const scanQtyInput = document.getElementById("scanQtyInput");
+    const scanQtyExisting = document.getElementById("scanQtyExisting");
+    let scannedExistingProduct = null;
+
+    function openProductForm() {
+      if (prodGate) prodGate.style.display = "none";
+      if (prodFormWrap) prodFormWrap.style.display = "block";
+    }
+
+    function resetScanQtyBar() {
+      scannedExistingProduct = null;
+      if (scanQtyBar) scanQtyBar.style.display = "none";
+      if (scanQtyInput) scanQtyInput.value = "1";
+    }
+
+    async function handleAddProductScan(rawCode) {
+      const code = normalizeScannedCode(rawCode, true);
+      if (!code) return;
+      document.getElementById("prodBarcode").value = code;
+      document.getElementById("prodCodeType").value = code.toUpperCase().startsWith("ASLY-") ? "qr" : "barcode";
+      updateLiveStickerPreview();
+      pulseScannerPill();
+      camToast("addProdCameraReader", tr("جاري فحص الكود...", "Checking code..."), "info", 1200);
+      try {
+        const check = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(code)}`);
+        const alertEl = document.getElementById("existingProdAlert");
+        if (check.found && check.product) {
+          playScanBeep();
+          scannedExistingProduct = check.product;
+          openProductForm();
+          window.populateProductForm(check.product);
+          if (alertEl) {
+            alertEl.style.display = "block";
+            alertEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${tr("الكود مسجل بالفعل للمنتج:", "Code already registered to:")} <strong>${esc(check.product.name)}</strong> — ${tr("المتاح حالياً:", "Current stock:")} <strong>${check.product.quantity}</strong>`;
+          }
+          if (scanQtyBar) {
+            scanQtyBar.style.display = "flex";
+            if (scanQtyExisting) scanQtyExisting.textContent = String(check.product.quantity);
+            if (scanQtyInput) {
+              scanQtyInput.value = "1";
+              window.setTimeout(() => {
+                scanQtyInput.focus();
+                scanQtyInput.select();
+              }, 220);
+            }
+          }
+          stopCameraScanner("addProdCameraReader");
+          resetScanButtons();
+          camToast(
+            "addProdCameraReader",
+            tr("منتج موجود — اختر الكمية اللي تزودها واضغط Enter", "Existing product — set the quantity to add and press Enter"),
+            "ok",
+            3000
+          );
+        } else {
+          playScanBeep();
+          resetScanQtyBar();
+          if (alertEl) alertEl.style.display = "none";
+          openProductForm();
+          camToast("addProdCameraReader", tr("كود جديد — اكتب تفاصيل المنتج", "New code — fill the product details"), "ok", 2200);
+          window.setTimeout(() => document.getElementById("prodName")?.focus(), 260);
+          stopCameraScanner("addProdCameraReader");
+          resetScanButtons();
+        }
+      } catch (err) {
+        camToast("addProdCameraReader", err.message || tr("تعذر فحص الكود", "Could not check the code"), "err", 3200);
+      }
+    }
+
+    scanQtyInput?.addEventListener("keydown", async e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      if (!scannedExistingProduct) return;
+      const addQty = Math.max(1, parseInt(scanQtyInput.value, 10) || 1);
+      const newQty = Number(scannedExistingProduct.quantity || 0) + addQty;
+      const qtyField = document.getElementById("prodQuantity");
+      if (qtyField) qtyField.value = newQty;
+      const alertEl = document.getElementById("existingProdAlert");
+      if (alertEl) {
+        alertEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${tr("تم تحديث الكمية إلى:", "Quantity updated to:")} <strong>${newQty}</strong> (${Number(scannedExistingProduct.quantity)} + ${addQty}) — ${tr("اضغط حفظ لتأكيد الإضافة", "Press save to confirm")}`;
+      }
+      showToast(tr(`الكمية الجديدة: ${newQty}`, `New quantity: ${newQty}`));
+      stopCameraScanner("addProdCameraReader");
+      resetScanButtons();
+      window.setTimeout(async () => {
+        await startCameraScanner("addProdCameraReader", async code => {
+          await handleAddProductScan(code);
+        }, { onClose: () => resetScanButtons() });
+        const bStart = document.getElementById("btnStartAddCam");
+        const bStop = document.getElementById("btnStopAddCam");
+        if (bStart) bStart.style.display = "none";
+        if (bStop) bStop.style.display = "inline-flex";
+        camToast("addProdCameraReader", tr("جاهز لمسح المنتج التالي", "Ready for the next product"), "info", 2200);
+      }, 320);
+    });
+
+    const imgCaptureBtn = document.getElementById("btnCaptureProdImage");
+    const imgCaptureInput = document.getElementById("prodImageCapture");
+    const imgFileInput = document.getElementById("prodImageInput");
+    const imgPreview = document.getElementById("prodImagePreview");
+    const imgThumb = document.getElementById("prodImagePreviewThumb");
+    const imgName = document.getElementById("prodImagePreviewName");
+
+    function showImagePreview(label) {
+      if (!imgPreview) return;
+      const thumb = (imgThumb && imgThumb.src) || "";
+      if (!thumb) return;
+      if (imgName) imgName.textContent = label || "";
+      imgPreview.classList.add("visible");
+    }
+
+    imgCaptureBtn?.addEventListener("click", () => {
+      imgCaptureInput?.click();
+    });
+
+    imgCaptureInput?.addEventListener("change", e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (imgThumb) imgThumb.src = URL.createObjectURL(file);
+      showImagePreview(tr("صورة بالكاميرا", "Camera photo") + " — " + file.name);
+      showToast(tr("تم التقاط صورة المنتج", "Product photo captured"));
+    });
+
+    imgFileInput?.addEventListener("change", e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (imgThumb) imgThumb.src = URL.createObjectURL(file);
+      showImagePreview(tr("صورة من الملفات", "Selected file") + " — " + file.name);
+    });
+
+    document.getElementById("btnClearProdImage")?.addEventListener("click", () => {
+      if (imgFileInput) imgFileInput.value = "";
+      if (imgCaptureInput) imgCaptureInput.value = "";
+      if (imgThumb) imgThumb.removeAttribute("src");
+      imgPreview?.classList.remove("visible");
+    });
+
+    document.getElementById("btnAddAnotherScan")?.addEventListener("click", async () => {
+      resetScanQtyBar();
+      const bStart = document.getElementById("btnStartAddCam");
+      const bStop = document.getElementById("btnStopAddCam");
+      await startCameraScanner("addProdCameraReader", async code => {
+        await handleAddProductScan(code);
+      }, { onClose: () => resetScanButtons() });
+      if (bStart) bStart.style.display = "none";
+      if (bStop) bStop.style.display = "inline-flex";
+    });
+
+    document.getElementById("btnGateStartCam")?.addEventListener("click", async () => {
+      const bStart = document.getElementById("btnStartAddCam");
+      const bStop = document.getElementById("btnStopAddCam");
+      const ok = await startCameraScanner("addProdCameraReader", async code => {
+        await handleAddProductScan(code);
+      }, { onClose: () => resetScanButtons() });
+      if (ok) {
+        if (bStart) bStart.style.display = "none";
+        if (bStop) bStop.style.display = "inline-flex";
+        camToast("addProdCameraReader", tr("وجّه الكاميرا نحو كود المنتج", "Point the camera at the product code"), "info", 2600);
+      }
+    });
+
+    document.getElementById("btnGenerateQrFromGate")?.addEventListener("click", () => {
+      document.getElementById("btnGenerateAutoQr")?.click();
+      openProductForm();
+    });
+
+    document.getElementById("btnSkipScan")?.addEventListener("click", () => {
+      openProductForm();
+      showToast(tr("اكتب الكود يدوياً أو ولّد QR", "Type the code manually or generate a QR"));
+    });
+
     document.getElementById("btnStopAddCam")?.addEventListener("click", () => stopAllCameras());
     document.getElementById("btnPrintCurrentSticker")?.addEventListener("click", () => {
       const code = document.getElementById("prodBarcode").value.trim();
@@ -1071,6 +1304,9 @@
     function resetProductForm() {
       document.getElementById("productSaveForm").reset();
       document.getElementById("prodId").value = "0";
+      resetScanQtyBar();
+      if (prodGate) prodGate.style.display = "flex";
+      if (prodFormWrap) prodFormWrap.style.display = "none";
       document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-plus-circle"></i> ${tr("تسجيل بيانات المنتج والأسعار الثلاثة", "Register Product & 3-Tier Pricing")}`;
       document.getElementById("existingProdAlert").style.display = "none";
       document.getElementById("liveProfitHint").textContent = "";
@@ -1107,6 +1343,10 @@
       e.preventDefault();
       const form = e.currentTarget;
       const fd = new FormData(form);
+      const captured = document.getElementById("prodImageCapture");
+      if (captured && captured.files && captured.files[0]) {
+        fd.set("image", captured.files[0], captured.files[0].name || "product.jpg");
+      }
       fd.set("action", "save");
       fd.set("show_on_landing", document.getElementById("prodShowLanding")?.checked ? "1" : "0");
       fd.set("is_featured", document.getElementById("prodFeatured")?.checked ? "1" : "0");
@@ -1119,6 +1359,7 @@
         document.getElementById("prodBarcode").value = res.barcode;
         updateLiveStickerPreview();
         if (document.getElementById("prodId").value === "0") {
+          document.getElementById("btnClearProdImage")?.click();
           resetProductForm();
         }
       } catch (err) {

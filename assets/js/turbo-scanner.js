@@ -152,6 +152,19 @@
     if (mount) mount.innerHTML = "";
   }
 
+  function toast(mountId, message, variant, holdMs) {
+    const inst = instances[mountId];
+    if (inst && typeof inst.toast === "function") {
+      inst.toast(message, variant, holdMs);
+      return true;
+    }
+    return false;
+  }
+
+  function isRunning(mountId) {
+    return !!instances[mountId];
+  }
+
   async function stopAll() {
     for (const id of Object.keys(instances)) {
       await stop(id);
@@ -241,14 +254,14 @@
         <video class="turbo-cam-video" playsinline muted autoplay></video>
         <div class="turbo-cam-reticle">
           <span class="tc-corner tc-tl"></span>
-          <span class="tc-corner tc-tr"></span>
+          <span class="tc-corner tc-tr"> </span>
           <span class="tc-corner tc-bl"></span>
           <span class="tc-corner tc-br"></span>
           <div class="turbo-laser-line"></div>
         </div>
-        <div class="turbo-cam-badge">
-          <i class="fa-solid fa-bolt"></i>
-          <span>${tr("مسح فائق السرعة + تحسين تلقائي للكاميرا الضعيفة", "Turbo Scan + Auto Low-Quality Deblur")}</span>
+        <div class="turbo-cam-toast" data-cam-toast aria-live="assertive">
+          <span class="turbo-toast-ico" data-toast-ico><i class="fa-solid fa-qrcode"></i></span>
+          <span class="turbo-toast-text" data-toast-text>${tr("وجّه الكاميرا نحو الباركود أو الـ QR", "Point the camera at the barcode or QR")}</span>
         </div>
         <div class="turbo-cam-controls">
           <button type="button" class="turbo-ctrl-btn active" data-zoom="1">1×</button>
@@ -257,11 +270,45 @@
           <button type="button" class="turbo-ctrl-btn" data-torch="1" style="display:none;" title="${tr("إضاءة الفلاش", "Flashlight")}"><i class="fa-solid fa-lightbulb"></i></button>
           <button type="button" class="turbo-ctrl-btn" data-switch-cam="1" style="display:none;" title="${tr("تبديل الكاميرا", "Switch Camera")}"><i class="fa-solid fa-camera-rotate"></i></button>
         </div>
+        <button type="button" class="turbo-cam-close" data-cam-close title="${tr("إغلاق الكاميرا", "Close camera")}"><i class="fa-solid fa-xmark"></i></button>
       </div>
     `;
 
     const shell = mount.querySelector(".turbo-cam-shell");
     const video = mount.querySelector(".turbo-cam-video");
+    const toastEl = mount.querySelector("[data-cam-toast]");
+    const toastIco = mount.querySelector("[data-toast-ico]");
+    const toastText = mount.querySelector("[data-toast-text]");
+    let toastTimer = 0;
+
+    function camToast(message, variant, holdMs) {
+      if (!toastEl) return;
+      const tone = variant || "info";
+      toastEl.classList.remove("is-ok", "is-err", "is-info");
+      toastEl.classList.add(tone === "ok" ? "is-ok" : tone === "err" ? "is-err" : "is-info");
+      if (toastIco) {
+        toastIco.innerHTML = tone === "ok"
+          ? '<i class="fa-solid fa-circle-check"></i>'
+          : tone === "err"
+            ? '<i class="fa-solid fa-triangle-exclamation"></i>'
+            : '<i class="fa-solid fa-qrcode"></i>';
+      }
+      if (toastText) toastText.textContent = message || "";
+      toastEl.classList.add("visible");
+      if (toastTimer) window.clearTimeout(toastTimer);
+      if (holdMs && holdMs > 0) {
+        toastTimer = window.setTimeout(() => toastEl.classList.remove("visible"), holdMs);
+      }
+    }
+    inst.toast = camToast;
+
+    const closeBtn = mount.querySelector("[data-cam-close]");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        if (typeof opts.onClose === "function") opts.onClose();
+        stop(mountId);
+      });
+    }
     const torchBtn = mount.querySelector("[data-torch]");
     const switchBtn = mount.querySelector("[data-switch-cam]");
     const zoomBtns = mount.querySelectorAll("[data-zoom]");
@@ -508,6 +555,8 @@
     start: start,
     stop: stop,
     stopAll: stopAll,
-    scanFile: scanFile
+    scanFile: scanFile,
+    toast: toast,
+    isRunning: isRunning
   };
 })();
