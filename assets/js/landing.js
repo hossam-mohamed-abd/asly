@@ -294,18 +294,90 @@
     if (focus) img.style.setProperty("object-position", focus);
   });
 
-  const slices = document.querySelectorAll(".craft-slice");
-  slices.forEach(slice => {
-    slice.addEventListener("mouseenter", () => {
-      slices.forEach(s => s.classList.remove("active"));
-      slice.classList.add("active");
+  const deck = document.querySelector("[data-craft-deck]");
+  const craftCards = Array.prototype.slice.call(document.querySelectorAll("[data-craft-card]"));
+  const craftBar = document.querySelector("[data-craft-bar]");
+  if (deck && craftCards.length) {
+    let craftIndex = 0;
+    let craftTimer = null;
+    let craftPaused = false;
+
+    function paintCraftBar(index) {
+      if (!craftBar) return;
+      const step = 100 / craftCards.length;
+      craftBar.style.width = step + "%";
+      const dir = isRtl ? -1 : 1;
+      craftBar.style.translate = dir * index * 100 + "% 0";
+    }
+
+    function setCraft(index, fromUser) {
+      const total = craftCards.length;
+      craftIndex = ((index % total) + total) % total;
+      craftCards.forEach((card, i) => {
+        card.classList.toggle("is-active", i === craftIndex);
+        card.setAttribute("aria-current", i === craftIndex ? "true" : "false");
+      });
+      paintCraftBar(craftIndex);
+      if (fromUser) scheduleScrollWrite();
+    }
+
+    function startCraftAuto() {
+      if (craftTimer || craftPaused) return;
+      craftTimer = window.setInterval(() => {
+        if (document.hidden) return;
+        setCraft(craftIndex + 1, false);
+      }, 5200);
+    }
+
+    function stopCraftAuto() {
+      if (!craftTimer) return;
+      window.clearInterval(craftTimer);
+      craftTimer = null;
+    }
+
+    setCraft(0, false);
+
+    craftCards.forEach((card, i) => {
+      card.addEventListener("mouseenter", () => {
+        craftPaused = true;
+        stopCraftAuto();
+        setCraft(i, true);
+      });
+      card.addEventListener("focusin", () => {
+        craftPaused = true;
+        stopCraftAuto();
+        setCraft(i, true);
+      });
+      card.addEventListener("click", () => setCraft(i, true));
     });
-    slice.addEventListener("click", () => {
-      slices.forEach(s => s.classList.remove("active"));
-      slice.classList.add("active");
-      scheduleScrollWrite();
+
+    deck.addEventListener("mouseleave", () => {
+      craftPaused = false;
+      startCraftAuto();
     });
-  });
+
+    if ("IntersectionObserver" in window) {
+      const deckObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            craftCards.forEach((card, i) => {
+              card.style.setProperty("--deck-delay", i * 110 + "ms");
+              card.classList.add("deck-in");
+            });
+            startCraftAuto();
+          } else if (entry.boundingClientRect.top > (window.innerHeight || 800) * 1.03) {
+            craftCards.forEach(card => card.classList.remove("deck-in"));
+            stopCraftAuto();
+          } else {
+            stopCraftAuto();
+          }
+        });
+      }, { threshold: 0.14 });
+      deckObserver.observe(deck);
+    } else {
+      craftCards.forEach(card => card.classList.add("deck-in"));
+    }
+  }
 
   document.querySelectorAll(".faq-trigger").forEach(btn => {
     btn.addEventListener("click", () => {

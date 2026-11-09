@@ -314,54 +314,80 @@ $assetVer = (string)max(
         </div>
       </div>
 
-      <div class="craft-accordion-deck">
-        <div class="craft-slice active" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/product-laptop-workstation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Pro Laptop And Genuine Accessories On The Demo Desk' : 'لابتوب احترافي مع ملحقاته الأصلية على مكتب المعاينة') ?>" class="craft-slice-img" loading="lazy" decoding="async" data-focus="center 42%">
-          <div class="craft-slice-glass">
-            <div class="craft-slice-top">
-              <span class="craft-idx">01 // LAPTOPS</span>
-              <span class="craft-icon"><i class="fa-solid fa-laptop-code"></i></span>
+      <div class="craft-deck" data-craft-deck>
+        <article class="craft-card" data-craft-card data-index="01">
+          <div class="craft-card-media">
+            <img src="<?= e(appUrl('assets/images/lookbook/product-laptop-workstation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Pro Laptop And Genuine Accessories On The Demo Desk' : 'لابتوب احترافي مع ملحقاته الأصلية على مكتب المعاينة') ?>" class="craft-card-img" loading="lazy" decoding="async" data-focus="center 42%">
+            <span class="craft-card-wash"></span>
+            <span class="craft-card-index">01</span>
+            <span class="craft-card-badge"><i class="fa-solid fa-laptop-code"></i></span>
+          </div>
+          <div class="craft-card-body">
+            <div class="craft-card-meta">
+              <span class="craft-card-tag">LAPTOPS</span>
+              <span class="craft-card-rule"></span>
             </div>
             <h3 data-scroll-write><?= e(t('craft_1_title')) ?></h3>
             <p><?= e(t('craft_1_sub')) ?></p>
+            <span class="craft-card-arrow"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
           </div>
-        </div>
-
-        <div class="craft-slice" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 90ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-interior.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Smartphones On Lit Shelves Inside ASLY Tech Store' : 'هواتف ذكية معروضة على أرفف مضيئة داخل أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async" data-focus="center 45%">
-          <div class="craft-slice-glass">
-            <div class="craft-slice-top">
-              <span class="craft-idx">02 // MOBILE</span>
-              <span class="craft-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
+        </article>
+        <article class="craft-card" data-craft-card data-index="02">
+          <div class="craft-card-media">
+            <img src="<?= e(appUrl('assets/images/lookbook/product-ecosystem-flatlay.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Flagship Phones And Tablets Laid Out On Marble' : 'هواتف وتابلت رائدة معروضة على رخام المعرض') ?>" class="craft-card-img" loading="lazy" decoding="async" data-focus="center 50%">
+            <span class="craft-card-wash"></span>
+            <span class="craft-card-index">02</span>
+            <span class="craft-card-badge"><i class="fa-solid fa-mobile-screen-button"></i></span>
+          </div>
+          <div class="craft-card-body">
+            <div class="craft-card-meta">
+              <span class="craft-card-tag">MOBILE</span>
+              <span class="craft-card-rule"></span>
             </div>
             <h3 data-scroll-write><?= e(t('craft_2_title')) ?></h3>
             <p><?= e(t('craft_2_sub')) ?></p>
+            <span class="craft-card-arrow"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
           </div>
-        </div>
-
-        <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 90ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/product-qr-ticket.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'QR Repair Ticket On The Reception Counter With Laptop' : 'إيصال صيانة برمز QR على مكتب الاستقبال مع اللابتوب') ?>" class="craft-slice-img" loading="lazy" decoding="async" data-focus="center 45%">
-          <div class="craft-slice-glass">
-            <div class="craft-slice-top">
-              <span class="craft-idx">03 // QR REPAIR</span>
-              <span class="craft-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+        </article>
+        <article class="craft-card" data-craft-card data-index="03">
+          <div class="craft-card-media">
+            <img src="<?= e(appUrl('assets/images/lookbook/product-qr-ticket.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'QR Repair Ticket On The Reception Counter With Laptop' : 'إيصال صيانة برمز QR على مكتب الاستقبال مع اللابتوب') ?>" class="craft-card-img" loading="lazy" decoding="async" data-focus="center 45%">
+            <span class="craft-card-wash"></span>
+            <span class="craft-card-index">03</span>
+            <span class="craft-card-badge"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+          </div>
+          <div class="craft-card-body">
+            <div class="craft-card-meta">
+              <span class="craft-card-tag">QR REPAIR</span>
+              <span class="craft-card-rule"></span>
             </div>
             <h3 data-scroll-write><?= e(t('craft_3_title')) ?></h3>
             <p><?= e(t('craft_3_sub')) ?></p>
+            <span class="craft-card-arrow"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
           </div>
-        </div>
-
-        <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 0ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/product-smartwatch-macro.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Gold Smartwatch On A Customer Wrist At ASLY' : 'ساعة ذكية ذهبية على معصم العميل داخل أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async" data-focus="center 45%">
-          <div class="craft-slice-glass">
-            <div class="craft-slice-top">
-              <span class="craft-idx">04 // WEARABLES</span>
-              <span class="craft-icon"><i class="fa-solid fa-headphones-simple"></i></span>
+        </article>
+        <article class="craft-card" data-craft-card data-index="04">
+          <div class="craft-card-media">
+            <img src="<?= e(appUrl('assets/images/lookbook/product-smartwatch-macro.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Gold Smartwatch, Earbuds And Audio On Display' : 'ساعة ذهبية وإيربودز وصوتيات أصلية معروضة') ?>" class="craft-card-img" loading="lazy" decoding="async" data-focus="center 45%">
+            <span class="craft-card-wash"></span>
+            <span class="craft-card-index">04</span>
+            <span class="craft-card-badge"><i class="fa-solid fa-headphones-simple"></i></span>
+          </div>
+          <div class="craft-card-body">
+            <div class="craft-card-meta">
+              <span class="craft-card-tag">WEARABLES</span>
+              <span class="craft-card-rule"></span>
             </div>
             <h3 data-scroll-write><?= e(t('craft_4_title')) ?></h3>
             <p><?= e(t('craft_4_sub')) ?></p>
+            <span class="craft-card-arrow"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
           </div>
-        </div>
+        </article>
+        <span class="craft-deck-sheen" aria-hidden="true"></span>
+      </div>
+
+      <div class="craft-deck-rail" data-craft-rail>
+        <span class="craft-deck-bar" data-craft-bar></span>
       </div>
 
       <div class="lookbook-showcase-grid">

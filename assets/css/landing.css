@@ -1031,110 +1031,295 @@ html[lang="en"] .section-title {
   font-size: 1.1rem;
 }
 
-.craft-accordion-deck {
+.craft-deck {
+  position: relative;
   display: flex;
-  gap: 18px;
-  min-height: 430px;
+  gap: 16px;
+  min-height: 470px;
   align-items: stretch;
+  isolation: isolate;
 }
 
-.craft-slice {
-  flex: 1;
+.craft-card {
   position: relative;
-  border-radius: 38px 16px 38px 16px;
+  flex: 0 1 0;
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 470px;
+  border-radius: 34px 14px 34px 14px;
   overflow: hidden;
-  border: 2px solid var(--line);
-  background: var(--bg-ivory);
+  border: 1.5px solid var(--line);
+  background: #ffffff;
   cursor: pointer;
-  transition: flex 0.6s var(--ease-spring), border-color 0.35s ease, box-shadow 0.35s ease;
-  min-height: 410px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  transition:
+    flex-grow 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s ease,
+    box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.craft-slice.active,
-.craft-slice:hover {
-  flex: 2.35;
-  border-color: var(--teal);
-  box-shadow: var(--shadow-lg);
+.craft-card.is-active {
+  flex-grow: 2.6;
+  border-color: var(--teal-border);
+  box-shadow: 0 30px 74px rgba(13, 146, 151, 0.16), 0 10px 26px rgba(30, 41, 59, 0.05);
 }
 
-.craft-slice-img {
+.craft-card-media {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.craft-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 16%;
-  transition: transform 0.7s var(--ease-spring);
+  transform: scale(1.02);
+  filter: saturate(0.84) brightness(0.92);
+  transition:
+    transform 1.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.9s ease;
+  will-change: transform;
 }
 
-.craft-slice:hover .craft-slice-img,
-.craft-slice.active .craft-slice-img {
-  transform: scale(1.06);
+.craft-card.is-active .craft-card-img {
+  transform: scale(1.09);
+  filter: saturate(1.02) brightness(1);
 }
 
-.craft-slice-glass {
-  position: relative;
-  z-index: 2;
-  margin: 16px;
-  padding: 20px 22px;
-  border-radius: 26px 12px 26px 12px;
-  background: rgba(255, 255, 255, 0.93);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(188, 236, 239, 0.9);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.4s var(--ease-spring);
+.craft-card-media::after {
+  content: "";
+  position: absolute;
+  inset: -25% -65%;
+  pointer-events: none;
+  opacity: 0;
+  translate: -70% 0;
+  background: linear-gradient(102deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 64%);
 }
 
-.craft-slice-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
+.craft-card.is-active .craft-card-media::after {
+  animation: deck-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s 1 both;
 }
 
-.craft-idx {
+@keyframes deck-sweep {
+  0% {
+    opacity: 0;
+    translate: -70% 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 70% 0;
+  }
+}
+
+.craft-card-wash {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(9, 30, 36, 0.88) 0%, rgba(9, 30, 36, 0.44) 34%, rgba(9, 30, 36, 0) 64%),
+    linear-gradient(to top, rgba(6, 24, 29, 0.3) 0%, rgba(6, 24, 29, 0.06) 48%, rgba(6, 24, 29, 0) 78%);
+  transition: background 0.7s ease;
+}
+
+.craft-card-index {
+  position: absolute;
+  top: 18px;
+  inset-inline-start: 20px;
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--teal-deep);
-  background: var(--bg-aqua-soft);
-  padding: 4px 10px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px 10px;
   border-radius: 999px;
+  transition: background 0.5s ease, border-color 0.5s ease, color 0.5s ease;
 }
 
-.craft-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: var(--bg-gold-soft);
-  color: var(--gold-deep);
+.craft-card.is-active .craft-card-index {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.95);
+  color: var(--teal-deep);
+}
+
+.craft-card-badge {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 1rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease, rotate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.craft-slice h3 {
-  margin: 0;
-  font-size: 1.12rem;
+.craft-card.is-active .craft-card-badge {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(255, 255, 255, 0.96);
+  color: var(--gold-deep);
+  rotate: -6deg;
+}
+
+.craft-card-body {
+  position: relative;
+  z-index: 3;
+  padding: 0 22px 24px;
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+}
+
+.craft-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  opacity: 0.92;
+}
+
+.craft-card-tag {
+  font-family: var(--font-en-display);
+  font-size: 0.66rem;
   font-weight: 800;
-  color: var(--ink-1);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
-.craft-slice p {
-  margin: 10px 0 0;
+.craft-card-rule {
+  flex: 1;
+  height: 1px;
+  min-width: 12px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+}
+
+.craft-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.5;
+  color: #ffffff;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  transition: font-size 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.craft-card.is-active h3 {
+  font-size: 1.32rem;
+  -webkit-line-clamp: 4;
+}
+
+.craft-card p {
+  margin: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
   font-size: 0.88rem;
-  color: var(--ink-2);
-  display: none;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.88);
+  translate: 0 10px;
+  transition:
+    max-height 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.55s ease 0.08s,
+    translate 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.05s,
+    margin 0.55s ease;
 }
 
-.craft-slice.active p,
-.craft-slice:hover p {
+.craft-card.is-active p {
+  max-height: 170px;
+  opacity: 1;
+  translate: 0 0;
+  margin-top: 10px;
+}
+
+.craft-card-arrow {
+  position: absolute;
+  bottom: 26px;
+  inset-inline-end: 22px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--teal-deep);
+  background: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  scale: 0.6;
+  transition: opacity 0.5s ease, scale 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.craft-card.is-active .craft-card-arrow {
+  opacity: 1;
+  scale: 1;
+}
+
+.craft-deck-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 34px 14px 34px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  opacity: 0.8;
+}
+
+.craft-deck-rail {
+  margin-top: 22px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.craft-deck-bar {
   display: block;
+  height: 100%;
+  width: 25%;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--teal), var(--teal-bright));
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1), translate 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.js-motion .craft-card {
+  opacity: 0;
+  translate: 0 42px;
+  scale: 0.955;
+}
+
+html.js-motion .craft-card.deck-in {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--deck-delay, 0ms),
+    translate 0.95s cubic-bezier(0.22, 1, 0.36, 1) var(--deck-delay, 0ms),
+    scale 0.95s cubic-bezier(0.22, 1, 0.36, 1) var(--deck-delay, 0ms),
+    flex-grow 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s ease,
+    box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .lab-console-shell {
@@ -2331,15 +2516,24 @@ html.js-motion [data-side].side-in {
     grid-column: span 12 !important;
     transform: none !important;
   }
-  .craft-accordion-deck {
+  .craft-deck {
     flex-direction: column;
+    gap: 14px;
     min-height: auto;
   }
-  .craft-slice {
-    min-height: 250px;
+  .craft-card {
+    min-height: 260px;
   }
-  .craft-slice p {
-    display: block;
+  .craft-card p {
+    max-height: 200px;
+    opacity: 1;
+    translate: 0 0;
+    margin-top: 10px;
+  }
+  html.js-motion .craft-card {
+    opacity: 0;
+    translate: 0 26px;
+    scale: 1;
   }
   .lookbook-wide,
   .lookbook-mid {
@@ -2576,14 +2770,29 @@ html.js-motion [data-side].side-in {
     top: 10px;
     inset-inline-end: 14px;
   }
-  .craft-slice {
-    min-height: 220px;
-    border-radius: 26px 12px 26px 12px;
+  .craft-card {
+    min-height: 230px;
+    border-radius: 24px 10px 24px 10px;
   }
-  .craft-slice-glass {
-    margin: 10px;
-    padding: 14px 16px;
-    border-radius: 20px 10px 20px 10px;
+  .craft-card-body {
+    padding: 0 16px 18px;
+  }
+  .craft-card h3,
+  .craft-card.is-active h3 {
+    font-size: 1.02rem;
+  }
+  .craft-card p {
+    font-size: 0.8rem;
+    line-height: 1.75;
+  }
+  .craft-card-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+  .craft-card-arrow {
+    display: none;
   }
   .collage-mid-orb {
     width: 78px;
