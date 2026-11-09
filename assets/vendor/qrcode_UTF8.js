@@ -1,0 +1,1 @@
+!function(qrcode){qrcode.stringToBytes=qrcode.stringToBytesFuncs["UTF-8"]}(qrcode);
