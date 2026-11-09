@@ -289,6 +289,11 @@
     }, { passive: true });
   }
 
+  document.querySelectorAll("img[data-focus]").forEach(img => {
+    const focus = String(img.getAttribute("data-focus") || "").trim();
+    if (focus) img.style.setProperty("object-position", focus);
+  });
+
   const slices = document.querySelectorAll(".craft-slice");
   slices.forEach(slice => {
     slice.addEventListener("mouseenter", () => {

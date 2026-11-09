@@ -85,8 +85,8 @@ function renderPublicSeoHead(array $settings, array $socialPlatforms, array $opt
 
     $ogImage = publicAbsoluteUrl('assets/brand/logo-card.jpg', $baseConf);
     $logoUrl = publicAbsoluteUrl('assets/brand/logo-transparent.png', $baseConf);
-    $showroomImg = publicAbsoluteUrl('assets/images/lookbook/showroom-space.jpg', $baseConf);
-    $labImg = publicAbsoluteUrl('assets/images/lookbook/lab-repair.jpg', $baseConf);
+    $showroomImg = publicAbsoluteUrl('assets/images/lookbook/showroom-product-wall.jpg', $baseConf);
+    $labImg = publicAbsoluteUrl('assets/images/lookbook/product-repair-macro.jpg', $baseConf);
 
     $sitemapUrl = publicAbsoluteUrl('sitemap.xml', $baseConf);
     $manifestUrl = publicAbsoluteUrl('site.webmanifest', $baseConf);
