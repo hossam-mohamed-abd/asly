@@ -392,8 +392,14 @@
     const inp = document.getElementById("prodBarcode");
     if (inp) {
       inp.value = code;
+      syncSlimCodeStrip();
       updateLiveStickerPreview();
     }
+    const idEl = document.getElementById("prodId");
+    if (idEl) idEl.value = "0";
+    const nf = document.getElementById("newProductFields");
+    if (nf) nf.style.display = "block";
+    if (window.AslyAddFlow) window.AslyAddFlow.stage("form");
   };
   async function runQuickScan(code) {
     const clean = (code || "").trim();
