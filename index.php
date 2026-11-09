@@ -220,7 +220,7 @@ $assetVer = (string)max(
   
   <section id="in-store" class="section-pad section-ivory ps-section">
     <div class="container">
-      <div class="ps-head reveal-up">
+      <div class="ps-head ps-head--tight reveal-up">
         <div class="ps-head-copy">
           <div class="eyebrow-chip">
             <i class="fa-solid fa-layer-group"></i>
@@ -389,7 +389,7 @@ $assetVer = (string)max(
         </article>
 
         <div class="mosaic-card mosaic-photo-tall" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 110ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/female-flagship-pose.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'The ASLY Studio Team Ready To Welcome You' : 'فريق أصلي تك ستور جاهز لاستقبالك داخل المعرض') ?>" loading="lazy" decoding="async" data-focus="center 22%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-team-portrait.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'ASLY Store Specialist With Devices On Display' : 'مختصة المعرض مع الأجهزة المعروضة أمامها') ?>" loading="lazy" decoding="async" data-focus="center 22%">
           <div class="mosaic-photo-caption">
             <span><i class="fa-solid fa-certificate" style="color: var(--teal-deep); margin-inline-end: 6px;"></i> <?= $en ? 'Authentic Hardware Culture' : 'ثقافة التقنية الأصلية' ?></span>
             <span style="font-family: var(--font-mono); color: var(--gold-deep);">100%</span>
@@ -529,7 +529,7 @@ $assetVer = (string)max(
 
       <div class="lookbook-showcase-grid">
         <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 40ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/product-counter-consultation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Devices Presented To The Customer By Our Engineer' : 'أجهزة معروضة أمام العميل مع استشارة مهندس مختص') ?>" loading="lazy" decoding="async" data-focus="center 55%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-hands-on-preview.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Customer Testing A Smartphone On The Counter' : 'عميل بيجرب هاتف ذكي على الكاونتر') ?>" loading="lazy" decoding="async" data-focus="center 50%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge"><i class="fa-solid fa-hand-holding-heart"></i> <?= $en ? 'HANDS-ON PREVIEW' : 'معاينة على الطبيعة' ?></span>
             <strong data-scroll-write><?= $en ? 'Every Device On Display, Tested In Your Hands Before You Decide' : 'كل جهاز معروض أمامك ومُختبر بيدك قبل أن تقرر' ?></strong>
@@ -537,7 +537,7 @@ $assetVer = (string)max(
         </figure>
 
         <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 120ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-interior.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Lit Shelves Of Phones Inside ASLY Showroom' : 'أرفف مضيئة بهواتف داخل معرض أصلي تك ستور') ?>" loading="lazy" decoding="async" data-focus="center 45%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-audio-wearables.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Headphones And Smartwatch On Display In Store' : 'هيدفونات وساعة ذكية معروضة داخل المعرض') ?>" loading="lazy" decoding="async" data-focus="center 45%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge gold"><i class="fa-solid fa-headphones-simple"></i> <?= $en ? 'AUDIO & WEARABLES' : 'صوتيات وساعات' ?></span>
             <strong data-scroll-write><?= $en ? 'Original Headphones, Earbuds and Watches Ready to Try' : 'هيدفونات وإيربودز وساعات أصلية جاهزة للتجربة' ?></strong>
@@ -545,7 +545,7 @@ $assetVer = (string)max(
         </figure>
 
         <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 60ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/female-audio-watch.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Smartwatches And Original Audio On Display At ASLY' : 'ساعات ذكية وصوتيات أصلية معروضة في أصلي تك ستور') ?>" loading="lazy" decoding="async" data-focus="center 22%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-sound-room.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Headphone Comparison Shelf In The Store' : 'رف مقارنة الهيدفونات داخل المعرض') ?>" loading="lazy" decoding="async" data-focus="center 45%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge"><i class="fa-solid fa-volume-high"></i> <?= $en ? 'SOUND ROOM' : 'زاوية الصوت' ?></span>
             <strong data-scroll-write><?= $en ? 'Compare Headphones and Speakers Side by Side In Store' : 'قارن بين الهيدفونات والسماعات جنباً إلى جنب داخل المعرض' ?></strong>
@@ -553,7 +553,7 @@ $assetVer = (string)max(
         </figure>
 
         <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 140ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/female-smart-devices.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Flagship Tablets And Phones Ready For Preview' : 'تابلت وهواتف رائدة معروضة للمعاينة داخل المعرض') ?>" loading="lazy" decoding="async" data-focus="center 24%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-service-desk.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Store Specialist Presenting Phones And Tablets' : 'مختصة بالمعرض بتعرض الهواتف والتابلت') ?>" loading="lazy" decoding="async" data-focus="center 55%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge gold"><i class="fa-solid fa-comments"></i> <?= $en ? 'PERSONAL SERVICE' : 'خدمة شخصية' ?></span>
             <strong data-scroll-write><?= $en ? 'Real Engineers Guide You Through Every Device Choice' : 'مهندسون حقيقيون يرشدونك في اختيار كل جهاز' ?></strong>
@@ -569,7 +569,7 @@ $assetVer = (string)max(
         </figure>
 
         <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 150ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/female-consultation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Premium Customer Care Inside The ASLY Studio' : 'خدمة عملاء راقية داخل استوديو أصلي تك ستور') ?>" loading="lazy" decoding="async" data-focus="center 24%">
+          <img src="<?= e(appUrl('assets/images/lookbook/scene-categories-shelf.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Category Shelf With Every Device Type' : 'رف الأقسام بكل نوع جهاز') ?>" loading="lazy" decoding="async" data-focus="center 45%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge gold"><i class="fa-solid fa-star"></i> <?= $en ? 'OUR SPECIALTY' : 'تخصصنا' ?></span>
             <strong data-scroll-write><?= $en ? 'The Categories We Work On, Shown In Their Best Light' : 'الأقسام اللي بنشتغل فيها معروضة في أفضل صورة' ?></strong>

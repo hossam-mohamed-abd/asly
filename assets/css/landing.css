@@ -1336,6 +1336,14 @@ html.js-motion .craft-card.deck-in {
   margin-bottom: 30px;
 }
 
+.ps-head--tight {
+  margin-bottom: clamp(46px, 6vw, 84px);
+}
+
+.ps-section .container {
+  padding-top: 4px;
+}
+
 .ps-head-copy {
   max-width: 660px;
 }
