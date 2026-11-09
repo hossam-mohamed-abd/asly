@@ -1337,7 +1337,7 @@ html.js-motion .craft-card.deck-in {
 }
 
 .ps-head-copy {
-  max-width: 640px;
+  max-width: 660px;
 }
 
 .ps-head-sub {
@@ -1398,10 +1398,13 @@ html.js-motion .craft-card.deck-in {
   border-radius: 26px 10px 26px 10px;
   overflow: hidden;
   background: #0c2027;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid transparent;
   cursor: pointer;
   isolation: isolate;
-  transition: border-color 0.5s ease, box-shadow 0.6s var(--ease-spring), opacity 0.45s ease, scale 0.5s var(--ease-spring);
+  transition:
+    translate 0.55s var(--ease-spring),
+    box-shadow 0.55s var(--ease-spring),
+    opacity 0.45s ease;
 }
 
 .ps-tile--tall {
@@ -1424,15 +1427,116 @@ html.js-motion .craft-card.deck-in {
   height: 100%;
   object-fit: cover;
   transform: scale(1.03);
-  filter: saturate(0.88) brightness(0.94);
-  transition: transform 1.35s var(--ease-spring), filter 0.7s ease;
+  filter: saturate(0.9) brightness(0.96);
+  transition: transform 1.15s var(--ease-spring), filter 0.6s ease;
 }
 
 .ps-tile-veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(8, 26, 32, 0.92) 0%, rgba(8, 26, 32, 0.36) 38%, rgba(8, 26, 32, 0) 68%);
-  transition: background 0.6s ease;
+  background: linear-gradient(to top, rgba(8, 26, 32, 0.88) 0%, rgba(8, 26, 32, 0.18) 46%, rgba(8, 26, 32, 0) 74%);
+  transition: background 0.55s ease;
+}
+
+.ps-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 2.5px;
+  background: conic-gradient(var(--ring-angle, 0deg), rgba(18, 178, 183, 0) 0%, rgba(18, 178, 183, 0) 55%, rgba(37, 205, 210, 0.9) 78%, #ffffff 90%, rgba(18, 178, 183, 0) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ps-tile-label {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 15px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: translate 0.55s var(--ease-spring);
+}
+
+.ps-tile-tag {
+  font-family: var(--font-en-display);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.ps-tile-label strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #ffffff;
+  text-wrap: balance;
+}
+
+.ps-tile--big .ps-tile-label strong {
+  font-size: 1.04rem;
+}
+
+.ps-tile:hover,
+.ps-tile.is-lit {
+  translate: 0 -6px;
+  box-shadow: 0 26px 58px rgba(13, 146, 151, 0.28);
+  z-index: 6;
+}
+
+.ps-tile:hover .ps-tile-img,
+.ps-tile.is-lit .ps-tile-img {
+  transform: scale(1.075);
+  filter: saturate(1.08) brightness(1);
+}
+
+.ps-tile:hover .ps-tile-veil,
+.ps-tile.is-lit .ps-tile-veil {
+  background: linear-gradient(to top, rgba(8, 26, 32, 0.9) 0%, rgba(8, 26, 32, 0.24) 44%, rgba(8, 26, 32, 0) 72%);
+}
+
+.ps-tile:hover .ps-ring,
+.ps-tile.is-lit .ps-ring {
+  opacity: 1;
+  animation: ps-ring-sweep 2.6s linear infinite;
+}
+
+.ps-tile:hover .ps-tile-label,
+.ps-tile.is-lit .ps-tile-label {
+  translate: 0 -3px;
+}
+
+@property --ring-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes ps-ring-sweep {
+  from {
+    --ring-angle: 0deg;
+  }
+  to {
+    --ring-angle: 360deg;
+  }
+}
+
+.ps-grid.has-open .ps-tile:not(.is-lit) {
+  opacity: 0.55;
+}
+
+.ps-tile.is-muted {
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 html.js-motion .ps-tile {
@@ -1456,18 +1560,23 @@ html.js-motion .ps-tile.ps-in {
     translate 0.95s var(--ease-spring) calc(var(--ps-i, 0) * 65ms),
     scale 0.95s var(--ease-spring) calc(var(--ps-i, 0) * 65ms),
     filter 0.8s ease calc(var(--ps-i, 0) * 65ms),
-    border-color 0.5s ease,
     box-shadow 0.6s var(--ease-spring),
     opacity 0.45s ease;
 }
 
 html.js-motion .ps-tile.ps-in .ps-tile-img {
   transform: scale(1.03);
-  transition: transform 1.5s var(--ease-spring) calc(var(--ps-i, 0) * 65ms + 90ms), filter 0.7s ease;
+  transition: transform 1.4s var(--ease-spring) calc(var(--ps-i, 0) * 65ms + 80ms), filter 0.6s ease;
+}
+
+html.js-motion .ps-tile.ps-in:hover,
+html.js-motion .ps-tile.ps-in.is-lit {
+  translate: 0 -6px;
+  scale: 1;
 }
 
 html.js-motion .ps-tile.is-muted {
-  opacity: 0.24;
+  opacity: 0.2;
 }
 
 .lab-console-shell {

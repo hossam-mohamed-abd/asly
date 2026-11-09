@@ -573,7 +573,7 @@ $assetVer = (string)max(
           <img src="<?= e(appUrl('assets/images/lookbook/female-consultation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Premium Customer Care Inside The ASLY Studio' : 'خدمة عملاء راقية داخل استوديو أصلي تك ستور') ?>" loading="lazy" decoding="async" data-focus="center 24%">
           <figcaption class="lookbook-caption">
             <span class="lookbook-badge gold"><i class="fa-solid fa-star"></i> <?= $en ? 'OUR SPECIALTY' : 'تخصصنا' ?></span>
-            <strong data-scroll-write><?= $en ? 'The Exact Devices And Accessories We Sell, Photographed In Our Studio' : 'نفس الأجهزة والإكسسوارات التي نبيعها مصورة داخل استوديونا' ?></strong>
+            <strong data-scroll-write><?= $en ? 'The Categories We Work On, Shown In Their Best Light' : 'الأقسام اللي بنشتغل فيها معروضة في أفضل صورة' ?></strong>
           </figcaption>
         </figure>
       </div>
