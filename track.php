@@ -56,7 +56,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
   <?= renderPublicSeoHead($settings, $socialPlatforms, ['page' => 'track', 'noindex' => ($code !== '')]) ?>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
-  <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css')) ?>">
+  <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css?v=' . (string)(@filemtime(__DIR__ . '/assets/css/landing.css') ?: 20261109))) ?>">
   <style>
     body { background: var(--bg-ivory); }
     .track-wrap { max-width: 960px; margin: 36px auto 72px; padding: 0 16px; display: flex; flex-direction: column; gap: 24px; }

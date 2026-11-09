@@ -34,6 +34,12 @@ $secondaryPhone = trim((string)($settings['secondary_phone'] ?? ''));
 $primaryWa = normalizeWhatsappNumber($settings['primary_whatsapp'] ?? '');
 $primaryEmail = trim((string)($settings['primary_email'] ?? ''));
 $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
+$assetVer = (string)max(
+    (int)@filemtime(__DIR__ . '/assets/css/landing.css'),
+    (int)@filemtime(__DIR__ . '/assets/js/landing.js'),
+    (int)@filemtime(__DIR__ . '/assets/images/lookbook/showroom-space.jpg'),
+    20261109
+);
 ?>
 <!DOCTYPE html>
 <html lang="<?= e(currentLang()) ?>" dir="<?= e(htmlDir()) ?>">
@@ -44,7 +50,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="apple-touch-icon" href="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
-  <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css')) ?>">
+  <link rel="stylesheet" href="<?= e(appUrl('assets/css/landing.css?v=' . $assetVer)) ?>">
 </head>
 <body class="ambient-canvas">
 
@@ -157,18 +163,22 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </div>
 
         <div class="collage-main-arch" data-parallax="-10" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 80ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'ASLY Tech Store Showroom in Tersa, Sinnuris, Faiyum' : 'معرض أصلي تك ستور في ترسا - سنورس - الفيوم') ?>" fetchpriority="high" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'ASLY Tech Store Showroom in Tersa, Sinnuris, Faiyum' : 'معرض أصلي تك ستور في ترسا - سنورس - الفيوم') ?>" fetchpriority="high" decoding="async">
         </div>
 
         <div class="collage-sub-chamfer" data-parallax="16" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 220ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Authentic Tech Accessories at ASLY' : 'أجهزة لابتوب وإكسسوارات أصلية مفحوصة في أصلي تك ستور') ?>" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Certified Laptops and Authentic Tech Accessories at ASLY' : 'أجهزة لابتوب وإكسسوارات أصلية مفحوصة في أصلي تك ستور') ?>" decoding="async">
         </div>
 
         <div class="collage-top-pill" data-parallax="-18" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 160ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Precision Board-Level Laptop & Mobile Repair Lab in Faiyum' : 'معمل صيانة اللابتوب والهواتف الدقيقة في أصلي تك ستور بالفيوم') ?>" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Precision Board-Level Laptop & Mobile Repair Lab in Faiyum' : 'معمل صيانة اللابتوب والهواتف الدقيقة في أصلي تك ستور بالفيوم') ?>" decoding="async">
         </div>
 
-        <div class="floating-chip floating-chip-end" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 280ms;">
+        <div class="collage-mid-orb" data-parallax="12" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 260ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-audio-watch.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Original Smartwatches and Wireless Audio at ASLY' : 'ساعات ذكية وصوتيات أصلية في أصلي تك ستور') ?>" decoding="async">
+        </div>
+
+        <div class="floating-chip floating-chip-end" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 310ms;">
           <div class="chip-icon gold">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
@@ -241,7 +251,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </article>
 
         <div class="mosaic-card mosaic-photo-tall" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 110ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg')) ?>" alt="<?= e($en ? 'Certified Smartphones and Genuine Tech Culture at ASLY Faiyum' : 'أجهزة أصلية مفحوصة هندسياً في مركز أصلي تك ستور بالفيوم') ?>" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Certified Smartphones and Genuine Tech Culture at ASLY Faiyum' : 'أجهزة أصلية مفحوصة هندسياً في مركز أصلي تك ستور بالفيوم') ?>" loading="lazy" decoding="async">
           <div class="mosaic-photo-caption">
             <span><i class="fa-solid fa-certificate" style="color: var(--teal-deep); margin-inline-end: 6px;"></i> <?= $en ? 'Authentic Hardware Culture' : 'ثقافة التقنية الأصلية' ?></span>
             <span style="font-family: var(--font-mono); color: var(--gold-deep);">100%</span>
@@ -295,52 +305,86 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
       <div class="craft-accordion-deck">
         <div class="craft-slice active" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/hero-1.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Workstations in Faiyum' : 'لابتوبات ووركستيشن معتمدة في أصلي تك ستور الفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/hero-1.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Certified Laptops and Workstations in Faiyum' : 'لابتوبات ووركستيشن معتمدة في أصلي تك ستور الفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">01 // LAB</span>
               <span class="craft-icon"><i class="fa-solid fa-laptop-code"></i></span>
             </div>
-            <h3><?= e(t('craft_1_title')) ?></h3>
+            <h3 data-scroll-write><?= e(t('craft_1_title')) ?></h3>
             <p><?= e(t('craft_1_sub')) ?></p>
           </div>
         </div>
 
         <div class="craft-slice" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 90ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Flagship Smartphones in Sinnuris and Tersa Faiyum' : 'هواتف ذكية أصلية في سنورس وترسا بالفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Flagship Smartphones in Sinnuris and Tersa Faiyum' : 'هواتف ذكية أصلية في سنورس وترسا بالفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">02 // MOBILE</span>
               <span class="craft-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
             </div>
-            <h3><?= e(t('craft_2_title')) ?></h3>
+            <h3 data-scroll-write><?= e(t('craft_2_title')) ?></h3>
             <p><?= e(t('craft_2_sub')) ?></p>
           </div>
         </div>
 
         <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 90ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Board-Level Laptop and Mobile Repair Lab with QR Tracking' : 'صيانة لابتوب وموبايلات احترافية بالـ QR في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Board-Level Laptop and Mobile Repair Lab with QR Tracking' : 'صيانة لابتوب وموبايلات احترافية بالـ QR في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">03 // QR REPAIR</span>
               <span class="craft-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
             </div>
-            <h3><?= e(t('craft_3_title')) ?></h3>
+            <h3 data-scroll-write><?= e(t('craft_3_title')) ?></h3>
             <p><?= e(t('craft_3_sub')) ?></p>
           </div>
         </div>
 
         <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 0ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'Smartwatches and Original Audio Accessories at ASLY Tech Store' : 'ساعات ذكية وإكسسوارات أصلية في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-audio-watch.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Smartwatches and Original Audio Accessories at ASLY Tech Store' : 'ساعات ذكية وإكسسوارات أصلية في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
               <span class="craft-idx">04 // ECOSYSTEM</span>
               <span class="craft-icon"><i class="fa-solid fa-headphones-simple"></i></span>
             </div>
-            <h3><?= e(t('craft_4_title')) ?></h3>
+            <h3 data-scroll-write><?= e(t('craft_4_title')) ?></h3>
             <p><?= e(t('craft_4_sub')) ?></p>
           </div>
         </div>
+      </div>
+
+      <div class="lookbook-showcase-grid">
+        <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 40ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-consultation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Personal Technology Consultation Inside ASLY Studio' : 'تجربة استشارات تقنية راقية داخل استوديو أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge"><i class="fa-solid fa-sparkles fa-wand-magic-sparkles"></i> <?= $en ? 'STUDIO EXPERIENCE' : 'تجربة الاستوديو' ?></span>
+            <strong data-scroll-write><?= $en ? 'Personal Guidance & Calm Hands-On Tech Consultation' : 'استشارات تقنية هادئة وتجربة معاينة راقية تليق بك' ?></strong>
+          </figcaption>
+        </figure>
+
+        <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 120ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-qr-handover.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Instant ASLY QR Lab Receipt Handover' : 'توثيق واستلام فوري عبر نظام QR في أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge gold"><i class="fa-solid fa-qrcode"></i> <?= $en ? 'LIVE QR CONCIERGE' : 'استقبال ومعمل QR' ?></span>
+            <strong data-scroll-write><?= $en ? 'Transparent QR Receipt & Real-Time Lab Follow-Up' : 'استلام موثق برمز QR ومتابعة لحظية شفافة لكل خطوة' ?></strong>
+          </figcaption>
+        </figure>
+
+        <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 60ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Sunlit Architectural Interior of ASLY Tech Store' : 'تصميم معماري مضيء داخل معرض أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge"><i class="fa-solid fa-gem"></i> <?= $en ? 'SUNLIT SHOWROOM' : 'بيئة مشرقة' ?></span>
+            <strong data-scroll-write><?= $en ? 'Daylight Architecture Built Around Hardware Authenticity' : 'هوية معمارية مشرقة تعكس نقاء وأصالة التكنولوجيا' ?></strong>
+          </figcaption>
+        </figure>
+
+        <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 140ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Precision Diagnostics Bench at ASLY Tech Lab' : 'فحص هندسي دقيق على مستوى البوردة في معمل أصلي') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge gold"><i class="fa-solid fa-microscope"></i> <?= $en ? 'PRECISION BENCH' : 'معمل الفحص الدقيق' ?></span>
+            <strong data-scroll-write><?= $en ? 'Micro-Level Board Diagnostics & Certified Thermal Testing' : 'تشخيص ميكروسكوبي دقيق واختبارات أداء معتمدة قبل التسليم' ?></strong>
+          </figcaption>
+        </figure>
       </div>
     </div>
   </section>
@@ -387,7 +431,15 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
 
           <div class="stage-constellation">
-            <div class="constellation-node" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 40ms;">
+            <div class="lab-photo-banner span-full" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 20ms;">
+              <img src="<?= e(appUrl('assets/images/lookbook/female-qr-handover.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'ASLY QR Repair Reception Desk' : 'مكتب استقبال وتسليم الصيانة بنظام QR في أصلي') ?>" loading="lazy" decoding="async">
+              <div class="lab-photo-overlay">
+                <i class="fa-solid fa-qrcode"></i>
+                <span><?= $en ? 'ASLY QR Lab • Instant Live Receipt' : 'معمل أصلي • إيصال QR حي لكل جهاز' ?></span>
+              </div>
+            </div>
+
+            <div class="constellation-node" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 60ms;">
               <div class="c-node-ico"><i class="fa-solid fa-clipboard-check"></i></div>
               <div>
                 <div class="chip-title">01 • <?= $en ? 'Logged & QR Issued' : 'الاستلام وإصدار QR' ?></div>
@@ -484,6 +536,9 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
       <div class="concierge-grid">
         <div class="location-arch-card" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
+          <div class="contact-studio-banner">
+            <img src="<?= e(appUrl('assets/images/lookbook/female-consultation.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'ASLY Concierge Team in Tersa, Sinnuris, Faiyum' : 'فريق استقبال واستشارات أصلي تك ستور في ترسا - سنورس - الفيوم') ?>" loading="lazy" decoding="async">
+          </div>
           <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="loc-row">
               <div class="loc-ico"><i class="fa-solid fa-map-location-dot"></i></div>
@@ -718,9 +773,9 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
       }
     };
   </script>
-  <script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js')) ?>"></script>
-  <script src="<?= e(appUrl('assets/vendor/html5-qrcode.min.js')) ?>"></script>
-  <script src="<?= e(appUrl('assets/js/turbo-scanner.js')) ?>"></script>
-  <script src="<?= e(appUrl('assets/js/landing.js')) ?>"></script>
+  <script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js?v=' . $assetVer)) ?>"></script>
+  <script src="<?= e(appUrl('assets/vendor/html5-qrcode.min.js?v=' . $assetVer)) ?>"></script>
+  <script src="<?= e(appUrl('assets/js/turbo-scanner.js?v=' . $assetVer)) ?>"></script>
+  <script src="<?= e(appUrl('assets/js/landing.js?v=' . $assetVer)) ?>"></script>
 </body>
 </html>

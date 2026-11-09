@@ -1,13 +1,9 @@
 (function() {
   "use strict";
   const cfg = window.ASLY_PUBLIC || {};
-  const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isRtl = (document.documentElement.getAttribute("dir") || "").toLowerCase() === "rtl";
-  const dirSign = isRtl ? -1 : 1;
 
-  if (!reducedMotion) {
-    document.documentElement.classList.add("js-motion");
-  }
+  document.documentElement.classList.add("js-motion");
 
   function esc(str) {
     const d = document.createElement("div");
@@ -15,7 +11,7 @@
     return d.innerHTML;
   }
 
-  function tokenizeWords(root) {
+  function prepareTypeBlock(root) {
     const words = [];
     function walk(node) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -30,9 +26,9 @@
             frag.appendChild(document.createTextNode(part));
           } else {
             const span = document.createElement("span");
-            span.className = "sw-word";
+            span.className = "tw-word";
             span.textContent = part;
-            words.push(span);
+            words.push({ el: span, weight: Math.max(2, part.length), start: 0, end: 1 });
             frag.appendChild(span);
           }
         }
@@ -43,7 +39,7 @@
       }
       if (node.nodeType === Node.ELEMENT_NODE) {
         const tag = node.tagName.toUpperCase();
-        if (tag === "SCRIPT" || tag === "STYLE" || node.classList.contains("sw-word")) return;
+        if (tag === "SCRIPT" || tag === "STYLE" || node.classList.contains("tw-word") || node.classList.contains("tw-caret")) return;
         const children = Array.from(node.childNodes);
         for (let i = 0; i < children.length; i++) {
           walk(children[i]);
@@ -51,136 +47,213 @@
       }
     }
     walk(root);
-    return words;
+    if (!words.length) return null;
+
+    let totalWeight = 0;
+    for (let i = 0; i < words.length; i++) totalWeight += words[i].weight;
+    let acc = 0;
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      w.start = acc / totalWeight;
+      acc += w.weight;
+      w.end = acc / totalWeight;
+    }
+
+    const caret = document.createElement("span");
+    caret.className = "tw-caret idle";
+    caret.setAttribute("aria-hidden", "true");
+    root.appendChild(caret);
+
+    return {
+      el: root,
+      words,
+      caret,
+      current: 0,
+      target: 0,
+      lastRendered: -1
+    };
   }
 
-  if (!reducedMotion) {
-    const heroWriteBlocks = document.querySelectorAll("[data-hero-write]");
-    heroWriteBlocks.forEach(el => {
-      const baseDelay = parseInt(el.getAttribute("data-hero-delay") || "60", 10) || 60;
-      const words = tokenizeWords(el);
-      words.forEach((w, idx) => {
-        w.style.setProperty("--hero-wd", `${baseDelay + idx * 46}ms`);
-      });
-    });
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        heroWriteBlocks.forEach(el => el.classList.add("hero-written"));
-      });
-    });
+  function applyWriteProgress(blk, rawP) {
+    const p = rawP < 0 ? 0 : rawP > 1 ? 1 : rawP;
+    if (Math.abs(p - blk.lastRendered) < 0.0008) return;
+    blk.lastRendered = p;
 
-    const scrollBlocks = [];
-    document.querySelectorAll("[data-scroll-write]").forEach(el => {
-      const words = tokenizeWords(el);
-      if (!words.length) return;
-      words.forEach(w => {
-        w.style.setProperty("--sw-x", `${(10 * dirSign).toFixed(1)}px`);
-      });
-      scrollBlocks.push({
-        el,
-        words,
-        current: -1,
-        target: 0
-      });
-    });
+    const words = blk.words;
+    const n = words.length;
 
-    let rafId = 0;
-    function renderScrollWrite() {
-      rafId = 0;
-      const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-      const nearBottom = Math.max(0, 1 - Math.max(0, docH - (scrollY + vh)) / 110);
-      let needsNextFrame = false;
+    if (p <= 0.002) {
+      for (let i = 0; i < n; i++) {
+        const el = words[i].el;
+        el.style.opacity = "0";
+        el.style.clipPath = isRtl ? "inset(-28% 0% -28% 100%)" : "inset(-28% 100% -28% 0%)";
+      }
+      blk.caret.classList.add("idle");
+      return;
+    }
 
-      for (let b = 0; b < scrollBlocks.length; b++) {
-        const blk = scrollBlocks[b];
-        const rect = blk.el.getBoundingClientRect();
-        const startY = vh * 0.92;
-        const endY = Math.min(vh * 0.48, startY - Math.max(90, rect.height * 0.55));
-        let raw = (startY - rect.top) / Math.max(60, startY - endY);
-        if (nearBottom > raw && rect.top < vh) raw = nearBottom;
-        blk.target = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+    if (p >= 0.998) {
+      for (let i = 0; i < n; i++) {
+        const el = words[i].el;
+        el.style.opacity = "1";
+        el.style.clipPath = "none";
+      }
+      blk.caret.classList.add("idle");
+      return;
+    }
 
-        if (blk.current < 0) {
-          blk.current = blk.target;
+    let activeWordEl = words[0].el;
+    for (let i = 0; i < n; i++) {
+      const w = words[i];
+      const el = w.el;
+      if (p <= w.start) {
+        el.style.opacity = "0";
+        el.style.clipPath = isRtl ? "inset(-28% 0% -28% 100%)" : "inset(-28% 100% -28% 0%)";
+      } else if (p >= w.end) {
+        el.style.opacity = "1";
+        el.style.clipPath = "none";
+        activeWordEl = el;
+      } else {
+        const local = (p - w.start) / Math.max(0.0001, w.end - w.start);
+        const clip = ((1 - local) * 100).toFixed(1);
+        el.style.opacity = (0.38 + 0.62 * Math.min(1, local * 2.1)).toFixed(3);
+        el.style.clipPath = isRtl ? `inset(-28% 0% -28% ${clip}%)` : `inset(-28% ${clip}% -28% 0%)`;
+        activeWordEl = el;
+      }
+    }
+
+    if (activeWordEl && activeWordEl.parentNode) {
+      if (activeWordEl.nextSibling !== blk.caret) {
+        activeWordEl.after(blk.caret);
+      }
+      blk.caret.classList.remove("idle");
+    }
+  }
+
+  const heroBlocks = [];
+  document.querySelectorAll("[data-hero-write]").forEach((el, idx) => {
+    const blk = prepareTypeBlock(el);
+    if (!blk) return;
+    applyWriteProgress(blk, 0);
+    const delay = parseInt(el.getAttribute("data-hero-delay") || String(idx === 0 ? 120 : 920), 10);
+    const duration = idx === 0 ? 1480 : 1720;
+    heroBlocks.push({ blk, delay, duration });
+  });
+
+  if (heroBlocks.length) {
+    const t0 = performance.now();
+    function tickHero(now) {
+      let active = false;
+      for (let i = 0; i < heroBlocks.length; i++) {
+        const h = heroBlocks[i];
+        const elapsed = now - t0 - h.delay;
+        if (elapsed < 0) {
+          active = true;
+          continue;
+        }
+        const prog = Math.min(1, elapsed / h.duration);
+        const eased = 1 - Math.pow(1 - prog, 1.65);
+        applyWriteProgress(h.blk, eased);
+        if (prog < 1) active = true;
+      }
+      if (active) requestAnimationFrame(tickHero);
+    }
+    requestAnimationFrame(tickHero);
+  }
+
+  const scrollBlocks = [];
+  document.querySelectorAll("[data-scroll-write]").forEach(el => {
+    const blk = prepareTypeBlock(el);
+    if (!blk) return;
+    applyWriteProgress(blk, 0);
+    scrollBlocks.push(blk);
+  });
+
+  let rafId = 0;
+  function tickScrollWrite() {
+    rafId = 0;
+    const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+    const atBottom = docH - (scrollY + vh) < 70;
+    let keepRunning = false;
+
+    for (let i = 0; i < scrollBlocks.length; i++) {
+      const blk = scrollBlocks[i];
+      const rect = blk.el.getBoundingClientRect();
+
+      if (rect.top > vh * 0.94) {
+        blk.target = 0;
+        blk.current = 0;
+        applyWriteProgress(blk, 0);
+        continue;
+      }
+
+      const startY = vh * 0.88;
+      const endY = Math.min(vh * 0.36, startY - Math.max(130, rect.height * 0.7));
+      let raw = (startY - rect.top) / Math.max(90, startY - endY);
+      if (rect.top < vh * 0.56 || (atBottom && rect.top < vh)) {
+        raw = Math.max(raw, 1);
+      }
+      blk.target = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+
+      const diff = blk.target - blk.current;
+      if (Math.abs(diff) > 0.0012) {
+        keepRunning = true;
+        if (diff > 0) {
+          const step = Math.min(0.026, Math.max(0.0075, diff * 0.095));
+          blk.current = Math.min(blk.target, blk.current + step);
         } else {
-          blk.current += (blk.target - blk.current) * 0.18;
-          if (Math.abs(blk.target - blk.current) > 0.0015) {
-            needsNextFrame = true;
-          } else {
-            blk.current = blk.target;
-          }
+          blk.current = Math.max(blk.target, blk.current + diff * 0.16);
         }
-
-        const p = blk.current;
-        const n = blk.words.length;
-        const spread = Math.min(0.46, Math.max(0.2, 2.4 / Math.max(3, n)));
-        const denom = Math.max(1, n - 1);
-
-        for (let i = 0; i < n; i++) {
-          const wStart = (i / denom) * (1 - spread);
-          let wProg = (p - wStart) / spread;
-          if (wProg < 0) wProg = 0;
-          else if (wProg > 1) wProg = 1;
-          const inv = 1 - wProg;
-          const eased = 1 - inv * inv * inv;
-          const wordEl = blk.words[i];
-          if (eased >= 0.996) {
-            wordEl.style.opacity = "1";
-            wordEl.style.transform = "translate3d(0,0,0)";
-          } else {
-            const op = 0.12 + 0.88 * eased;
-            const tx = (1 - eased) * 10 * dirSign;
-            const ty = (1 - eased) * 8;
-            wordEl.style.opacity = op.toFixed(3);
-            wordEl.style.transform = `translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0)`;
-          }
-        }
+      } else {
+        blk.current = blk.target;
       }
 
-      if (needsNextFrame) {
-        rafId = requestAnimationFrame(renderScrollWrite);
-      }
+      applyWriteProgress(blk, blk.current);
     }
 
-    function scheduleScrollWrite() {
-      if (!rafId) {
-        rafId = requestAnimationFrame(renderScrollWrite);
-      }
+    if (keepRunning) {
+      rafId = requestAnimationFrame(tickScrollWrite);
     }
+  }
 
-    if (scrollBlocks.length) {
-      scheduleScrollWrite();
-      window.addEventListener("scroll", scheduleScrollWrite, { passive: true });
-      window.addEventListener("resize", scheduleScrollWrite, { passive: true });
+  function scheduleScrollWrite() {
+    if (!rafId) {
+      rafId = requestAnimationFrame(tickScrollWrite);
     }
+  }
 
-    const sideItems = document.querySelectorAll("[data-side]");
-    if ("IntersectionObserver" in window && sideItems.length) {
-      const sideObserver = new IntersectionObserver(entries => {
-        const vh = window.innerHeight || 800;
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("side-in");
-          } else if (entry.boundingClientRect.top > vh * 1.04) {
-            entry.target.classList.remove("side-in");
-          }
-        });
-      }, {
-        threshold: 0.08,
-        rootMargin: "0px 0px -5% 0px"
-      });
-      sideItems.forEach(el => {
-        if (el.closest(".hero-stage")) {
-          requestAnimationFrame(() => el.classList.add("side-in"));
-        } else {
-          sideObserver.observe(el);
+  if (scrollBlocks.length) {
+    scheduleScrollWrite();
+    window.addEventListener("scroll", scheduleScrollWrite, { passive: true });
+    window.addEventListener("resize", scheduleScrollWrite, { passive: true });
+  }
+
+  const sideItems = document.querySelectorAll("[data-side]");
+  if ("IntersectionObserver" in window && sideItems.length) {
+    const sideObserver = new IntersectionObserver(entries => {
+      const vh = window.innerHeight || 800;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("side-in");
+        } else if (entry.boundingClientRect.top > vh * 1.03) {
+          entry.target.classList.remove("side-in");
         }
       });
-    } else {
-      sideItems.forEach(el => el.classList.add("side-in"));
-    }
+    }, {
+      threshold: 0.08,
+      rootMargin: "0px 0px -5% 0px"
+    });
+    sideItems.forEach(el => {
+      if (el.closest(".hero-stage")) {
+        requestAnimationFrame(() => el.classList.add("side-in"));
+      } else {
+        sideObserver.observe(el);
+      }
+    });
+  } else {
+    sideItems.forEach(el => el.classList.add("side-in"));
   }
 
   const revealItems = document.querySelectorAll(".reveal-up");
@@ -189,7 +262,7 @@
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("in-view");
-        } else if (entry.boundingClientRect.top > (window.innerHeight || 800) * 1.04) {
+        } else if (entry.boundingClientRect.top > (window.innerHeight || 800) * 1.03) {
           entry.target.classList.remove("in-view");
         }
       });
@@ -202,7 +275,7 @@
   }
 
   const parallaxNodes = document.querySelectorAll("[data-parallax]");
-  if (!reducedMotion && parallaxNodes.length && window.matchMedia("(pointer: fine)").matches) {
+  if (parallaxNodes.length && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
     window.addEventListener("mousemove", e => {
       const rx = (e.clientX / window.innerWidth - 0.5) * 2;
       const ry = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -229,6 +302,7 @@
     slice.addEventListener("click", () => {
       slices.forEach(s => s.classList.remove("active"));
       slice.classList.add("active");
+      scheduleScrollWrite();
     });
   });
 
@@ -246,6 +320,7 @@
         item.classList.add("open");
         ans.style.maxHeight = ans.scrollHeight + 24 + "px";
       }
+      setTimeout(scheduleScrollWrite, 180);
     });
   });
 

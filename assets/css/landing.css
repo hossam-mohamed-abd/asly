@@ -438,7 +438,7 @@ html[lang="en"] .hero-display .stroke-word {
 }
 
 .hero-display .gradient-word,
-.hero-display .gradient-word .sw-word {
+.hero-display .gradient-word .tw-word {
   background: linear-gradient(125deg, var(--teal-deep) 0%, var(--teal) 48%, var(--gold-deep) 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1763,44 +1763,214 @@ html[lang="en"] .footer-links-list a:hover {
   transform: translateY(0);
 }
 
-.sw-word {
+.collage-mid-orb {
+  position: absolute;
+  top: 44%;
+  inset-inline-start: 2px;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 5px solid #ffffff;
+  box-shadow: var(--shadow-md);
+  z-index: 4;
+  background: var(--bg-ivory);
+  transform: rotate(-4deg);
+  transition: transform 0.5s var(--ease-spring);
+}
+
+.collage-mid-orb:hover {
+  transform: rotate(0deg) scale(1.06);
+}
+
+.collage-mid-orb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lookbook-showcase-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 22px;
+}
+
+.lookbook-frame {
+  margin: 0;
+  position: relative;
+  border-radius: 44px 18px 44px 18px;
+  overflow: hidden;
+  border: 5px solid #ffffff;
+  box-shadow: var(--shadow-md);
+  background: var(--bg-ivory);
+  height: 340px;
+}
+
+.lookbook-wide {
+  grid-column: span 7;
+}
+
+.lookbook-mid {
+  grid-column: span 5;
+  border-radius: 18px 44px 18px 44px;
+}
+
+.lookbook-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.75s var(--ease-spring);
+}
+
+.lookbook-frame:hover img {
+  transform: scale(1.06);
+}
+
+.lookbook-caption {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 24px 10px 24px 10px;
+  background: rgba(255, 255, 255, 0.93);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid var(--teal-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lookbook-caption strong {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--ink-1);
+  line-height: 1.45;
+}
+
+.lookbook-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--teal-deep);
+  background: var(--bg-aqua-soft);
+  border: 1px solid var(--teal-border);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.lookbook-badge.gold {
+  color: var(--gold-deep);
+  background: var(--bg-gold-soft);
+  border-color: var(--gold-border);
+}
+
+.lab-photo-banner {
+  grid-column: span 2;
+  position: relative;
+  height: 188px;
+  border-radius: 28px 12px 28px 12px;
+  overflow: hidden;
+  border: 4px solid #ffffff;
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-ivory);
+}
+
+.lab-photo-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 24%;
+}
+
+.lab-photo-overlay {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-start: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--teal-border);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--teal-deep);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contact-studio-banner {
+  height: 196px;
+  border-radius: 32px 12px 32px 12px;
+  overflow: hidden;
+  border: 4px solid #ffffff;
+  box-shadow: var(--shadow-xs);
+  background: var(--bg-ivory);
+}
+
+.contact-studio-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.tw-word {
   display: inline-block;
-  will-change: opacity, transform;
+  will-change: clip-path, opacity, transform;
 }
 
-html.js-motion [data-hero-write] .sw-word {
+html.js-motion [data-hero-write] .tw-word,
+html.js-motion [data-scroll-write] .tw-word {
   opacity: 0;
-  transform: translate3d(0, 15px, 0);
-  filter: blur(4px);
-  transition: opacity 0.68s cubic-bezier(0.16, 1, 0.3, 1), transform 0.68s cubic-bezier(0.16, 1, 0.3, 1), filter 0.68s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--hero-wd, 0ms);
 }
 
-html.js-motion [data-hero-write].hero-written .sw-word {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: blur(0);
+.tw-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.92em;
+  vertical-align: -0.1em;
+  margin-inline-start: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--teal-bright), var(--gold));
+  box-shadow: 0 0 10px rgba(18, 178, 183, 0.55);
+  animation: twCaretBlink 0.55s ease-in-out infinite alternate;
+  pointer-events: none;
 }
 
-html.js-motion [data-scroll-write] .sw-word {
-  opacity: 0.12;
-  transform: translate3d(var(--sw-x, 0px), 10px, 0);
+.tw-caret.idle {
+  opacity: 0 !important;
+  width: 0;
+  margin: 0;
+  animation: none;
+}
+
+@keyframes twCaretBlink {
+  0% { opacity: 0.25; transform: scaleY(0.88); }
+  100% { opacity: 1; transform: scaleY(1.04); }
 }
 
 html.js-motion [data-side] {
-  --side-dist: 64px;
+  --side-dist: 70px;
   opacity: 0;
-  scale: 0.965;
-  transition: opacity 0.78s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), translate 0.92s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), scale 0.92s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-spring), border-color 0.3s ease, flex 0.6s var(--ease-spring);
+  scale: 0.955;
+  transition: opacity 0.82s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), translate 0.96s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), scale 0.96s cubic-bezier(0.16, 1, 0.3, 1) var(--side-delay, 0ms), transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-spring), border-color 0.3s ease, flex 0.6s var(--ease-spring);
   will-change: opacity, translate, scale;
 }
 
 html.js-motion [data-side="right"] {
-  translate: var(--side-dist) 16px;
+  translate: var(--side-dist) 18px;
 }
 
 html.js-motion [data-side="left"] {
-  translate: calc(var(--side-dist) * -1) 16px;
+  translate: calc(var(--side-dist) * -1) 18px;
 }
 
 html.js-motion [data-side].side-in {
@@ -1841,8 +2011,10 @@ html.js-motion [data-side].side-in {
 }
 
 @media (max-width: 1040px) {
-  .nav-links, .lab-live-pill {
-    display: none;
+  .nav-links,
+  .lab-live-pill,
+  .nav-track-cta {
+    display: none !important;
   }
   .mobile-menu-btn {
     display: inline-flex;
@@ -1872,6 +2044,11 @@ html.js-motion [data-side].side-in {
   }
   .craft-slice p {
     display: block;
+  }
+  .lookbook-wide,
+  .lookbook-mid {
+    grid-column: span 6;
+    height: 290px;
   }
   .social-geo-tile {
     grid-column: span 6 !important;
@@ -2091,6 +2268,42 @@ html.js-motion [data-side].side-in {
     padding: 14px 16px;
     border-radius: 20px 10px 20px 10px;
   }
+  .collage-mid-orb {
+    width: 78px;
+    height: 78px;
+    border-width: 4px;
+    top: 42%;
+    inset-inline-start: 0;
+  }
+  .lookbook-showcase-grid {
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .lookbook-wide,
+  .lookbook-mid {
+    grid-column: span 12;
+    height: 245px;
+    border-radius: 28px 12px 28px 12px;
+    border-width: 4px;
+  }
+  .lookbook-caption {
+    inset-inline: 10px;
+    bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 18px 8px 18px 8px;
+  }
+  .lookbook-caption strong {
+    font-size: 0.85rem;
+  }
+  .lab-photo-banner {
+    grid-column: span 1;
+    height: 158px;
+    border-radius: 22px 10px 22px 10px;
+  }
+  .contact-studio-banner {
+    height: 164px;
+    border-radius: 24px 10px 24px 10px;
+  }
   .lab-console-shell {
     padding: 22px 16px;
     border-radius: 30px 14px 30px 14px;
@@ -2250,18 +2463,8 @@ html.js-motion [data-side].side-in {
     width: 66px;
     height: 66px;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.js-motion [data-hero-write] .sw-word,
-  html.js-motion [data-scroll-write] .sw-word,
-  html.js-motion [data-side],
-  .reveal-up {
-    opacity: 1 !important;
-    transform: none !important;
-    translate: none !important;
-    scale: 1 !important;
-    filter: none !important;
-    transition: none !important;
+  .collage-mid-orb {
+    width: 66px;
+    height: 66px;
   }
 }
