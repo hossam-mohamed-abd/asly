@@ -1841,3 +1841,68 @@ html[lang="en"] .kpi-value {
   color: #94c9cc;
   text-align: center;
 }
+
+.add-flow-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.add-flow-stage .camera-viewport-box {
+  text-align: center;
+}
+
+.add-flow-stage .reader-mount {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.add-flow-stage .card {
+  padding: 22px;
+}
+
+.add-flow-stage .form-group {
+  text-align: start;
+  margin-bottom: 14px;
+}
+
+.add-flow-stage .form-group label {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 800;
+  color: var(--db-text, #1e293b);
+  margin-bottom: 6px;
+}
+
+@media (max-width: 480px) {
+  .add-flow-stage .card {
+    padding: 16px;
+  }
+  .add-flow-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+  .add-flow-alt .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .add-flow-head h2 {
+    font-size: 1.02rem;
+  }
+  .add-flow-steps {
+    gap: 5px;
+  }
+  .add-flow-steps li {
+    font-size: 0.68rem;
+    padding: 4px 8px;
+  }
+  .add-flow-steps li span {
+    width: 18px;
+    height: 18px;
+  }
+}
