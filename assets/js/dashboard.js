@@ -1131,7 +1131,6 @@
     const txtEl = document.getElementById("stickerCodeText");
     if (nameEl) nameEl.textContent = name;
     if (txtEl) txtEl.textContent = code || "—";
-    renderQrInto(document.getElementById("stickerQrMount"), code, 3);
     renderBarcodeInto(document.getElementById("stickerBarcodeSvg"), code);
   }
   function updateLiveProfitHint() {
@@ -1496,7 +1495,6 @@
         showToast(tr("لا يوجد كود لطباعته بعد", "No code to print yet"), true);
         return;
       }
-      renderQrInto(document.getElementById("modalStickerQr"), code, 4);
       renderBarcodeInto(document.getElementById("modalStickerBarcode"), code);
       const nameEl = document.getElementById("modalStickerName");
       const codeEl = document.getElementById("modalStickerCode");
@@ -1657,7 +1655,6 @@
     if (!p) return;
     document.getElementById("modalStickerName").textContent = p.display_name || p.name;
     document.getElementById("modalStickerCode").textContent = p.barcode;
-    renderQrInto(document.getElementById("modalStickerQr"), p.barcode, 4);
     renderBarcodeInto(document.getElementById("modalStickerBarcode"), p.barcode);
     window.openModal("stickerModal");
   };

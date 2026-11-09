@@ -623,12 +623,15 @@ $jsConfig = [
                 <button type="button" class="btn btn-teal" id="btnScanNextProduct"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan next product' : 'امسح المنتج التالي' ?></button>
                 <button type="button" class="btn btn-ghost" id="btnSeeInventory"><i class="fa-solid fa-boxes-stacked"></i> <?= $en ? 'Open inventory' : 'فتح المخزون' ?></button>
               </div>
-              <div class="sticker-preview-box" id="liveStickerBox" style="margin-top:18px;">
-                <strong style="font-size:0.84rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
-                <div id="stickerProdName" style="font-size:0.78rem;color:#475569;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $en ? 'New Product' : 'منتج جديد' ?></div>
-                <div id="stickerQrMount" style="margin:4px auto;"></div>
-                <svg id="stickerBarcodeSvg" style="max-width:210px;height:48px;"></svg>
-                <div id="stickerCodeText" style="font-family:monospace;font-weight:800;font-size:0.82rem;letter-spacing:1px;">—</div>
+              <div class="sticker-preview-box sticker-wide" id="liveStickerBox" style="margin-top:18px;">
+                <div class="sticker-top">
+                  <strong class="sticker-brand">ASLY | أصلي TECH STORE</strong>
+                  <span class="sticker-phone" style="direction:ltr;">01154639718</span>
+                </div>
+                <div id="stickerProdName" class="sticker-name"><?= $en ? 'New Product' : 'منتج جديد' ?></div>
+                <div id="stickerQrMount" style="display:none;"></div>
+                <svg id="stickerBarcodeSvg" class="sticker-bars" style="max-width:270px;height:26px;"></svg>
+                <div id="stickerCodeText" class="sticker-code">—</div>
                 <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker" style="margin-top:10px;"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
               </div>
             </div>
@@ -1256,12 +1259,15 @@ $jsConfig = [
       <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal('stickerModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="db-modal-body" style="text-align:center;">
-      <div id="modalStickerArea" class="sticker-preview-box" style="margin-bottom:18px;">
-        <strong style="font-size:0.9rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
-        <div id="modalStickerName" style="font-size:0.82rem;color:#334155;font-weight:700;"></div>
-        <div id="modalStickerQr" style="margin:6px auto;"></div>
-        <svg id="modalStickerBarcode" style="max-width:220px;height:52px;"></svg>
-        <div id="modalStickerCode" style="font-family:monospace;font-weight:900;font-size:0.88rem;"></div>
+      <div id="modalStickerArea" class="sticker-preview-box sticker-wide" style="margin-bottom:18px;">
+        <div class="sticker-top">
+          <strong class="sticker-brand">ASLY | أصلي TECH STORE</strong>
+          <span class="sticker-phone" style="direction:ltr;">01154639718</span>
+        </div>
+        <div id="modalStickerName" class="sticker-name"></div>
+        <div id="modalStickerQr" style="display:none;"></div>
+        <svg id="modalStickerBarcode" class="sticker-bars" style="max-width:270px;height:26px;"></svg>
+        <div id="modalStickerCode" class="sticker-code"></div>
       </div>
       <div>
         <button type="button" class="btn btn-teal" id="btnPrintModalSticker" style="width:100%;"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker Now' : 'طباعة الاستيكر الآن' ?></button>

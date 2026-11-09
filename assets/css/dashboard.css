@@ -2088,3 +2088,71 @@ html[lang="en"] .kpi-value {
     width: 100%;
   }
 }
+
+.sticker-preview-box.sticker-wide {
+  max-width: 320px;
+  margin-inline: auto;
+  padding: 12px 14px 10px;
+  border: 1.5px solid var(--db-teal-700, #0d9499);
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sticker-wide .sticker-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sticker-wide .sticker-brand {
+  font-size: 0.66rem;
+  font-weight: 900;
+  color: #0d9499;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.sticker-wide .sticker-phone {
+  font-size: 0.66rem;
+  font-weight: 900;
+  color: #0f172a;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.sticker-wide .sticker-name {
+  width: 100%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.sticker-wide .sticker-bars {
+  width: 100%;
+  max-width: 270px;
+  height: 26px;
+  display: block;
+}
+
+.sticker-wide .sticker-code {
+  font-family: monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: #0f172a;
+  direction: ltr;
+}
