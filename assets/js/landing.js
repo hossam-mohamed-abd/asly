@@ -67,6 +67,7 @@
     return {
       el: root,
       words,
+      totalWeight,
       caret,
       current: 0,
       target: 0,
@@ -170,44 +171,37 @@
   });
 
   let rafId = 0;
-  function tickScrollWrite() {
+  let lastTickTs = 0;
+  function tickScrollWrite(nowTs) {
     rafId = 0;
+    const now = typeof nowTs === "number" ? nowTs : performance.now();
+    const dt = lastTickTs ? Math.min(48, Math.max(8, now - lastTickTs)) : 16.67;
+    lastTickTs = now;
+    const dtScale = dt / 16.67;
+
     const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-    const scrollY = window.scrollY || window.pageYOffset || 0;
-    const docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-    const atBottom = docH - (scrollY + vh) < 70;
     let keepRunning = false;
 
     for (let i = 0; i < scrollBlocks.length; i++) {
       const blk = scrollBlocks[i];
       const rect = blk.el.getBoundingClientRect();
 
-      if (rect.top > vh * 0.94) {
+      if (rect.top >= vh * 0.99) {
         blk.target = 0;
         blk.current = 0;
         applyWriteProgress(blk, 0);
         continue;
       }
 
-      const startY = vh * 0.88;
-      const endY = Math.min(vh * 0.36, startY - Math.max(130, rect.height * 0.7));
-      let raw = (startY - rect.top) / Math.max(90, startY - endY);
-      if (rect.top < vh * 0.56 || (atBottom && rect.top < vh)) {
-        raw = Math.max(raw, 1);
-      }
-      blk.target = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+      blk.target = 1;
 
-      const diff = blk.target - blk.current;
-      if (Math.abs(diff) > 0.0012) {
+      if (blk.current < 0.999) {
         keepRunning = true;
-        if (diff > 0) {
-          const step = Math.min(0.026, Math.max(0.0075, diff * 0.095));
-          blk.current = Math.min(blk.target, blk.current + step);
-        } else {
-          blk.current = Math.max(blk.target, blk.current + diff * 0.16);
-        }
+        const baseStep = Math.min(0.022, Math.max(0.011, 0.58 / Math.max(14, blk.totalWeight || 24)));
+        const boost = rect.top < vh * 0.38 ? 1.55 : 1;
+        blk.current = Math.min(1, blk.current + baseStep * boost * dtScale);
       } else {
-        blk.current = blk.target;
+        blk.current = 1;
       }
 
       applyWriteProgress(blk, blk.current);
@@ -215,6 +209,8 @@
 
     if (keepRunning) {
       rafId = requestAnimationFrame(tickScrollWrite);
+    } else {
+      lastTickTs = 0;
     }
   }
 

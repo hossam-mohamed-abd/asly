@@ -37,8 +37,8 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 $assetVer = (string)max(
     (int)@filemtime(__DIR__ . '/assets/css/landing.css'),
     (int)@filemtime(__DIR__ . '/assets/js/landing.js'),
-    (int)@filemtime(__DIR__ . '/assets/images/lookbook/showroom-space.jpg'),
-    20261109
+    (int)@filemtime(__DIR__ . '/assets/images/lookbook/female-flagship-pose.jpg'),
+    20261110
 );
 ?>
 <!DOCTYPE html>
@@ -371,18 +371,34 @@ $assetVer = (string)max(
         </figure>
 
         <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 60ms;">
-          <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Sunlit Architectural Interior of ASLY Tech Store' : 'تصميم معماري مضيء داخل معرض أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-smart-devices.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Flagship Tablets and Smartphones Experience at ASLY' : 'معاينة الأجهزة اللوحية والهواتف الرائدة في أصلي تك ستور') ?>" loading="lazy" decoding="async">
           <figcaption class="lookbook-caption">
-            <span class="lookbook-badge"><i class="fa-solid fa-gem"></i> <?= $en ? 'SUNLIT SHOWROOM' : 'بيئة مشرقة' ?></span>
-            <strong data-scroll-write><?= $en ? 'Daylight Architecture Built Around Hardware Authenticity' : 'هوية معمارية مشرقة تعكس نقاء وأصالة التكنولوجيا' ?></strong>
+            <span class="lookbook-badge"><i class="fa-solid fa-tablet-screen-button"></i> <?= $en ? 'FLAGSHIP SELECTION' : 'إصدارات رائدة' ?></span>
+            <strong data-scroll-write><?= $en ? 'Curated Flagship Devices Inspected to Engineering Perfection' : 'تشكيلة منتقاة بعناية ومفحوصة هندسياً بأعلى معايير الدقة' ?></strong>
           </figcaption>
         </figure>
 
         <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 140ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/female-flagship-pose.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Sunlit Architectural Interior of ASLY Tech Store' : 'تصميم معماري مضيء داخل معرض أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge gold"><i class="fa-solid fa-gem"></i> <?= $en ? 'SUNLIT SHOWROOM' : 'أناقة الهوية' ?></span>
+            <strong data-scroll-write><?= $en ? 'Daylight Architecture Built Around Hardware Authenticity' : 'هوية معمارية مشرقة تعكس نقاء وأصالة التكنولوجيا الحديثة' ?></strong>
+          </figcaption>
+        </figure>
+
+        <figure class="lookbook-frame lookbook-wide" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 70ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Precision Diagnostics Bench at ASLY Tech Lab' : 'فحص هندسي دقيق على مستوى البوردة في معمل أصلي') ?>" loading="lazy" decoding="async">
           <figcaption class="lookbook-caption">
-            <span class="lookbook-badge gold"><i class="fa-solid fa-microscope"></i> <?= $en ? 'PRECISION BENCH' : 'معمل الفحص الدقيق' ?></span>
+            <span class="lookbook-badge"><i class="fa-solid fa-microscope"></i> <?= $en ? 'PRECISION BENCH' : 'معمل الفحص الدقيق' ?></span>
             <strong data-scroll-write><?= $en ? 'Micro-Level Board Diagnostics & Certified Thermal Testing' : 'تشخيص ميكروسكوبي دقيق واختبارات أداء معتمدة قبل التسليم' ?></strong>
+          </figcaption>
+        </figure>
+
+        <figure class="lookbook-frame lookbook-mid" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 150ms;">
+          <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Modern Connected Lifestyle at ASLY Tech Store' : 'تكامل الأجهزة العصرية في أصلي تك ستور') ?>" loading="lazy" decoding="async">
+          <figcaption class="lookbook-caption">
+            <span class="lookbook-badge gold"><i class="fa-solid fa-bolt"></i> <?= $en ? 'CONNECTED LIFESTYLE' : 'تكامل ذكي' ?></span>
+            <strong data-scroll-write><?= $en ? 'Seamless Harmony Across Laptops, Phones & Smart Wearables' : 'تناغم متكامل بين اللابتوب والهاتف والساعات والإكسسوارات' ?></strong>
           </figcaption>
         </figure>
       </div>
