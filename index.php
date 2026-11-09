@@ -224,13 +224,13 @@ $assetVer = (string)max(
         <div class="ps-head-copy">
           <div class="eyebrow-chip">
             <i class="fa-solid fa-layer-group"></i>
-            <span><?= e($en ? 'ON THE SHELF RIGHT NOW' : 'على الرف دلوقتي') ?></span>
+            <span><?= e($en ? 'WHAT WE HANDLE' : 'اللي بنشتغل فيه') ?></span>
           </div>
-          <h2 class="section-title" data-scroll-write><?= e($en ? 'Real Devices, Photographed In Our Own Studio' : 'أجهزة حقيقية مصورة في استوديونا') ?></h2>
-          <p class="ps-head-sub"><?= e($en ? 'Nine categories, one shelf. Hover any device to open its detail panel and read what we actually check before selling it.' : 'تسعة أقسام على رف واحد. حوّم على أي جهاز يتفتح لك لوح التفاصيل وتقرأ اللي بنفحصه فعلاً قبل البيع.') ?></p>
+          <h2 class="section-title" data-scroll-write><?= e($en ? 'The Categories Behind The ASLY Counter' : 'الأقسام اللي بتشوفها في أصلي') ?></h2>
+          <p class="ps-head-sub"><?= e($en ? 'Illustrative visuals that show who we are and what we work on. Hover any item for a quick look.' : 'صور توضيحية بتوريك إحنا مين وإيه اللي بنشتغل فيه. حوّم على أي عنصر تشوف نظرة سريعة.') ?></p>
         </div>
         <div class="ps-filters" data-ps-filters>
-          <button type="button" class="ps-chip is-on" data-ps-filter="all"><?= e($en ? 'All Products' : 'كل المنتجات') ?></button>
+          <button type="button" class="ps-chip is-on" data-ps-filter="all"><?= e($en ? 'All' : 'الكل') ?></button>
           <button type="button" class="ps-chip" data-ps-filter="phones"><?= e($en ? 'Phones' : 'هواتف') ?></button>
           <button type="button" class="ps-chip" data-ps-filter="laptops"><?= e($en ? 'Laptops' : 'لابتوب') ?></button>
           <button type="button" class="ps-chip" data-ps-filter="tablets"><?= e($en ? 'Tablets' : 'تابلت') ?></button>
@@ -241,232 +241,118 @@ $assetVer = (string)max(
       </div>
 
       <div class="ps-grid" data-ps-grid>
-        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="phones" data-sku="VAR-001" style="--ps-i:0;">
+        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="phones" style="--ps-i:0;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-phone.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Flagship Smartphones' : 'هواتف رائدة أصلية') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 45%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-001</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Phones</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'PHONES' : 'هواتف') ?></span>
             <strong><?= e($en ? 'Flagship Smartphones' : 'هواتف رائدة أصلية') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Phones // VAR-001</span>
-            <h4><?= e($en ? 'Flagship Smartphones' : 'هواتف رائدة أصلية') ?></h4>
-            <p><?= e($en ? 'Dual-camera flagships, sealed units, battery health verified on the bench before they reach the shelf.' : 'هواتف رائدة بكاميرا مزدوجة، وحدات مقفلة، وسلامة بطارية مفحوصة على البنش قبل ما تنزل الرف.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-001</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="wearables" data-sku="VAR-002" style="--ps-i:1;">
+        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="wearables" style="--ps-i:1;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-watch.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Smartwatch Series' : 'ساعة ذكية') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 45%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-002</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Watches</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'WATCHES' : 'ساعات') ?></span>
             <strong><?= e($en ? 'Smartwatch Series' : 'ساعة ذكية') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Watches // VAR-002</span>
-            <h4><?= e($en ? 'Smartwatch Series' : 'ساعة ذكية') ?></h4>
-            <p><?= e($en ? 'Smartwatches with ceramic backs and steel cases, paired, charged and firmware-updated in front of you.' : 'ساعات ذكية بظهر سيراميك وإطار ستيل، مقترنة ومشحونة ومحدّثة بالسوفتوير أمامك.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-002</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--big" data-ps-tile data-cat="laptops" data-sku="VAR-003" style="--ps-i:2;">
+        <article class="ps-tile ps-tile--big" data-ps-tile data-cat="laptops" style="--ps-i:2;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-laptop.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Creator Laptops' : 'لابتوب للمبدعين') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 55%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-003</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Laptops</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'LAPTOPS' : 'لابتوب') ?></span>
             <strong><?= e($en ? 'Creator Laptops' : 'لابتوب للمبدعين') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Laptops // VAR-003</span>
-            <h4><?= e($en ? 'Creator Laptops' : 'لابتوب للمبدعين') ?></h4>
-            <p><?= e($en ? 'Aluminium chassis laptops with calibrated displays and thermal profiling done in-house before handover.' : 'لابتوبات بهيكل ألمنيوم وشاشات معايرة، وملف حراري معمول في المعمل قبل التسليم.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-003</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="audio" data-sku="VAR-004" style="--ps-i:3;">
+        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="audio" style="--ps-i:3;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-headphones.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Over-Ear Headphones' : 'هيدفونات أوفر إير') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-004</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Audio</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'AUDIO' : 'صوتيات') ?></span>
             <strong><?= e($en ? 'Over-Ear Headphones' : 'هيدفونات أوفر إير') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Audio // VAR-004</span>
-            <h4><?= e($en ? 'Over-Ear Headphones' : 'هيدفونات أوفر إير') ?></h4>
-            <p><?= e($en ? 'Studio-grade over-ear audio with plush leather cups, tested channel by channel for balance and isolation.' : 'سماعات أوفر إير بمستوى الاستوديو مع وسائد جلدية، مختبرة قناة بقناة للتوازن والعزل الصوتي.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-004</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="audio" data-sku="VAR-005" style="--ps-i:4;">
+        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="audio" style="--ps-i:4;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-earbuds.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'True Wireless Earbuds' : 'إيربودز لاسلكية') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-005</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Audio</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'AUDIO' : 'صوتيات') ?></span>
             <strong><?= e($en ? 'True Wireless Earbuds' : 'إيربودز لاسلكية') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Audio // VAR-005</span>
-            <h4><?= e($en ? 'True Wireless Earbuds' : 'إيربودز لاسلكية') ?></h4>
-            <p><?= e($en ? 'Compact true-wireless buds with active noise cancellation, checked for pairing stability and case charging.' : 'إيربودز لاسلكية صغيرة بعزل ضوضاء نشط، مفحوصة من ناحية ثبات الاقتران وشحن العلبة.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-005</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="tablets" data-sku="VAR-006" style="--ps-i:5;">
+        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="tablets" style="--ps-i:5;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-tablet.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Tablets & Stylus' : 'تابلت وقلم رقمي') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 45%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-006</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Tablets</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'TABLETS' : 'تابلت') ?></span>
             <strong><?= e($en ? 'Tablets & Stylus' : 'تابلت وقلم رقمي') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Tablets // VAR-006</span>
-            <h4><?= e($en ? 'Tablets & Stylus' : 'تابلت وقلم رقمي') ?></h4>
-            <p><?= e($en ? 'Tablets with pressure-sensitive stylus support, screen uniformity checked across the full panel.' : 'تابلتات بدعم قلم حساس للضغط، مع فحص تجانس الشاشة على البانل بالكامل.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-006</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="accessories" data-sku="VAR-007" style="--ps-i:6;">
+        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="accessories" style="--ps-i:6;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-charger.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Charging & Cables' : 'شواحن وكابلات') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-007</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Accessories</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'ACCESSORIES' : 'ملحقات') ?></span>
             <strong><?= e($en ? 'Charging & Cables' : 'شواحن وكابلات') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Accessories // VAR-007</span>
-            <h4><?= e($en ? 'Charging & Cables' : 'شواحن وكابلات') ?></h4>
-            <p><?= e($en ? 'GaN fast chargers, power banks and braided USB-C cables rated for the wattage printed on the box.' : 'شواحن سريعة GaN وباور بانك وكابلات USB-C مجدولة بقدرة مطابقة للمكتوب على العلبة.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-007</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="audio" data-sku="VAR-008" style="--ps-i:7;">
+        <article class="ps-tile ps-tile--tall" data-ps-tile data-cat="audio" style="--ps-i:7;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-speaker.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Portable Speakers' : 'سماعات محمولة') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-008</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Audio</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'AUDIO' : 'صوتيات') ?></span>
             <strong><?= e($en ? 'Portable Speakers' : 'سماعات محمولة') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Audio // VAR-008</span>
-            <h4><?= e($en ? 'Portable Speakers' : 'سماعات محمولة') ?></h4>
-            <p><?= e($en ? 'Fabric-mesh Bluetooth speakers, tested for output headroom and battery endurance at high volume.' : 'سماعات بلوتوث بشبك قماشي، مختبرة من حيث الاحتياطي الصوتي وتحمل البطارية على أعلى صوت.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-008</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--big" data-ps-tile data-cat="accessories" data-sku="VAR-009" style="--ps-i:8;">
+        <article class="ps-tile ps-tile--big" data-ps-tile data-cat="accessories" style="--ps-i:8;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-keyboard.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Keyboards & Mice' : 'كيبورد وماوس') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-009</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Accessories</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'ACCESSORIES' : 'ملحقات') ?></span>
             <strong><?= e($en ? 'Keyboards & Mice' : 'كيبورد وماوس') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Accessories // VAR-009</span>
-            <h4><?= e($en ? 'Keyboards & Mice' : 'كيبورد وماوس') ?></h4>
-            <p><?= e($en ? 'Low-profile mechanical keyboards and silent mice, key-tested switch by switch before packing.' : 'كيبورد ميكانيكي منخفض وماوس صامت، مختبر مفتاح بمفتاح قبل التغليف.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-009</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
-        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="accessories" data-sku="VAR-010" style="--ps-i:9;">
+        <article class="ps-tile ps-tile--std" data-ps-tile data-cat="accessories" style="--ps-i:9;">
           <div class="ps-tile-media">
             <img src="<?= e(appUrl('assets/images/lookbook/mosaic-gamepad.jpg?v=' . $assetVer)) ?>" alt="<?= e($en ? 'Gaming Controllers' : 'دراعات ألعاب') ?>" class="ps-tile-img" loading="lazy" decoding="async" data-focus="center 50%">
             <span class="ps-tile-veil"></span>
-            <span class="ps-tile-sku">VAR-010</span>
-            <span class="ps-tile-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
+            <span class="ps-ring" aria-hidden="true"></span>
           </div>
-          <div class="ps-tile-foot">
-            <span class="ps-tile-cat">Accessories</span>
+          <div class="ps-tile-label">
+            <span class="ps-tile-tag"><?= e($en ? 'ACCESSORIES' : 'ملحقات') ?></span>
             <strong><?= e($en ? 'Gaming Controllers' : 'دراعات ألعاب') ?></strong>
-            <span class="ps-tile-dot"></span>
-          </div>
-          <div class="ps-tile-detail">
-            <span class="ps-detail-kicker">Accessories // VAR-010</span>
-            <h4><?= e($en ? 'Gaming Controllers' : 'دراعات ألعاب') ?></h4>
-            <p><?= e($en ? 'Controllers with hall-effect sticks and low-latency wireless, stick drift measured before packing.' : 'دراعات بعصا هول إفكت ولاتنسي منخفض، مع قياس انحراف العصا قبل التغليف.') ?></p>
-            <span class="ps-detail-foot">
-              <span class="ps-detail-sku">VAR-010</span>
-              <span class="ps-detail-hint"><?= e($en ? 'Ask the team to see it live in store' : 'اطلب من الفريق تشوفه على الطبيعة في المعرض') ?></span>
-            </span>
           </div>
         </article>
       </div>
 
-      <div class="ps-note">
-        <i class="fa-solid fa-circle-info"></i>
-        <span><?= e($en ? 'No prices online. Availability, condition and final price are confirmed in store or on WhatsApp.' : 'لا أسعار على الموقع. التوفر والحالة والسعر النهائي يتم تأكيدهم داخل المعرض أو على واتساب.') ?></span>
-      </div>
     </div>
   </section>
 
