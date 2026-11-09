@@ -48,11 +48,11 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 </head>
 <body class="ambient-canvas">
 
-  
-  <div class="geo-orb geo-orb-aqua" style="top: -120px; inset-inline-end: -140px;"></div>
-  <div class="geo-orb geo-orb-gold" style="top: 380px; inset-inline-start: -180px;"></div>
+  <div class="ambient-orbs-layer" aria-hidden="true">
+    <div class="geo-orb geo-orb-aqua" style="top: -120px; inset-inline-end: -140px;"></div>
+    <div class="geo-orb geo-orb-gold" style="top: 380px; inset-inline-start: -180px;"></div>
+  </div>
 
-  
   <header class="nav-shell">
     <nav class="nav-capsule" aria-label="Main navigation">
       <a href="<?= e(appUrl('index.php')) ?>" class="brand-mark">
@@ -76,10 +76,11 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
 
         <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="icon-pill-btn lang-pill" title="Switch Language">
           <i class="fa-solid fa-globe"></i>
-          <span><?= e(t('lang_switch_label')) ?></span>
+          <span class="lang-full"><?= e(t('lang_switch_label')) ?></span>
+          <span class="lang-short"><?= $en ? 'ع' : 'EN' ?></span>
         </a>
 
-        <a href="#repair-lab" class="btn btn-teal btn-sm">
+        <a href="#repair-lab" class="btn btn-teal btn-sm nav-track-cta" aria-label="<?= e(t('nav_track_btn')) ?>" title="<?= e(t('nav_track_btn')) ?>">
           <i class="fa-solid fa-qrcode"></i>
           <span><?= e(t('nav_track_btn')) ?></span>
         </a>
@@ -100,20 +101,19 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     <div class="geo-shape geo-capsule" data-parallax="-20" style="width: 84px; height: 30px; bottom: 16%; left: 38%; transform: rotate(-22deg);"></div>
 
     <div class="container hero-grid">
-      
-      <div class="hero-copy reveal-up in-view">
+      <div class="hero-copy" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 40ms;">
         <div class="eyebrow-chip">
           <i class="fa-solid fa-compass-drafting"></i>
           <span><?= e(t('hero_eyebrow')) ?></span>
         </div>
 
-        <h1 class="hero-display">
+        <h1 class="hero-display" data-hero-write>
           <span><?= e(t('hero_title_1')) ?></span><br>
           <span class="gradient-word"><?= e(t('hero_title_2')) ?></span><br>
           <span class="stroke-word"><?= e(t('hero_title_3')) ?></span>
         </h1>
 
-        <p class="hero-lead"><?= e(t('hero_subtitle')) ?></p>
+        <p class="hero-lead" data-hero-write data-hero-delay="220"><?= e(t('hero_subtitle')) ?></p>
 
         <div class="hero-cta-cluster">
           <a href="#repair-lab" class="btn btn-teal">
@@ -141,10 +141,8 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         <?php endif; ?>
       </div>
 
-      
-      <div class="collage-stage reveal-up in-view">
-        
-        <div class="orbital-stamp" aria-hidden="true">
+      <div class="collage-stage">
+        <div class="orbital-stamp" aria-hidden="true" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 140ms;">
           <svg viewBox="0 0 120 120">
             <defs>
               <path id="aslyCirclePath" d="M 60, 60 m -44, 0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0"/>
@@ -158,21 +156,19 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        
-        <div class="collage-main-arch" data-parallax="-10">
+        <div class="collage-main-arch" data-parallax="-10" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 80ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'ASLY Tech Store Showroom in Tersa, Sinnuris, Faiyum' : 'معرض أصلي تك ستور في ترسا - سنورس - الفيوم') ?>" fetchpriority="high" decoding="async">
         </div>
 
-        <div class="collage-sub-chamfer" data-parallax="16">
+        <div class="collage-sub-chamfer" data-parallax="16" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 220ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Authentic Tech Accessories at ASLY' : 'أجهزة لابتوب وإكسسوارات أصلية مفحوصة في أصلي تك ستور') ?>" decoding="async">
         </div>
 
-        <div class="collage-top-pill" data-parallax="-18">
+        <div class="collage-top-pill" data-parallax="-18" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 160ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Precision Board-Level Laptop & Mobile Repair Lab in Faiyum' : 'معمل صيانة اللابتوب والهواتف الدقيقة في أصلي تك ستور بالفيوم') ?>" decoding="async">
         </div>
 
-        
-        <div class="floating-chip floating-chip-end">
+        <div class="floating-chip floating-chip-end" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 280ms;">
           <div class="chip-icon gold">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
@@ -219,24 +215,23 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
             <i class="fa-solid fa-fingerprint"></i>
             <span><?= e(t('who_eyebrow')) ?></span>
           </div>
-          <h2 class="section-title"><?= e(t('who_title')) ?></h2>
+          <h2 class="section-title" data-scroll-write><?= e(t('who_title')) ?></h2>
         </div>
-        <p class="section-sub"><?= e($tagline) ?></p>
+        <p class="section-sub" data-scroll-write><?= e($tagline) ?></p>
       </div>
 
       <div class="who-mosaic">
-        
-        <article class="mosaic-card mosaic-story reveal-up">
+        <article class="mosaic-card mosaic-story" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
           <span class="hollow-num">ASLY</span>
           <div>
             <div class="pillar-icon-orb">
               <i class="fa-solid fa-gem"></i>
             </div>
             <span class="pillar-tag"><?= $en ? 'OUR MANIFESTO // STORY' : 'قصتنا وهويتنا // ASLY' ?></span>
-            <h3 style="font-size: 1.55rem; margin-bottom: 14px;">
+            <h3 style="font-size: 1.55rem; margin-bottom: 14px;" data-scroll-write>
               <?= e($en ? $storeNameEn : "{$storeNameAr} — {$storeNameEn}") ?>
             </h3>
-            <p style="font-size: 1.02rem; line-height: 1.85;"><?= e($aboutStory) ?></p>
+            <p style="font-size: 1.02rem; line-height: 1.85;" data-scroll-write><?= e($aboutStory) ?></p>
           </div>
 
           <div class="founders-ribbon">
@@ -245,8 +240,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </article>
 
-        
-        <div class="mosaic-card mosaic-photo-tall reveal-up">
+        <div class="mosaic-card mosaic-photo-tall" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 110ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/hero-2.jpg')) ?>" alt="<?= e($en ? 'Certified Smartphones and Genuine Tech Culture at ASLY Faiyum' : 'أجهزة أصلية مفحوصة هندسياً في مركز أصلي تك ستور بالفيوم') ?>" loading="lazy" decoding="async">
           <div class="mosaic-photo-caption">
             <span><i class="fa-solid fa-certificate" style="color: var(--teal-deep); margin-inline-end: 6px;"></i> <?= $en ? 'Authentic Hardware Culture' : 'ثقافة التقنية الأصلية' ?></span>
@@ -254,41 +248,39 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        
-        <article class="mosaic-card mosaic-pillar reveal-up">
+        <article class="mosaic-card mosaic-pillar" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 60ms;">
           <span class="hollow-num">01</span>
           <div class="pillar-icon-orb">
             <i class="fa-solid fa-microchip"></i>
           </div>
           <span class="pillar-tag"><?= e(t('pillar_1_tag')) ?></span>
-          <h3><?= e(t('pillar_1_title')) ?></h3>
-          <p><?= e(t('pillar_1_desc')) ?></p>
+          <h3 data-scroll-write><?= e(t('pillar_1_title')) ?></h3>
+          <p data-scroll-write><?= e(t('pillar_1_desc')) ?></p>
         </article>
 
-        <article class="mosaic-card mosaic-pillar reveal-up">
+        <article class="mosaic-card mosaic-pillar" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 140ms;">
           <span class="hollow-num">02</span>
           <div class="pillar-icon-orb gold">
             <i class="fa-solid fa-microscope"></i>
           </div>
           <span class="pillar-tag" style="color: var(--gold-deep);"><?= e(t('pillar_2_tag')) ?></span>
-          <h3><?= e(t('pillar_2_title')) ?></h3>
-          <p><?= e(t('pillar_2_desc')) ?></p>
+          <h3 data-scroll-write><?= e(t('pillar_2_title')) ?></h3>
+          <p data-scroll-write><?= e(t('pillar_2_desc')) ?></p>
         </article>
 
-        <article class="mosaic-card mosaic-pillar reveal-up">
+        <article class="mosaic-card mosaic-pillar" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 210ms;">
           <span class="hollow-num">03</span>
           <div class="pillar-icon-orb">
             <i class="fa-solid fa-user-shield"></i>
           </div>
           <span class="pillar-tag"><?= e(t('pillar_3_tag')) ?></span>
-          <h3><?= e(t('pillar_3_title')) ?></h3>
-          <p><?= e(t('pillar_3_desc')) ?></p>
+          <h3 data-scroll-write><?= e(t('pillar_3_title')) ?></h3>
+          <p data-scroll-write><?= e(t('pillar_3_desc')) ?></p>
         </article>
       </div>
     </div>
   </section>
 
-  
   <section id="our-craft" class="section-pad section-ivory">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -297,12 +289,12 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
             <i class="fa-solid fa-cubes"></i>
             <span><?= e(t('craft_eyebrow')) ?></span>
           </div>
-          <h2 class="section-title"><?= e(t('craft_title')) ?></h2>
+          <h2 class="section-title" data-scroll-write><?= e(t('craft_title')) ?></h2>
         </div>
       </div>
 
-      <div class="craft-accordion-deck reveal-up">
-        <div class="craft-slice active">
+      <div class="craft-accordion-deck">
+        <div class="craft-slice active" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/hero-1.jpg')) ?>" alt="<?= e($en ? 'Certified Laptops and Workstations in Faiyum' : 'لابتوبات ووركستيشن معتمدة في أصلي تك ستور الفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
@@ -314,7 +306,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <div class="craft-slice">
+        <div class="craft-slice" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 90ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/studio-desk.jpg')) ?>" alt="<?= e($en ? 'Flagship Smartphones in Sinnuris and Tersa Faiyum' : 'هواتف ذكية أصلية في سنورس وترسا بالفيوم') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
@@ -326,7 +318,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <div class="craft-slice">
+        <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 90ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/lab-repair.jpg')) ?>" alt="<?= e($en ? 'Board-Level Laptop and Mobile Repair Lab with QR Tracking' : 'صيانة لابتوب وموبايلات احترافية بالـ QR في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
@@ -338,7 +330,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        <div class="craft-slice">
+        <div class="craft-slice" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 0ms;">
           <img src="<?= e(appUrl('assets/images/lookbook/showroom-space.jpg')) ?>" alt="<?= e($en ? 'Smartwatches and Original Audio Accessories at ASLY Tech Store' : 'ساعات ذكية وإكسسوارات أصلية في أصلي تك ستور') ?>" class="craft-slice-img" loading="lazy" decoding="async">
           <div class="craft-slice-glass">
             <div class="craft-slice-top">
@@ -356,19 +348,18 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
   
   <section id="repair-lab" class="section-pad">
     <div class="container">
-      <div class="lab-console-shell reveal-up">
+      <div class="lab-console-shell">
         <div class="geo-orb geo-orb-aqua" style="bottom: -160px; inset-inline-end: -120px;"></div>
 
         <div class="lab-console-grid">
-          
-          <div>
+          <div data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
             <div class="eyebrow-chip" style="background: #ffffff;">
               <i class="fa-solid fa-satellite-dish"></i>
               <span><?= e(t('lab_eyebrow')) ?></span>
             </div>
 
-            <h2 class="section-title" style="margin-bottom: 14px;"><?= e(t('lab_title')) ?></h2>
-            <p style="color: var(--ink-2); margin: 0; line-height: 1.8;"><?= e(t('lab_desc')) ?></p>
+            <h2 class="section-title" style="margin-bottom: 14px;" data-scroll-write><?= e(t('lab_title')) ?></h2>
+            <p style="color: var(--ink-2); margin: 0; line-height: 1.8;" data-scroll-write><?= e(t('lab_desc')) ?></p>
 
             <form id="inlineTrackForm" class="lab-search-box" action="<?= e(appUrl('track.php')) ?>" method="get">
               <input type="hidden" name="lang" value="<?= e(currentLang()) ?>">
@@ -392,13 +383,11 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </a>
             </div>
 
-            
             <div id="inlineTicketResult" class="inline-ticket-result" aria-live="polite"></div>
           </div>
 
-          
           <div class="stage-constellation">
-            <div class="constellation-node">
+            <div class="constellation-node" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 40ms;">
               <div class="c-node-ico"><i class="fa-solid fa-clipboard-check"></i></div>
               <div>
                 <div class="chip-title">01 • <?= $en ? 'Logged & QR Issued' : 'الاستلام وإصدار QR' ?></div>
@@ -406,7 +395,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </div>
             </div>
 
-            <div class="constellation-node">
+            <div class="constellation-node" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 100ms;">
               <div class="c-node-ico"><i class="fa-solid fa-microscope"></i></div>
               <div>
                 <div class="chip-title">02 • <?= $en ? 'Deep Diagnostics' : 'الفحص والتشخيص' ?></div>
@@ -414,7 +403,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </div>
             </div>
 
-            <div class="constellation-node">
+            <div class="constellation-node" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 160ms;">
               <div class="c-node-ico"><i class="fa-solid fa-screwdriver-wrench"></i></div>
               <div>
                 <div class="chip-title">03 • <?= $en ? 'Precision Repair' : 'الإصلاح والاختبار' ?></div>
@@ -422,7 +411,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </div>
             </div>
 
-            <div class="constellation-node">
+            <div class="constellation-node" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 220ms;">
               <div class="c-node-ico"><i class="fa-solid fa-envelope-circle-check"></i></div>
               <div>
                 <div class="chip-title">04 • <?= $en ? 'Live Email Alerts' : 'تنبيهات البريد الفورية' ?></div>
@@ -430,7 +419,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               </div>
             </div>
 
-            <div class="constellation-node span-full">
+            <div class="constellation-node span-full" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: 280ms;">
               <div class="c-node-ico"><i class="fa-solid fa-user-lock"></i></div>
               <div>
                 <div class="chip-title"><?= $en ? 'Automatic Privacy Wipe Upon Handover' : 'مسح تلقائي كامل لبيانات التذكرة فور التسليم' ?></div>
@@ -443,7 +432,6 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  
   <section id="social-universe" class="section-pad section-ivory">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -452,14 +440,14 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
             <i class="fa-solid fa-hashtag"></i>
             <span><?= e(t('social_eyebrow')) ?></span>
           </div>
-          <h2 class="section-title"><?= e(t('social_title')) ?></h2>
+          <h2 class="section-title" data-scroll-write><?= e(t('social_title')) ?></h2>
         </div>
-        <p class="section-sub"><?= e(t('social_sub')) ?></p>
+        <p class="section-sub" data-scroll-write><?= e(t('social_sub')) ?></p>
       </div>
 
       <div class="social-wall-grid">
-        <?php foreach ($socialPlatforms as $sp): ?>
-          <a href="<?= e($sp['url']) ?>" target="_blank" rel="noopener" class="social-geo-tile reveal-up" data-accent="<?= e($sp['accent']) ?>">
+        <?php foreach ($socialPlatforms as $spIdx => $sp): ?>
+          <a href="<?= e($sp['url']) ?>" target="_blank" rel="noopener" class="social-geo-tile" data-accent="<?= e($sp['accent']) ?>" data-side="<?= ($spIdx % 2 === 0) ? ($en ? 'left' : 'right') : ($en ? 'right' : 'left') ?>" style="--side-delay: <?= (int)(($spIdx % 4) * 70) ?>ms;">
             <i class="<?= e($sp['icon']) ?> social-watermark" aria-hidden="true"></i>
 
             <div class="social-tile-head">
@@ -482,7 +470,6 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  
   <section id="contact-studio" class="section-pad">
     <div class="container">
       <div class="section-head-asym reveal-up">
@@ -491,19 +478,18 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
             <i class="fa-solid fa-location-dot"></i>
             <span><?= e(t('contact_eyebrow')) ?></span>
           </div>
-          <h2 class="section-title"><?= e(t('contact_title')) ?></h2>
+          <h2 class="section-title" data-scroll-write><?= e(t('contact_title')) ?></h2>
         </div>
       </div>
 
-      <div class="concierge-grid reveal-up">
-        
-        <div class="location-arch-card">
+      <div class="concierge-grid">
+        <div class="location-arch-card" data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
           <div style="display: flex; flex-direction: column; gap: 20px;">
             <div class="loc-row">
               <div class="loc-ico"><i class="fa-solid fa-map-location-dot"></i></div>
               <div>
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--ink-3);"><?= e(t('contact_location')) ?></div>
-                <div style="font-size: 1.08rem; font-weight: 800; color: var(--ink-1);"><?= e($address) ?></div>
+                <div style="font-size: 1.08rem; font-weight: 800; color: var(--ink-1);" data-scroll-write><?= e($address) ?></div>
               </div>
             </div>
 
@@ -511,7 +497,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               <div class="loc-ico"><i class="fa-solid fa-clock"></i></div>
               <div>
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--ink-3);"><?= e(t('contact_hours')) ?></div>
-                <div style="font-size: 1.04rem; font-weight: 800; color: var(--ink-1);"><?= e($hours) ?></div>
+                <div style="font-size: 1.04rem; font-weight: 800; color: var(--ink-1);" data-scroll-write><?= e($hours) ?></div>
               </div>
             </div>
 
@@ -540,13 +526,13 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               <div class="loc-ico"><i class="fa-solid fa-envelope-open-text"></i></div>
               <div>
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--ink-3);">Email</div>
-                <a href="mailto:<?= e($primaryEmail) ?>" style="font-size: 1rem; font-weight: 800; color: var(--teal-deep); direction: ltr; display: inline-block;"><?= e($primaryEmail) ?></a>
+                <a href="mailto:<?= e($primaryEmail) ?>" style="font-size: 1rem; font-weight: 800; color: var(--teal-deep); direction: ltr; display: inline-block; word-break: break-all;"><?= e($primaryEmail) ?></a>
               </div>
             </div>
             <?php endif; ?>
           </div>
 
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <div class="contact-card-actions" style="display: flex; gap: 12px; flex-wrap: wrap;">
             <?php if ($mapsUrl !== ''): ?>
               <a href="<?= e($mapsUrl) ?>" target="_blank" rel="noopener" class="btn btn-gold" style="flex: 1;">
                 <i class="fa-solid fa-diamond-turn-right"></i>
@@ -562,9 +548,8 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
           </div>
         </div>
 
-        
         <div class="channels-stack">
-          <?php foreach ($channels as $ch):
+          <?php foreach ($channels as $chIdx => $ch):
               $type = (string)($ch['channel_type'] ?? 'phone');
               $faIco = getChannelFontAwesomeIcon($type);
               $href = trim((string)($ch['url'] ?? ''));
@@ -575,7 +560,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
               }
               $lbl = translateChannelLabel((string)$ch['label'], $type);
           ?>
-            <a href="<?= e($href) ?>" target="<?= str_starts_with($href, 'http') ? '_blank' : '_self' ?>" rel="noopener" class="direct-channel-card">
+            <a href="<?= e($href) ?>" target="<?= str_starts_with($href, 'http') ? '_blank' : '_self' ?>" rel="noopener" class="direct-channel-card" data-side="<?= ($chIdx % 2 === 0) ? ($en ? 'right' : 'left') : ($en ? 'left' : 'right') ?>" style="--side-delay: <?= (int)(($chIdx % 4) * 65) ?>ms;">
               <div class="direct-ch-ico">
                 <i class="<?= e($faIco) ?>"></i>
               </div>
@@ -590,16 +575,15 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
     </div>
   </section>
 
-  
   <section id="faq" class="section-pad section-ivory">
-    <div class="container faq-asym-grid reveal-up">
-      <div>
+    <div class="container faq-asym-grid">
+      <div data-side="<?= $en ? 'left' : 'right' ?>" style="--side-delay: 0ms;">
         <div class="eyebrow-chip">
           <i class="fa-solid fa-circle-question"></i>
           <span><?= e(t('faq_eyebrow')) ?></span>
         </div>
-        <h2 class="section-title" style="margin-bottom: 16px;"><?= e(t('faq_title')) ?></h2>
-        <p style="color: var(--ink-2); margin: 0;"><?= e($founders) ?></p>
+        <h2 class="section-title" style="margin-bottom: 16px;" data-scroll-write><?= e(t('faq_title')) ?></h2>
+        <p style="color: var(--ink-2); margin: 0;" data-scroll-write><?= e($founders) ?></p>
       </div>
 
       <div class="faq-list">
@@ -610,7 +594,7 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
                     : "يقع مقر {$storeNameAr} في {$address}. مواعيد استقبال العملاء: {$hours}.")
                 : t("faq_a{$q}");
         ?>
-          <div class="faq-item <?= $q === 1 ? 'open' : '' ?>">
+          <div class="faq-item <?= $q === 1 ? 'open' : '' ?>" data-side="<?= $en ? 'right' : 'left' ?>" style="--side-delay: <?= (int)(($q - 1) * 55) ?>ms;">
             <button type="button" class="faq-trigger">
               <span><?= e(t("faq_q{$q}")) ?></span>
               <span class="faq-toggle-ico"><i class="fa-solid fa-plus"></i></span>
@@ -707,12 +691,14 @@ $mapsUrl = trim((string)($settings['google_maps_url'] ?? ''));
         </button>
       </div>
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <a href="#who-we-are" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-fingerprint"></i> <?= e(t('nav_about')) ?></a>
-        <a href="#our-craft" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-cubes"></i> <?= e(t('nav_craft')) ?></a>
-        <a href="#repair-lab" class="btn btn-teal mobile-nav-item"><i class="fa-solid fa-qrcode"></i> <?= e(t('nav_lab')) ?></a>
-        <a href="#social-universe" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-hashtag"></i> <?= e(t('nav_social')) ?></a>
-        <a href="#contact-studio" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-location-dot"></i> <?= e(t('nav_contact')) ?></a>
-        <a href="<?= e(appUrl('admin/login.php')) ?>" class="btn btn-gold mobile-nav-item"><i class="fa-solid fa-user-shield"></i> <?= e(t('nav_staff_portal')) ?></a>
+        <a href="#who-we-are" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-fingerprint"></i> <span><?= e(t('nav_about')) ?></span></a>
+        <a href="#our-craft" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-cubes"></i> <span><?= e(t('nav_craft')) ?></span></a>
+        <a href="#repair-lab" class="btn btn-teal mobile-nav-item"><i class="fa-solid fa-qrcode"></i> <span><?= e(t('nav_lab')) ?></span></a>
+        <a href="#social-universe" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-hashtag"></i> <span><?= e(t('nav_social')) ?></span></a>
+        <a href="#contact-studio" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-location-dot"></i> <span><?= e(t('nav_contact')) ?></span></a>
+        <a href="#faq" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-circle-question"></i> <span><?= e(t('nav_faq')) ?></span></a>
+        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="btn btn-outline mobile-nav-item"><i class="fa-solid fa-globe"></i> <span><?= e(t('lang_switch_label')) ?></span></a>
+        <a href="<?= e(appUrl('admin/login.php')) ?>" class="btn btn-gold mobile-nav-item"><i class="fa-solid fa-user-shield"></i> <span><?= e(t('nav_staff_portal')) ?></span></a>
       </div>
     </div>
   </div>

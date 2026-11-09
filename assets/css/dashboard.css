@@ -1021,3 +1021,44 @@ html[lang="en"] .kpi-value {
     padding: 18px 14px 50px;
   }
 }
+
+@media (max-width: 640px) {
+  html, body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .topbar-admin {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .scanner-ready-pill {
+    display: none;
+  }
+  .panel {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+  .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .scanner-input-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .scanner-input-bar .db-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .pos-floating-bar {
+    padding: 10px 12px;
+    bottom: 8px;
+  }
+  .db-modal-backdrop {
+    padding: 10px;
+  }
+  .db-modal {
+    border-radius: 18px;
+  }
+}

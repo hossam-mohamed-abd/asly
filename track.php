@@ -107,25 +107,35 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
     }
     .note-bubble.admin { border-color: var(--teal-border); background: var(--bg-aqua-soft); }
     .note-bubble.customer { border-color: var(--gold-border); background: #ffffff; }
+    .track-card-pad { padding: 28px 32px; }
+    @media (max-width: 640px) {
+      .track-wrap { margin: 20px auto 48px; padding: 0 12px; gap: 16px; }
+      .track-card { border-radius: 26px 12px 26px 12px; }
+      .track-card-pad, .track-head, .timeline-box { padding: 18px 16px; }
+      .stage-step { padding: 16px; border-radius: 20px 8px 20px 8px; }
+      .sub-nav-btn { width: 38px; height: 38px; padding: 0 !important; border-radius: 50% !important; }
+      .sub-nav-btn span { display: none; }
+    }
   </style>
 </head>
 <body>
 
   <header class="subpage-header">
     <div class="container subpage-header-inner">
-      <a href="<?= e(appUrl('index.php')) ?>">
+      <a href="<?= e(appUrl('index.php')) ?>" class="brand-mark">
         <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY Tech Store" class="subpage-logo">
       </a>
       <div class="nav-actions">
-        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="icon-pill-btn lang-pill">
+        <a href="<?= e(langSwitchUrl($otherLang)) ?>" class="icon-pill-btn lang-pill" title="Switch Language">
           <i class="fa-solid fa-globe"></i>
-          <span><?= e(t('lang_switch_label')) ?></span>
+          <span class="lang-full"><?= e(t('lang_switch_label')) ?></span>
+          <span class="lang-short"><?= $en ? 'ع' : 'EN' ?></span>
         </a>
-        <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-outline btn-sm">
+        <a href="<?= e(appUrl('index.php')) ?>" class="btn btn-outline btn-sm sub-nav-btn" aria-label="<?= e(t('track_back_home')) ?>" title="<?= e(t('track_back_home')) ?>">
           <i class="fa-solid fa-house"></i>
           <span><?= e(t('track_back_home')) ?></span>
         </a>
-        <a href="https://wa.me/<?= e($primaryWa) ?>" target="_blank" rel="noopener" class="btn btn-teal btn-sm">
+        <a href="https://wa.me/<?= e($primaryWa) ?>" target="_blank" rel="noopener" class="btn btn-teal btn-sm sub-nav-btn" aria-label="<?= e(t('track_wa_support')) ?>" title="<?= e(t('track_wa_support')) ?>">
           <i class="fa-brands fa-whatsapp"></i>
           <span><?= e(t('track_wa_support')) ?></span>
         </a>
@@ -135,8 +145,7 @@ $hasValidQrToken = $ticket && $qrToken !== '' && hash_equals((string)$ticket['qr
 
   <main class="track-wrap">
 
-    
-    <div class="track-card" style="padding: 28px 32px;">
+    <div class="track-card track-card-pad">
       <div class="eyebrow-chip">
         <i class="fa-solid fa-microscope"></i>
         <span><?= e(t('lab_eyebrow')) ?></span>
