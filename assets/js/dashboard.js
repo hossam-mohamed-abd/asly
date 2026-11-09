@@ -176,11 +176,11 @@
     try {
       window.JsBarcode(svgEl, String(code), {
         format: "CODE128",
-        lineColor: "#0d9499",
-        width: 1.7,
-        height: 40,
+        lineColor: "#0b1b22",
+        width: 1.1,
+        height: 26,
         displayValue: false,
-        margin: 2
+        margin: 1
       });
     } catch (_) {}
   }
@@ -359,16 +359,36 @@
       }
       if (!data.found) {
         resWrap.innerHTML = `\n          <div class="card" style="border-color:#fca5a5;text-align:center;padding:34px;">\n            <h3 style="color:#b91c1c;margin:0 0 8px;">${tr("لم يتم العثور على منتج بالكود:", "No product found for code:")} <span style="direction:ltr;">${esc(data.scanned_code)}</span></h3>\n            <p style="color:var(--db-muted);margin:0 0 16px;">${tr("هذا الكود غير مسجل بالمخزن حتى الآن.", "This code is not registered in inventory yet.")}</p>\n            ${IS_ADMIN ? `<button type="button" class="btn btn-teal" onclick="prefillNewProductCode('${esc(data.scanned_code)}')"><i class="fa-solid fa-plus"></i> ${tr("تسجيل كمنتج جديد بهذا الكود", "Register New Product with Code")}</button>` : ""}\n          </div>\n        `;
+        showQuickStage("result");
         return { ok: false, message: tr("الكود غير مسجل بالمخزن", "Code is not registered in inventory") };
       }
       const p = data.product;
       lastQuickProduct = p;
-      const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
       const prodTitle = p.display_name || p.name;
       const prodSpecs = p.display_specs || p.specs || "";
       const decoyBtnHtml = `<i class="fa-solid fa-eye"></i> ${tr("اعرض سعر الشراء", "Show Purchase Price")}`;
       const hideBtnHtml = `<i class="fa-solid fa-eye-slash"></i> ${tr("إخفاء السعر", "Hide Price")}`;
-      resWrap.innerHTML = `\n        <div class="price-reveal-card">\n          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">\n            <img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:16px;border:1px solid var(--db-border);background:#fff;">\n            <div style="flex:1;min-width:180px;">\n              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-teal-50);color:var(--db-teal-800);font-size:0.76rem;font-weight:800;">${esc(p.category_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:var(--db-gold-50);color:var(--db-gold-600);font-size:0.76rem;font-weight:800;">${esc(p.condition_label)}</span>\n                <span style="padding:2px 10px;border-radius:999px;background:${p.quantity > 0 ? "#ecfdf5" : "#fef2f2"};color:${p.quantity > 0 ? "#059669" : "#b91c1c"};font-size:0.76rem;font-weight:800;">\n                  ${tr("المتاح:", "In Stock:")} ${p.quantity}\n                </span>\n              </div>\n              <h3 style="margin:0 0 4px;font-size:1.25rem;color:var(--db-text);">${esc(prodTitle)}</h3>\n              <div style="font-size:0.82rem;color:var(--db-muted);">${esc(prodSpecs)}</div>\n            </div>\n          </div>\n\n          <div class="big-sell-price-box">\n            <div class="lbl">${tr("سعر البيع للعميل", "Customer Selling Price")}</div>\n            <div class="val">${fmtMoney(p.sell_price)}</div>\n          </div>\n\n          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">\n            <button type="button" class="btn btn-ghost" id="btnShowDecoyCost" style="flex:1;min-width:180px;">\n              ${decoyBtnHtml}\n            </button>\n            ${p.quantity > 0 ? `\n              <button type="button" class="btn btn-teal" id="btnQuickSellNow" style="flex:1;min-width:180px;">\n                <i class="fa-solid fa-cart-plus"></i> ${tr("بيع هذه القطعة وإصدار فاتورة", "Sell Item & Issue Invoice")}\n              </button>\n            ` : ""}\n          </div>\n\n          <div class="decoy-cost-box" id="decoyCostBox">\n            <div style="font-size:0.8rem;color:var(--db-gold-600);font-weight:700;">${tr("سعر التكلفة المسجل بالنظام", "Registered System Floor Rate")}</div>\n            <div style="font-size:1.65rem;font-weight:900;color:var(--db-teal-800);margin-top:2px;">${fmtMoney(p.display_floor_price)}</div>\n          </div>\n        </div>\n      `;
+      resWrap.innerHTML = `
+        <div class="quick-price-card">
+          <div class="quick-price-name">${esc(prodTitle)}</div>
+          <div class="quick-price-specs">${esc(prodSpecs)}</div>
+          <div class="quick-price-val">${fmtMoney(p.sell_price)}</div>
+          <div class="quick-price-meta">
+            <span>${tr("المتاح:", "In Stock:")} <strong>${p.quantity}</strong></span>
+            <span>${esc(p.category_label)}</span>
+            <span>${esc(p.condition_label)}</span>
+          </div>
+          <div class="quick-price-tools">
+            <button type="button" class="btn btn-ghost btn-sm" id="btnShowDecoyCost">${decoyBtnHtml}</button>
+            ${p.quantity > 0 ? `<button type="button" class="btn btn-teal btn-sm" id="btnQuickSellNow"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع وإصدار فاتورة", "Sell & Invoice")}</button>` : ""}
+          </div>
+          <div class="decoy-cost-box" id="decoyCostBox">
+            <div style="font-size:0.76rem;color:var(--db-gold-600);font-weight:700;">${tr("أقل سعر بيع مسموح", "Minimum Floor Price")}</div>
+            <div style="font-size:1.3rem;font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.display_floor_price)}</div>
+          </div>
+          <div class="quick-price-code"><span>${tr("الكود", "Code")}</span> <strong style="direction:ltr;display:inline-block;">${esc(p.barcode || data.scanned_code || "")}</strong></div>
+        </div>
+      `;
       document.getElementById("btnShowDecoyCost")?.addEventListener("click", ev => {
         const box = document.getElementById("decoyCostBox");
         if (!box) return;
@@ -401,6 +421,23 @@
     if (nf) nf.style.display = "block";
     if (window.AslyAddFlow) window.AslyAddFlow.stage("form");
   };
+  function showQuickStage(name) {
+    const scanStage = document.getElementById("quickStageScan");
+    const resStage = document.getElementById("quickStageResult");
+    if (scanStage) scanStage.style.display = name === "scan" ? "block" : "none";
+    if (resStage) resStage.style.display = name === "result" ? "block" : "none";
+    if (name === "scan") {
+      const inp = document.getElementById("quickCodeInput");
+      if (inp) inp.value = "";
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  document.getElementById("btnQuickScanNext")?.addEventListener("click", () => {
+    showQuickStage("scan");
+    window.setTimeout(() => {
+      document.getElementById("btnStartQuickCam")?.click();
+    }, 240);
+  });
   async function runQuickScan(code) {
     const clean = (code || "").trim();
     if (!clean) return;
@@ -410,6 +447,7 @@
     if (outcome && outcome.ok) {
       stopCameraScanner("quickCameraReader");
       resetScanButtons();
+      showQuickStage("result");
     } else {
       camToast(
         "quickCameraReader",
@@ -1075,12 +1113,15 @@
       printHtmlSnippet(`Invoice ${activeInvoiceData.invoice.invoice_number}`, el.outerHTML);
     }
   });
+  function isAslyCode(code) {
+    return /^ASLY/i.test((code || "").toUpperCase());
+  }
   function syncSlimCodeStrip() {
     const codeEl = document.getElementById("slimCodeText");
     const typeEl = document.getElementById("slimCodeType");
     const code = (document.getElementById("prodBarcode")?.value || "").trim();
     if (codeEl) codeEl.textContent = code || "—";
-    if (typeEl) typeEl.textContent = code.toUpperCase().startsWith("ASLY-") ? "QR" : "BARCODE";
+    if (typeEl) typeEl.textContent = isAslyCode(code) ? "QR" : "BARCODE";
   }
   function updateLiveStickerPreview() {
     syncSlimCodeStrip();
@@ -1188,7 +1229,7 @@
       const code = normalizeScannedCode(rawCode, true);
       if (!code) return;
       document.getElementById("prodBarcode").value = code;
-      document.getElementById("prodCodeType").value = code.toUpperCase().startsWith("ASLY-") ? "qr" : "barcode";
+      document.getElementById("prodCodeType").value = isAslyCode(code) ? "qr" : "barcode";
       syncSlimCodeStrip();
       updateLiveStickerPreview();
       pulseScannerPill();
@@ -1974,7 +2015,7 @@
     const inp = document.getElementById("prodBarcode");
     if (inp) inp.value = code;
     const typeEl = document.getElementById("prodCodeType");
-    if (typeEl) typeEl.value = code.toUpperCase().startsWith("ASLY-") ? "qr" : "barcode";
+    if (typeEl) typeEl.value = isAslyCode(code) ? "qr" : "barcode";
     updateLiveStickerPreview();
     pulseScannerPill();
     try {

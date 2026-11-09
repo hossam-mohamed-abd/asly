@@ -292,7 +292,7 @@ function generateUniqueProductCode(PDO $pdo, string $category = 'laptops'): stri
     $prefix = $cats[$category]['prefix'] ?? 'PRD';
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE barcode = ?");
     do {
-        $code = 'ASLY-' . $prefix . '-' . random_int(100000, 999999);
+        $code = 'ASLY' . $prefix . random_int(10000, 99999);
         $stmt->execute([$code]);
     } while ((int)$stmt->fetchColumn() > 0);
     return $code;

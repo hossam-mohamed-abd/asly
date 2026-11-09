@@ -306,47 +306,43 @@ $jsConfig = [
 
       
       <section class="tab-panel<?= !$isAdmin ? ' active' : '' ?>" id="tab-quick-scanner">
-        <div class="scanner-grid">
+        <div class="quick-focus">
+          <header class="quick-focus-head">
+            <h2><i class="fa-solid fa-barcode"></i> <?= $en ? 'Price Check' : 'عرض السعر' ?></h2>
+            <p><?= $en ? 'Scan the code — the price appears alone. One press and you scan the next item.' : 'امسح الكود — السعر يظهر لوحده. بضغطة واحدة تمسح القطعة اللي بعدها.' ?></p>
+          </header>
 
-          <div class="camera-viewport-box">
-            <h3 style="margin:0 0 6px;color:var(--db-teal-800);"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan 1D Barcode or 2D QR Code' : 'اسكان الباركود المطاول أو رمز الـ QR' ?></h3>
-            <p style="margin:0 0 14px;font-size:0.84rem;color:var(--db-muted);"><?= $en ? 'Point your camera at the elongated box barcode or QR sticker to display customer selling price immediately.' : 'وجّه الكاميرا نحو الباركود الطولي أو الـ QR الموجود على الجهاز لعرض سعر البيع فوراً' ?></p>
-
-            <div id="quickCameraReader" class="reader-mount">
-              <div style="padding:24px;color:var(--db-muted);font-size:0.9rem;"><?= $en ? 'Click "Start Camera" to scan live or use a USB scanner / image' : 'اضغط «تشغيل الكاميرا» لبدء المسح المباشر أو استخدم قارئ الباركود' ?></div>
-            </div>
-
-            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">
-              <button type="button" class="btn btn-teal btn-sm" id="btnStartQuickCam"><i class="fa-solid fa-play"></i> <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
-              <button type="button" class="btn btn-danger btn-sm" id="btnStopQuickCam" style="display:none;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop Camera' : 'إيقاف الكاميرا' ?></button>
-              <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
-                <i class="fa-solid fa-image"></i> <?= $en ? 'Scan Barcode Image' : 'مسح من صورة باركود' ?>
-                <input type="file" id="quickScanFile" accept="image/*" style="display:none;">
-              </label>
-            </div>
-
-            <form id="quickManualForm" style="display:flex;gap:8px;">
-              <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Scan or enter product barcode / QR code...' : 'أو امسح بمسدس الباركود / اكتب كود المنتج هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
-              <button type="submit" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> <?= $en ? 'Lookup' : 'فحص' ?></button>
-            </form>
-          </div>
-
-          <div id="quickScanResult">
-            <div class="card" style="text-align:center;padding:48px 24px;">
-              <div style="font-size:2.6rem;color:var(--db-teal-700);margin-bottom:12px;"><i class="fa-solid fa-qrcode"></i></div>
-              <h3 style="margin:0 0 8px;color:var(--db-text);"><?= $en ? 'Ready to Scan Product Code' : 'في انتظار مسح كود القطعة' ?></h3>
-              <p style="margin:0;color:var(--db-muted);font-size:0.9rem;">
-                <?= $en
-                  ? 'Scanning displays <strong>Selling Price only</strong>, with a safe <strong>“Show Purchase Price”</strong> button that reveals the <strong>Minimum Allowed Floor Price</strong> in front of customers.'
-                  : 'بمجرد مسح الباركود أو الـ QR سيظهر <strong>سعر البيع فقط</strong> بخط واضح، مع زر <strong>«اعرض سعر الشراء»</strong> الذي يعرض <strong>أقل سعر بيع مسموح</strong> بأمان أمام العميل.' ?>
-              </p>
+          <div class="quick-focus-stage" id="quickStageScan">
+            <div class="camera-viewport-box">
+              <div id="quickCameraReader" class="reader-mount" style="min-height:250px;">
+                <div style="padding:22px;color:var(--db-muted);font-size:0.9rem;"><?= $en ? 'Camera is off — press the button below to scan' : 'الكاميرا متوقفة — اضغط الزر اللي تحت لبدء المسح' ?></div>
+              </div>
+              <div class="quick-focus-actions">
+                <button type="button" class="btn btn-teal" id="btnStartQuickCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Start Camera & Scan' : 'تشغيل الكاميرا وامسح' ?></button>
+                <button type="button" class="btn btn-danger" id="btnStopQuickCam" style="display:none;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop' : 'إيقاف' ?></button>
+              </div>
+              <div class="quick-focus-alt">
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">
+                  <i class="fa-solid fa-image"></i> <?= $en ? 'Scan from image' : 'مسح من صورة' ?>
+                  <input type="file" id="quickScanFile" accept="image/*" style="display:none;">
+                </label>
+              </div>
+              <form id="quickManualForm" class="quick-manual-form">
+                <input type="text" id="quickCodeInput" class="form-control" placeholder="<?= $en ? 'Or type the code...' : 'أو اكتب الكود هنا...' ?>" style="direction:ltr;text-align:center;font-weight:800;">
+                <button type="submit" class="btn btn-gold"><i class="fa-solid fa-magnifying-glass"></i> <?= $en ? 'Lookup' : 'فحص' ?></button>
+              </form>
             </div>
           </div>
 
+          <div class="quick-focus-stage" id="quickStageResult" style="display:none;">
+            <div id="quickScanResult"></div>
+            <button type="button" class="btn btn-teal quick-next-btn" id="btnQuickScanNext">
+              <i class="fa-solid fa-barcode"></i> <?= $en ? 'Scan another item' : 'امسح قطعة أخرى' ?>
+            </button>
+          </div>
         </div>
       </section>
 
-      
       <section class="tab-panel" id="tab-pos">
         <div class="pos-layout">
 
