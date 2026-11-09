@@ -465,144 +465,182 @@ $jsConfig = [
       <?php if ($isAdmin): ?>
       
       <section class="tab-panel" id="tab-add-product">
-        <div class="scanner-grid">
+        <div class="add-flow">
 
-          <div>
-            <div class="camera-viewport-box" style="margin-bottom:20px;">
-              <h3 style="margin:0 0 6px;color:var(--db-teal-800);"><i class="fa-solid fa-qrcode"></i> <?= $en ? '1. Scan Box Barcode OR Generate Auto QR' : '1. مسح كود العلبة أو توليد رمز QR جديد' ?></h3>
-              <p style="margin:0 0 12px;font-size:0.82rem;color:var(--db-muted);"><?= $en ? 'Scan the original 1D barcode on a retail box, or click "Generate Auto QR" for open-box devices and accessories.' : 'يمكنك مسح الباركود المطاول الموجود على العلبة بالكاميرا، أو الضغط على «توليد QR تلقائي» للأجهزة المستعملة والإكسسوارات بدون علبة.' ?></p>
+          <header class="add-flow-head">
+            <h2><i class="fa-solid fa-box-open"></i> <?= $en ? 'Add Product to Stock' : 'إضافة منتج للمخزن' ?></h2>
+            <p><?= $en ? 'One step at a time: scan the code, then fill the short form.' : 'خطوة واحدة في كل مرة: امسح الكود، وبعدها املا الفورم القصير.' ?></p>
+            <ol class="add-flow-steps">
+              <li class="is-current" data-flow-dot="scan"><span>1</span> <?= $en ? 'Scan Code' : 'امسح الكود' ?></li>
+              <li data-flow-dot="form"><span>2</span> <?= $en ? 'Fill Details' : 'اكتب البيانات' ?></li>
+              <li data-flow-dot="done"><span>3</span> <?= $en ? 'Saved' : 'تم الحفظ' ?></li>
+            </ol>
+          </header>
 
-              <div id="addProdCameraReader" class="reader-mount" style="min-height:220px;">
-                <div style="padding:20px;color:var(--db-muted);font-size:0.88rem;"><?= $en ? 'Camera idle — start camera to scan box or click Auto QR below' : 'الكاميرا متوقفة — اضغط تشغيل لمسح باركود المنتج أو ولّد رمز QR مباشرة' ?></div>
+          <div class="add-flow-stage" id="stageScan">
+            <div class="camera-viewport-box">
+              <div id="addProdCameraReader" class="reader-mount" style="min-height:260px;">
+                <div style="padding:22px;color:var(--db-muted);font-size:0.9rem;"><?= $en ? 'Camera is off — press the big button below to start scanning' : 'الكاميرا متوقفة — اضغط الزر الكبير اللي تحت لبدء المسح' ?></div>
               </div>
 
-              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-                <button type="button" class="btn btn-teal btn-sm" id="btnStartAddCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan Box Barcode' : 'مسح باركود العلبة بالكاميرا' ?></button>
-                <button type="button" class="btn btn-danger btn-sm" id="btnStopAddCam" style="display:none;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop' : 'إيقاف' ?></button>
-                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Generate Auto QR Code' : 'توليد QR تلقائي للمنتج' ?></button>
+              <div class="add-flow-actions">
+                <button type="button" class="btn btn-teal" id="btnStartAddCam" style="min-width:220px;padding:13px 20px;font-size:0.98rem;"><i class="fa-solid fa-camera"></i> <?= $en ? 'Start Camera & Scan' : 'تشغيل الكاميرا وابدأ المسح' ?></button>
+                <button type="button" class="btn btn-danger" id="btnStopAddCam" style="display:none;padding:13px 20px;"><i class="fa-solid fa-stop"></i> <?= $en ? 'Stop' : 'إيقاف' ?></button>
+              </div>
+
+              <div class="add-flow-alt">
+                <span><?= $en ? 'No box barcode?' : 'مفيش باركود على العلبة؟' ?></span>
+                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateAutoQr"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Generate QR' : 'ولّد QR' ?></button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnSkipScan"><i class="fa-solid fa-keyboard"></i> <?= $en ? 'Type code manually' : 'اكتب الكود يدوي' ?></button>
               </div>
             </div>
 
-            <div class="card" style="text-align:center;">
-              <div class="card-header">
-                <h3><i class="fa-solid fa-tag" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Printable Sticker Preview' : 'معاينة استيكر الكود الجاهز للطباعة واللصق' ?></h3>
-                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
+            <div class="add-flow-hint">
+              <i class="fa-solid fa-circle-info"></i>
+              <span><?= $en ? 'If the code already exists, you will be asked how many units to add to the current stock — no duplicate products.' : 'لو الكود موجود بالفعل، هنسألك كام قطعة تضيفها على المخزون الحالي — ومش هيتكرر منتج.' ?></span>
+            </div>
+          </div>
+
+          <div class="add-flow-stage" id="stageForm" style="display:none;">
+            <div class="card">
+              <div class="slim-code-strip">
+                <span class="slim-code-label"><?= $en ? 'Scanned code' : 'الكود اللي اتمسح' ?></span>
+                <strong id="slimCodeText" style="direction:ltr;">—</strong>
+                <span class="slim-code-tag" id="slimCodeType">QR</span>
               </div>
-              <div class="sticker-preview-box" id="liveStickerBox">
+
+              <div id="existingProdAlert" class="add-existing-alert" style="display:none;"></div>
+
+              <div id="scanQtyBar" class="add-qty-panel" style="display:none;">
+                <div class="add-qty-head">
+                  <span class="add-qty-ico"><i class="fa-solid fa-boxes-stacked"></i></span>
+                  <div>
+                    <strong><?= $en ? 'This product already exists' : 'المنتج ده موجود بالفعل' ?></strong>
+                    <div class="add-qty-sub"><?= $en ? 'Current stock:' : 'المتاح حالياً:' ?> <strong id="scanQtyExisting">0</strong> <?= $en ? 'units' : 'قطعة' ?></div>
+                  </div>
+                </div>
+                <div class="add-qty-row">
+                  <label for="scanQtyInput"><?= $en ? 'How many to add?' : 'كام قطعة تريد تضيفها؟' ?></label>
+                  <button type="button" class="qty-step" data-qty-step="-1">−</button>
+                  <input type="number" min="1" step="1" value="1" id="scanQtyInput" class="scan-qty-input">
+                  <button type="button" class="qty-step" data-qty-step="1">+</button>
+                </div>
+                <div class="add-qty-preview"><?= $en ? 'Stock will become:' : 'المخزون سيصبح:' ?> <strong id="scanQtyPreview">1</strong></div>
+                <button type="button" class="btn btn-teal" id="btnApplyQty" style="width:100%;padding:12px;font-size:0.95rem;"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add and scan next' : 'أضف الكمية وامسح العنصر التالي' ?></button>
+              </div>
+
+              <form id="productSaveForm" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="prodId" value="0">
+                <input type="hidden" name="barcode" id="prodBarcode" value="">
+                <input type="hidden" name="code_type" id="prodCodeType" value="qr">
+                <input type="hidden" name="name_en" id="prodNameEn" value="">
+                <input type="hidden" name="category" id="prodCategory" value="accessories">
+                <input type="hidden" name="condition_status" id="prodCondition" value="new">
+                <input type="hidden" name="brand" id="prodBrand" value="">
+                <input type="hidden" name="specs" id="prodSpecs" value="">
+                <input type="hidden" name="specs_en" id="prodSpecsEn" value="">
+                <input type="hidden" name="description" id="prodDescription" value="">
+                <input type="hidden" name="low_stock_threshold" id="prodLowStock" value="2">
+                <input type="hidden" name="warranty_default" id="prodWarranty" value="<?= e($en ? 'Certified ASLY Testing Warranty' : 'ضمان الفحص والتجربة - أصلي تك ستور') ?>">
+                <input type="hidden" name="show_on_landing" id="prodShowLanding" value="0">
+                <input type="hidden" name="is_featured" id="prodFeatured" value="0">
+
+                <div class="add-form-block" id="newProductFields">
+                  <div class="form-group">
+                    <label><?= $en ? 'Product name' : 'اسم المنتج' ?></label>
+                    <input type="text" name="name" id="prodName" class="form-control" placeholder="<?= $en ? 'Dell XPS 15 Laptop' : 'لابتوب ديل Dell XPS 15' ?>">
+                  </div>
+
+                  <div class="add-price-panel">
+                    <div class="add-price-head"><i class="fa-solid fa-coins"></i> <?= $en ? 'Smart 3-Tier Pricing' : 'نظام التسعير الثلاثي الذكي' ?></div>
+                    <div class="form-group">
+                      <label><?= $en ? 'Purchase cost (admin only)' : 'سعر الشراء الحقيقي (سري للأدمن)' ?></label>
+                      <input type="number" step="0.01" min="0" name="purchase_price" id="prodPurchasePrice" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                      <label><?= $en ? 'Selling price' : 'سعر البيع الأساسي' ?></label>
+                      <input type="number" step="0.01" min="0" name="sell_price" id="prodSellPrice" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                      <label><?= $en ? 'Minimum floor price' : 'أقل سعر بيع مسموح' ?></label>
+                      <input type="number" step="0.01" min="0" name="min_sell_price" id="prodMinSellPrice" class="form-control" placeholder="0.00">
+                    </div>
+                    <div id="liveProfitHint" class="add-profit-hint"></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label><?= $en ? 'Quantity in stock' : 'الكمية المتوفرة بالمخزن' ?></label>
+                    <input type="number" min="0" name="quantity" id="prodQuantity" class="form-control" value="1">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label><i class="fa-solid fa-image"></i> <?= $en ? 'Product photo' : 'الصورة الخاصة بالمنتج' ?></label>
+                  <div class="img-capture-row">
+                    <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
+                    <input type="file" id="prodImageCapture" accept="image/*" capture="environment" style="display:none;">
+                    <div class="img-capture-actions">
+                      <button type="button" class="btn btn-teal btn-sm" id="btnCaptureProdImage"><i class="fa-solid fa-camera"></i> <?= $en ? 'Take Photo Now' : 'صور بالكاميرا الآن' ?></button>
+                    </div>
+                    <div class="img-capture-preview" id="prodImagePreview">
+                      <img alt="" id="prodImagePreviewThumb">
+                      <span style="flex:1;font-size:0.78rem;color:var(--db-muted);" id="prodImagePreviewName"></span>
+                      <button type="button" id="btnClearProdImage"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Remove' : 'حذف' ?></button>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-teal" style="width:100%;padding:14px;font-size:1rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Product' : 'حفظ المنتج' ?>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnBackToScan" style="width:100%;margin-top:8px;">
+                  <i class="fa-solid fa-rotate-left"></i> <?= $en ? 'Back to scanning' : 'رجوع للمسح' ?>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="prod-cam-overlay" id="prodCamOverlay">
+            <div class="prod-cam-box">
+              <div class="prod-cam-head">
+                <strong><i class="fa-solid fa-camera"></i> <?= $en ? 'Take the product photo' : 'صوّر المنتج دلوقتي' ?></strong>
+                <button type="button" id="btnProdCamClose"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="prod-cam-stage">
+                <video id="prodCamVideo" autoplay playsinline muted></video>
+              </div>
+              <div class="prod-cam-actions">
+                <button type="button" class="btn btn-teal" id="btnProdCamShot"><i class="fa-solid fa-circle-dot"></i> <?= $en ? 'Capture' : 'التقط الصورة' ?></button>
+                <span class="prod-cam-hint"><?= $en ? 'Frame the device so the whole product is clear.' : 'خلّي الجهاز واضح وكامل داخل الإطار.' ?></span>
+              </div>
+            </div>
+            <canvas id="prodCamCanvas" style="display:none;"></canvas>
+          </div>
+
+          <div class="add-flow-stage" id="stageDone" style="display:none;">
+            <div class="card add-done-card">
+              <span class="add-done-orb"><i class="fa-solid fa-circle-check"></i></span>
+              <h3 id="addDoneTitle"><?= $en ? 'Saved successfully' : 'تم الحفظ بنجاح' ?></h3>
+              <p id="addDoneText"><?= $en ? 'The product is now in stock.' : 'المنتج بقى داخل المخزون.' ?></p>
+              <div class="add-done-summary" id="addDoneSummary"></div>
+              <div class="add-done-actions">
+                <button type="button" class="btn btn-teal" id="btnScanNextProduct"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan next product' : 'امسح المنتج التالي' ?></button>
+                <button type="button" class="btn btn-ghost" id="btnSeeInventory"><i class="fa-solid fa-boxes-stacked"></i> <?= $en ? 'Open inventory' : 'فتح المخزون' ?></button>
+              </div>
+              <div class="sticker-preview-box" id="liveStickerBox" style="margin-top:18px;">
                 <strong style="font-size:0.84rem;color:#0d9499;">ASLY | أصلي TECH STORE</strong>
                 <div id="stickerProdName" style="font-size:0.78rem;color:#475569;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?= $en ? 'New Product' : 'منتج جديد' ?></div>
                 <div id="stickerQrMount" style="margin:4px auto;"></div>
                 <svg id="stickerBarcodeSvg" style="max-width:210px;height:48px;"></svg>
                 <div id="stickerCodeText" style="font-family:monospace;font-weight:800;font-size:0.82rem;letter-spacing:1px;">—</div>
+                <button type="button" class="btn btn-teal btn-sm" id="btnPrintCurrentSticker" style="margin-top:10px;"><i class="fa-solid fa-print"></i> <?= $en ? 'Print Sticker' : 'طباعة الاستيكر' ?></button>
               </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div id="prodFormGate" class="prod-scan-gate">
-              <span class="prod-scan-gate-orb"><i class="fa-solid fa-barcode"></i></span>
-              <h4><?= $en ? 'Scan the product code first' : 'امسح كود المنتج الأول' ?></h4>
-              <p><?= $en ? 'The form opens only after a scan. If the code already exists you will be offered a quantity top-up instead of a duplicate product.' : 'النموذج يفتح بعد المسح فقط. لو الكود موجود بالفعل هيتعرض عليك زيادة الكمية بدل تكرار المنتج.' ?></p>
-              <div class="prod-scan-gate-actions">
-                <button type="button" class="btn btn-teal btn-sm" id="btnGateStartCam"><i class="fa-solid fa-camera"></i> <?= $en ? 'Start Camera' : 'تشغيل الكاميرا' ?></button>
-                <button type="button" class="btn btn-gold btn-sm" id="btnGenerateQrFromGate"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Generate QR' : 'توليد QR' ?></button>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnSkipScan"><i class="fa-solid fa-keyboard"></i> <?= $en ? 'Enter Manually' : 'إدخال يدوي' ?></button>
-              </div>
-            </div>
-
-            <div id="prodFormWrap" style="display:none;">
-            <div class="card-header">
-              <h3 id="productFormHeading"><i class="fa-solid fa-plus-circle" style="color:var(--db-teal-700);margin-inline-end:6px;"></i><?= $en ? 'Register Product & 3-Tier Pricing' : 'تسجيل بيانات المنتج والأسعار الثلاثة' ?></h3>
-              <button type="button" class="btn btn-ghost btn-sm" id="btnResetProductForm"><i class="fa-solid fa-rotate-left"></i> <?= $en ? 'Reset Form' : 'تفريغ النموذج' ?></button>
-            </div>
-
-            <div id="existingProdAlert" style="display:none;margin-bottom:16px;padding:12px 16px;border-radius:14px;background:var(--db-gold-50);border:1.5px solid var(--db-gold-500);color:var(--db-text);font-weight:700;font-size:0.88rem;"></div>
-
-            <div id="scanQtyBar" class="scan-qty-bar" style="display:none;">
-              <label for="scanQtyInput"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add to stock' : 'زيادة الكمية' ?></label>
-              <input type="number" min="1" step="1" value="1" id="scanQtyInput" class="scan-qty-input">
-              <span class="scan-qty-hint"><?= $en ? 'Current:' : 'المتاح:' ?> <strong id="scanQtyExisting">0</strong> — <?= $en ? 'press Enter to add & rescan' : 'اضغط Enter للإضافة والمسح التالي' ?></span>
-              <button type="button" class="btn btn-teal btn-sm" id="btnAddAnotherScan"><i class="fa-solid fa-camera"></i> <?= $en ? 'Scan next item' : 'مسح العنصر التالي' ?></button>
-            </div>
-
-            <form id="productSaveForm" enctype="multipart/form-data">
-              <input type="hidden" name="id" id="prodId" value="0">
-              <input type="hidden" name="barcode" id="prodBarcode" value="">
-              <input type="hidden" name="code_type" id="prodCodeType" value="qr">
-              <div class="form-group" style="margin-bottom:14px;">
-                <label><?= $en ? 'Product Name *' : 'اسم المنتج *' ?></label>
-                <input type="text" name="name" id="prodName" class="form-control" placeholder="<?= $en ? 'Dell XPS 15 Laptop' : 'لابتوب ديل Dell XPS 15' ?>" required>
-              </div>
-              <input type="hidden" name="name_en" id="prodNameEn" value="">
-              <input type="hidden" name="category" id="prodCategory" value="accessories">
-              <input type="hidden" name="condition_status" id="prodCondition" value="new">
-              <input type="hidden" name="brand" id="prodBrand" value="">
-              <input type="hidden" name="specs" id="prodSpecs" value="">
-              <input type="hidden" name="specs_en" id="prodSpecsEn" value="">
-              <input type="hidden" name="description" id="prodDescription" value="">
-              <input type="hidden" name="low_stock_threshold" id="prodLowStock" value="2">
-              <input type="hidden" name="warranty_default" id="prodWarranty" value="<?= e($en ? 'Certified ASLY Testing Warranty' : 'ضمان الفحص والتجربة - أصلي تك ستور') ?>">
-              <input type="hidden" name="show_on_landing" id="prodShowLanding" value="0">
-              <input type="hidden" name="is_featured" id="prodFeatured" value="0">
-
-              <div class="slim-code-strip">
-                <span class="slim-code-label"><?= $en ? 'Registered code' : 'الكود المسجل' ?></span>
-                <strong id="slimCodeText" style="direction:ltr;">—</strong>
-                <span class="slim-code-tag" id="slimCodeType">QR</span>
-              </div>
-
-              <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-teal-100);margin-bottom:16px;">
-                <div style="font-weight:800;color:var(--db-teal-800);margin-bottom:10px;font-size:0.92rem;">
-                  <i class="fa-solid fa-coins" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Smart 3-Tier Pricing' : 'نظام التسعير الثلاثي الذكي' ?>
-                </div>
-                <div class="form-grid">
-                  <div class="form-group">
-                    <label style="color:#b45309;"><?= $en ? '1. True Purchase Cost (Admin Only) *' : '1. سعر الشراء الحقيقي (سري — للأدمن فقط) *' ?></label>
-                    <input type="number" step="0.01" min="0" name="purchase_price" id="prodPurchasePrice" class="form-control" placeholder="0.00" required>
-                  </div>
-                  <div class="form-group">
-                    <label style="color:var(--db-teal-800);"><?= $en ? '2. Selling Price (Shown on Scan) *' : '2. سعر البيع الأساسي (يظهر عند المسح) *' ?></label>
-                    <input type="number" step="0.01" min="0" name="sell_price" id="prodSellPrice" class="form-control" placeholder="0.00" required>
-                  </div>
-                  <div class="form-group">
-                    <label style="color:#059669;"><?= $en ? '3. Min Floor Price (Decoy Button) *' : '3. أقل سعر بيع (يظهر بزر التمويه) *' ?></label>
-                    <input type="number" step="0.01" min="0" name="min_sell_price" id="prodMinSellPrice" class="form-control" placeholder="0.00">
-                  </div>
-                </div>
-                <div id="liveProfitHint" style="margin-top:10px;font-size:0.82rem;color:var(--db-text);font-weight:700;"></div>
-              </div>
-
-              <div class="form-group" style="margin-bottom:16px;">
-                <label><?= $en ? 'Stock Quantity *' : 'الكمية المتوفرة بالمخزن *' ?></label>
-                <input type="number" min="0" name="quantity" id="prodQuantity" class="form-control" value="1" required>
-              </div>
-
-              <div class="form-group" style="margin-bottom:16px;">
-                <label><i class="fa-solid fa-image" style="color:var(--db-teal-700);margin-inline-end:5px;"></i><?= $en ? 'Product Image' : 'الصورة الخاصة بالمنتج' ?></label>
-                <div class="img-capture-row">
-                  <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
-                  <input type="file" id="prodImageCapture" accept="image/*" capture="environment" style="display:none;">
-                  <div class="img-capture-actions">
-                    <button type="button" class="btn btn-teal btn-sm" id="btnCaptureProdImage"><i class="fa-solid fa-camera"></i> <?= $en ? 'Take Photo Now' : 'صور بالكاميرا الآن' ?></button>
-                  </div>
-                  <div class="img-capture-preview" id="prodImagePreview">
-                    <img alt="" id="prodImagePreviewThumb">
-                    <span style="flex:1;font-size:0.78rem;color:var(--db-muted);" id="prodImagePreviewName"></span>
-                    <button type="button" id="btnClearProdImage"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Remove' : 'حذف' ?></button>
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" class="btn btn-teal" style="width:100%;padding:13px;font-size:1rem;">
-                <i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save Product & Update Code' : 'حفظ المنتج وتحديث المخزن والكود' ?>
-              </button>
-            </form>
             </div>
           </div>
 
         </div>
       </section>
-      
+
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
           <div class="card-header">

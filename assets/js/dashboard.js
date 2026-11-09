@@ -226,6 +226,12 @@
     if (tabName === "maintenance") loadMaintenanceList();
     if (tabName === "staff" && IS_ADMIN) loadUsersList();
     if (tabName === "settings" && IS_ADMIN) loadSettingsData();
+    if (tabName === "add-product") {
+      if (window.AslyAddFlow) {
+        window.AslyAddFlow.clear();
+        window.AslyAddFlow.stage("scan");
+      }
+    }
   };
   document.querySelectorAll(".side-btn[data-tab]").forEach(btn => {
     btn.addEventListener("click", () => window.switchTab(btn.dataset.tab));
@@ -1109,39 +1115,67 @@
         document.getElementById("prodBarcode").value = res.code;
         document.getElementById("prodCodeType").value = "qr";
         document.getElementById("existingProdAlert").style.display = "none";
+        syncSlimCodeStrip();
         updateLiveStickerPreview();
+        resetScanQtyBar();
+        const nfGen = document.getElementById("newProductFields");
+        if (nfGen) nfGen.style.display = "block";
+        const idGen = document.getElementById("prodId");
+        if (idGen) idGen.value = "0";
+        showStage("form");
         showToast(tr(`تم توليد رمز QR جديد: ${res.code}`, `Generated new QR code: ${res.code}`));
       } catch (err) {
         showToast(err.message, true);
       }
     });
-    document.getElementById("btnStartAddCam")?.addEventListener("click", async () => {
-      const ok = await startCameraScanner("addProdCameraReader", async code => {
-        await handleAddProductScan(code);
-      }, {
-        onClose: () => resetScanButtons()
-      });
-      if (ok) {
-        document.getElementById("btnStartAddCam").style.display = "none";
-        document.getElementById("btnStopAddCam").style.display = "inline-flex";
-      }
-    });
-    const prodGate = document.getElementById("prodFormGate");
-    const prodFormWrap = document.getElementById("prodFormWrap");
+    const stageScan = document.getElementById("stageScan");
+    const stageForm = document.getElementById("stageForm");
+    const stageDone = document.getElementById("stageDone");
+    const flowDots = Array.prototype.slice.call(document.querySelectorAll("[data-flow-dot]"));
     const scanQtyBar = document.getElementById("scanQtyBar");
     const scanQtyInput = document.getElementById("scanQtyInput");
     const scanQtyExisting = document.getElementById("scanQtyExisting");
+    const scanQtyPreview = document.getElementById("scanQtyPreview");
+    const newProductFields = document.getElementById("newProductFields");
     let scannedExistingProduct = null;
 
-    function openProductForm() {
-      if (prodGate) prodGate.style.display = "none";
-      if (prodFormWrap) prodFormWrap.style.display = "block";
+    function showStage(name) {
+      [["scan", stageScan], ["form", stageForm], ["done", stageDone]].forEach(([key, el]) => {
+        if (!el) return;
+        el.style.display = key === name ? "block" : "none";
+      });
+      const order = ["scan", "form", "done"];
+      const idx = order.indexOf(name);
+      flowDots.forEach(dot => {
+        const dotIdx = order.indexOf(dot.getAttribute("data-flow-dot"));
+        dot.classList.toggle("is-current", dotIdx === idx);
+        dot.classList.toggle("is-done", dotIdx < idx);
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+
+    function setQtyPreview() {
+      const base = Number(scannedExistingProduct?.quantity || 0);
+      const add = Math.max(1, parseInt(scanQtyInput?.value, 10) || 1);
+      if (scanQtyPreview) scanQtyPreview.textContent = String(base + add);
+    }
+
+    document.querySelectorAll("[data-qty-step]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (!scanQtyInput) return;
+        const delta = parseInt(btn.getAttribute("data-qty-step"), 10) || 0;
+        const next = Math.max(1, (parseInt(scanQtyInput.value, 10) || 1) + delta);
+        scanQtyInput.value = String(next);
+        setQtyPreview();
+      });
+    });
+    scanQtyInput?.addEventListener("input", setQtyPreview);
 
     function resetScanQtyBar() {
       scannedExistingProduct = null;
       if (scanQtyBar) scanQtyBar.style.display = "none";
       if (scanQtyInput) scanQtyInput.value = "1";
+      if (newProductFields) newProductFields.style.display = "block";
     }
 
     async function handleAddProductScan(rawCode) {
@@ -1149,6 +1183,7 @@
       if (!code) return;
       document.getElementById("prodBarcode").value = code;
       document.getElementById("prodCodeType").value = code.toUpperCase().startsWith("ASLY-") ? "qr" : "barcode";
+      syncSlimCodeStrip();
       updateLiveStickerPreview();
       pulseScannerPill();
       camToast("addProdCameraReader", tr("جاري فحص الكود...", "Checking code..."), "info", 1200);
@@ -1158,72 +1193,135 @@
         if (check.found && check.product) {
           playScanBeep();
           scannedExistingProduct = check.product;
-          openProductForm();
-          window.populateProductForm(check.product);
+          stopCameraScanner("addProdCameraReader");
+          resetScanButtons();
+          if (newProductFields) newProductFields.style.display = "none";
           if (alertEl) {
             alertEl.style.display = "block";
-            alertEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${tr("الكود مسجل بالفعل للمنتج:", "Code already registered to:")} <strong>${esc(check.product.name)}</strong> — ${tr("المتاح حالياً:", "Current stock:")} <strong>${check.product.quantity}</strong>`;
+            alertEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>${esc(check.product.name)}</strong>`;
           }
-          if (scanQtyBar) {
-            scanQtyBar.style.display = "flex";
-            if (scanQtyExisting) scanQtyExisting.textContent = String(check.product.quantity);
-            if (scanQtyInput) {
-              scanQtyInput.value = "1";
-              window.setTimeout(() => {
-                scanQtyInput.focus();
-                scanQtyInput.select();
-              }, 220);
-            }
-          }
-          stopCameraScanner("addProdCameraReader");
-          resetScanButtons();
-          camToast(
-            "addProdCameraReader",
-            tr("منتج موجود — اختر الكمية اللي تزودها واضغط Enter", "Existing product — set the quantity to add and press Enter"),
-            "ok",
-            3000
-          );
+          if (scanQtyBar) scanQtyBar.style.display = "block";
+          if (scanQtyExisting) scanQtyExisting.textContent = String(check.product.quantity);
+          if (scanQtyInput) scanQtyInput.value = "1";
+          setQtyPreview();
+          showStage("form");
+          window.setTimeout(() => scanQtyInput?.focus(), 260);
         } else {
           playScanBeep();
-          resetScanQtyBar();
-          if (alertEl) alertEl.style.display = "none";
-          openProductForm();
-          camToast("addProdCameraReader", tr("كود جديد — اكتب تفاصيل المنتج", "New code — fill the product details"), "ok", 2200);
-          window.setTimeout(() => document.getElementById("prodName")?.focus(), 260);
           stopCameraScanner("addProdCameraReader");
           resetScanButtons();
+          resetScanQtyBar();
+          if (alertEl) alertEl.style.display = "none";
+          document.getElementById("prodId").value = "0";
+          const nameField = document.getElementById("prodName");
+          if (nameField) nameField.value = "";
+          ["prodPurchasePrice", "prodSellPrice", "prodMinSellPrice"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+          });
+          const qtyField = document.getElementById("prodQuantity");
+          if (qtyField) qtyField.value = "1";
+          const nf = document.getElementById("newProductFields");
+          if (nf) nf.style.display = "block";
+          showStage("form");
+          window.setTimeout(() => document.getElementById("prodName")?.focus(), 280);
+          camToast("addProdCameraReader", tr("كود جديد — اكتب البيانات", "New code — fill the details"), "ok", 2200);
         }
       } catch (err) {
         camToast("addProdCameraReader", err.message || tr("تعذر فحص الكود", "Could not check the code"), "err", 3200);
       }
     }
 
-    scanQtyInput?.addEventListener("keydown", async e => {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      if (!scannedExistingProduct) return;
-      const addQty = Math.max(1, parseInt(scanQtyInput.value, 10) || 1);
-      const newQty = Number(scannedExistingProduct.quantity || 0) + addQty;
-      const qtyField = document.getElementById("prodQuantity");
-      if (qtyField) qtyField.value = newQty;
-      const alertEl = document.getElementById("existingProdAlert");
-      if (alertEl) {
-        alertEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${tr("تم تحديث الكمية إلى:", "Quantity updated to:")} <strong>${newQty}</strong> (${Number(scannedExistingProduct.quantity)} + ${addQty}) — ${tr("اضغط حفظ لتأكيد الإضافة", "Press save to confirm")}`;
-      }
-      showToast(tr(`الكمية الجديدة: ${newQty}`, `New quantity: ${newQty}`));
-      stopCameraScanner("addProdCameraReader");
-      resetScanButtons();
-      window.setTimeout(async () => {
-        await startCameraScanner("addProdCameraReader", async code => {
-          await handleAddProductScan(code);
-        }, { onClose: () => resetScanButtons() });
-        const bStart = document.getElementById("btnStartAddCam");
-        const bStop = document.getElementById("btnStopAddCam");
+    async function startAddCam() {
+      const bStart = document.getElementById("btnStartAddCam");
+      const bStop = document.getElementById("btnStopAddCam");
+      const ok = await startCameraScanner("addProdCameraReader", async code => {
+        await handleAddProductScan(code);
+      }, { onClose: () => resetScanButtons() });
+      if (ok) {
         if (bStart) bStart.style.display = "none";
         if (bStop) bStop.style.display = "inline-flex";
-        camToast("addProdCameraReader", tr("جاهز لمسح المنتج التالي", "Ready for the next product"), "info", 2200);
-      }, 320);
+        camToast("addProdCameraReader", tr("وجّه الكاميرا نحو كود المنتج", "Point the camera at the product code"), "info", 2400);
+      }
+    }
+
+    document.getElementById("btnStartAddCam")?.addEventListener("click", startAddCam);
+    document.getElementById("btnStopAddCam")?.addEventListener("click", () => {
+      stopCameraScanner("addProdCameraReader");
+      resetScanButtons();
     });
+
+    async function applyQtyTopUp() {
+      if (!scannedExistingProduct) return;
+      const addQty = Math.max(1, parseInt(scanQtyInput?.value, 10) || 1);
+      const targetId = Number(scannedExistingProduct.id);
+      const btn = document.getElementById("btnApplyQty");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${tr("جاري الحفظ...", "Saving...")}`;
+      }
+      try {
+        const fd = new FormData();
+        fd.set("action", "save");
+        fd.set("id", String(targetId));
+        fd.set("barcode", scannedExistingProduct.barcode || "");
+        fd.set("code_type", scannedExistingProduct.code_type || "qr");
+        fd.set("name", scannedExistingProduct.name || "");
+        fd.set("name_en", scannedExistingProduct.name_en || "");
+        fd.set("category", scannedExistingProduct.category || "accessories");
+        fd.set("condition_status", scannedExistingProduct.condition_status || "new");
+        fd.set("brand", scannedExistingProduct.brand || "");
+        fd.set("specs", scannedExistingProduct.specs || "");
+        fd.set("specs_en", scannedExistingProduct.specs_en || "");
+        fd.set("description", scannedExistingProduct.description || "");
+        fd.set("purchase_price", String(scannedExistingProduct.purchase_price ?? 0));
+        fd.set("sell_price", String(scannedExistingProduct.sell_price ?? 0));
+        fd.set("min_sell_price", String(scannedExistingProduct.min_sell_price ?? 0));
+        fd.set("low_stock_threshold", String(scannedExistingProduct.low_stock_threshold ?? 2));
+        fd.set("warranty_default", scannedExistingProduct.warranty_default || "");
+        fd.set("show_on_landing", String(scannedExistingProduct.show_on_landing ?? 0));
+        fd.set("is_featured", String(scannedExistingProduct.is_featured ?? 0));
+        fd.set("quantity", String(Number(scannedExistingProduct.quantity || 0) + addQty));
+        const res = await apiFetch("api/products.php", { method: "POST", body: fd });
+        const confirm = await apiFetch(`api/scanner.php?action=lookup&code=${encodeURIComponent(scannedExistingProduct.barcode || "")}`);
+        const finalQty = confirm.found && confirm.product ? confirm.product.quantity : Number(scannedExistingProduct.quantity || 0) + addQty;
+        playScanBeep();
+        showToast(res.message || tr("تم تحديث الكمية", "Stock updated"));
+        showDone(
+          tr("تمت زيادة الكمية", "Stock increased"),
+          tr(`أضفنا ${addQty} قطعة إلى ${scannedExistingProduct.name}`, `Added ${addQty} unit(s) to ${scannedExistingProduct.name}`),
+          `<strong>${esc(scannedExistingProduct.name)}</strong><br><span style="font-size:0.84rem;">${tr("المتاح الآن بالمخزن", "Now in stock")}: <strong>${finalQty}</strong> ${tr("قطعة", "unit(s)")}</span>`
+        );
+        loadInventoryTable();
+      } catch (err) {
+        playScanErrorTone();
+        showToast(err.message, true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-plus"></i> ${tr("أضف الكمية وامسح العنصر التالي", "Add and scan next")}`;
+        }
+      }
+    }
+    document.getElementById("btnApplyQty")?.addEventListener("click", applyQtyTopUp);
+    scanQtyInput?.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      applyQtyTopUp();
+    });
+
+    function showDone(title, text, summaryHtml) {
+      const t = document.getElementById("addDoneTitle");
+      const d = document.getElementById("addDoneText");
+      const sum = document.getElementById("addDoneSummary");
+      if (t) t.textContent = title;
+      if (d) d.textContent = text;
+      if (sum) sum.innerHTML = summaryHtml || "";
+      stopCameraScanner("addProdCameraReader");
+      resetScanButtons();
+      resetScanQtyBar();
+      showStage("done");
+    }
 
     const imgCaptureBtn = document.getElementById("btnCaptureProdImage");
     const imgCaptureInput = document.getElementById("prodImageCapture");
@@ -1234,20 +1332,87 @@
 
     function showImagePreview(label) {
       if (!imgPreview) return;
-      const thumb = (imgThumb && imgThumb.src) || "";
-      if (!thumb) return;
       if (imgName) imgName.textContent = label || "";
       imgPreview.classList.add("visible");
     }
 
-    imgCaptureBtn?.addEventListener("click", () => {
-      imgCaptureInput?.click();
+    let capturedProdFile = null;
+    const camOverlay = document.getElementById("prodCamOverlay");
+    const camVideo = document.getElementById("prodCamVideo");
+    const camCanvas = document.getElementById("prodCamCanvas");
+    let camStream = null;
+
+    function stopProdCam() {
+      if (camStream) {
+        camStream.getTracks().forEach(t => t.stop());
+        camStream = null;
+      }
+      if (camVideo) camVideo.srcObject = null;
+      camOverlay?.classList.remove("visible");
+    }
+
+    async function openProdCam() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (imgCaptureInput) {
+          imgCaptureInput.value = "";
+          imgCaptureInput.click();
+        }
+        return;
+      }
+      try {
+        stopProdCam();
+        camStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+          audio: false
+        });
+        if (camVideo) {
+          camVideo.srcObject = camStream;
+          await camVideo.play().catch(() => {});
+        }
+        camOverlay?.classList.add("visible");
+      } catch (err) {
+        stopProdCam();
+        if (imgCaptureInput) {
+          imgCaptureInput.value = "";
+          imgCaptureInput.click();
+        }
+      }
+    }
+
+    imgCaptureBtn?.addEventListener("click", openProdCam);
+    document.getElementById("btnProdCamClose")?.addEventListener("click", stopProdCam);
+
+    document.getElementById("btnProdCamShot")?.addEventListener("click", async () => {
+      if (!camVideo || !camCanvas) return;
+      const w = camVideo.videoWidth || 960;
+      const h = camVideo.videoHeight || 960;
+      camCanvas.width = w;
+      camCanvas.height = h;
+      camCanvas.getContext("2d").drawImage(camVideo, 0, 0, w, h);
+      const blob = await new Promise(res => camCanvas.toBlob(res, "image/jpeg", 0.9));
+      if (!blob) {
+        showToast(tr("تعذر التقاط الصورة، جرّب تاني", "Could not capture, please retry"), true);
+        return;
+      }
+      const file = new File([blob], `product-${Date.now()}.jpg`, { type: "image/jpeg" });
+      capturedProdFile = file;
+      if (imgCaptureInput && window.DataTransfer) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        imgCaptureInput.files = dt.files;
+      }
+      if (imgThumb) imgThumb.src = URL.createObjectURL(blob);
+      if (imgFileInput) imgFileInput.value = "";
+      showImagePreview(tr("صورة بالكاميرا", "Camera photo") + " — " + file.name);
+      stopProdCam();
+      showToast(tr("تم التقاط صورة المنتج", "Product photo captured"));
     });
 
     imgCaptureInput?.addEventListener("change", e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       if (imgThumb) imgThumb.src = URL.createObjectURL(file);
+      if (imgFileInput) imgFileInput.value = "";
       showImagePreview(tr("صورة بالكاميرا", "Camera photo") + " — " + file.name);
       showToast(tr("تم التقاط صورة المنتج", "Product photo captured"));
     });
@@ -1255,133 +1420,134 @@
     imgFileInput?.addEventListener("change", e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+      capturedProdFile = null;
       if (imgThumb) imgThumb.src = URL.createObjectURL(file);
+      if (imgCaptureInput) imgCaptureInput.value = "";
       showImagePreview(tr("صورة من الملفات", "Selected file") + " — " + file.name);
     });
 
     document.getElementById("btnClearProdImage")?.addEventListener("click", () => {
+      capturedProdFile = null;
       if (imgFileInput) imgFileInput.value = "";
       if (imgCaptureInput) imgCaptureInput.value = "";
       if (imgThumb) imgThumb.removeAttribute("src");
       imgPreview?.classList.remove("visible");
     });
 
-    document.getElementById("btnAddAnotherScan")?.addEventListener("click", async () => {
-      resetScanQtyBar();
-      const bStart = document.getElementById("btnStartAddCam");
-      const bStop = document.getElementById("btnStopAddCam");
-      await startCameraScanner("addProdCameraReader", async code => {
-        await handleAddProductScan(code);
-      }, { onClose: () => resetScanButtons() });
-      if (bStart) bStart.style.display = "none";
-      if (bStop) bStop.style.display = "inline-flex";
+    document.getElementById("btnSkipScan")?.addEventListener("click", async () => {
+      const typed = window.prompt(tr("اكتب الكود الموجود على المنتج:", "Type the code printed on the product:"));
+      if (!typed) return;
+      const clean = typed.trim();
+      if (!clean) return;
+      await handleAddProductScan(clean);
     });
 
-    document.getElementById("btnGateStartCam")?.addEventListener("click", async () => {
-      const bStart = document.getElementById("btnStartAddCam");
-      const bStop = document.getElementById("btnStopAddCam");
-      const ok = await startCameraScanner("addProdCameraReader", async code => {
-        await handleAddProductScan(code);
-      }, { onClose: () => resetScanButtons() });
-      if (ok) {
-        if (bStart) bStart.style.display = "none";
-        if (bStop) bStop.style.display = "inline-flex";
-        camToast("addProdCameraReader", tr("وجّه الكاميرا نحو كود المنتج", "Point the camera at the product code"), "info", 2600);
+    document.getElementById("btnPrintCurrentSticker")?.addEventListener("click", () => {
+      const code = document.getElementById("prodBarcode")?.value || "";
+      const nm = document.getElementById("prodName")?.value || document.getElementById("stickerProdName")?.textContent || "";
+      if (!code) {
+        showToast(tr("لا يوجد كود لطباعته بعد", "No code to print yet"), true);
+        return;
       }
+      renderQrInto(document.getElementById("modalStickerQr"), code, 4);
+      renderBarcodeInto(document.getElementById("modalStickerBarcode"), code);
+      const nameEl = document.getElementById("modalStickerName");
+      const codeEl = document.getElementById("modalStickerCode");
+      if (nameEl) nameEl.textContent = nm;
+      if (codeEl) codeEl.textContent = code;
+      window.openModal("stickerModal");
     });
 
-    function closeProductFormAfterSave() {
-      document.getElementById("productSaveForm").reset();
+    window.AslyAddFlow = { stage: showStage, clear: clearProductFormState, resetQty: resetScanQtyBar };
+
+    document.getElementById("btnScanNextProduct")?.addEventListener("click", () => {
+      clearProductFormState();
+      showStage("scan");
+      window.setTimeout(startAddCam, 240);
+    });
+
+    document.getElementById("btnSeeInventory")?.addEventListener("click", () => {
+      clearProductFormState();
+      window.switchTab("inventory");
+    });
+
+    document.getElementById("btnBackToScan")?.addEventListener("click", () => {
+      stopCameraScanner("addProdCameraReader");
+      resetScanButtons();
+      clearProductFormState();
+      showStage("scan");
+    });
+
+    function clearProductFormState() {
+      const form = document.getElementById("productSaveForm");
+      if (form) form.reset();
       document.getElementById("prodId").value = "0";
       const bc = document.getElementById("prodBarcode");
-      const ct = document.getElementById("prodCodeType");
-      const cat = document.getElementById("prodCategory");
-      const cond = document.getElementById("prodCondition");
       if (bc) bc.value = "";
+      const ct = document.getElementById("prodCodeType");
       if (ct) ct.value = "qr";
+      const cat = document.getElementById("prodCategory");
       if (cat) cat.value = "accessories";
+      const cond = document.getElementById("prodCondition");
       if (cond) cond.value = "new";
       const qty = document.getElementById("prodQuantity");
       if (qty) qty.value = "1";
       document.getElementById("existingProdAlert").style.display = "none";
-      document.getElementById("liveProfitHint").textContent = "";
+      const hint = document.getElementById("liveProfitHint");
+      if (hint) hint.textContent = "";
+      document.getElementById("btnClearProdImage")?.click();
       resetScanQtyBar();
       syncSlimCodeStrip();
-      if (prodGate) prodGate.style.display = "flex";
-      if (prodFormWrap) prodFormWrap.style.display = "none";
       updateLiveStickerPreview();
     }
 
-    document.getElementById("btnGenerateQrFromGate")?.addEventListener("click", () => {
-      document.getElementById("btnGenerateAutoQr")?.click();
-      openProductForm();
-    });
-
-    document.getElementById("btnSkipScan")?.addEventListener("click", () => {
-      openProductForm();
-      showToast(tr("اكتب الكود يدوياً أو ولّد QR", "Type the code manually or generate a QR"));
-    });
-
-    document.getElementById("btnStopAddCam")?.addEventListener("click", () => stopAllCameras());
-    document.getElementById("btnPrintCurrentSticker")?.addEventListener("click", () => {
-      const code = document.getElementById("prodBarcode").value.trim();
-      if (!code) {
-        showToast(tr("ولّد أو امسح كود المنتج أولاً لطباعة الاستيكر", "Generate or scan a product code first"), true);
-        return;
-      }
-      printHtmlSnippet(`Sticker ${code}`, `<div style="text-align:center;width:240px;padding:10px;border:1.5px solid #0d9499;border-radius:10px;">${document.getElementById("liveStickerBox").innerHTML}</div>`);
-    });
-    function resetProductForm() {
-      document.getElementById("productSaveForm").reset();
-      document.getElementById("prodId").value = "0";
-      const bcField = document.getElementById("prodBarcode");
-      if (bcField) bcField.value = "";
-      syncSlimCodeStrip();
-      resetScanQtyBar();
-      if (prodGate) prodGate.style.display = "flex";
-      if (prodFormWrap) prodFormWrap.style.display = "none";
-      document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-plus-circle"></i> ${tr("تسجيل بيانات المنتج والأسعار الثلاثة", "Register Product & 3-Tier Pricing")}`;
-      document.getElementById("existingProdAlert").style.display = "none";
-      document.getElementById("liveProfitHint").textContent = "";
-      updateLiveStickerPreview();
-    }
     window.populateProductForm = p => {
-      document.getElementById("prodId").value = p.id;
+      if (!p) return;
+      document.getElementById("prodId").value = p.id || 0;
       document.getElementById("prodBarcode").value = p.barcode || "";
       document.getElementById("prodCodeType").value = p.code_type || "qr";
-      document.getElementById("prodName").value = p.name || "";
-      if (document.getElementById("prodNameEn")) document.getElementById("prodNameEn").value = p.name_en || "";
-      document.getElementById("prodCategory").value = p.category || "laptops";
-      document.getElementById("prodCondition").value = p.condition_status || "new";
-      document.getElementById("prodBrand").value = p.brand || "";
-      document.getElementById("prodPurchasePrice").value = p.purchase_price ?? 0;
-      document.getElementById("prodSellPrice").value = p.sell_price ?? 0;
-      document.getElementById("prodMinSellPrice").value = p.min_sell_price ?? 0;
-      document.getElementById("prodQuantity").value = p.quantity ?? 1;
-      document.getElementById("prodLowStock").value = p.low_stock_threshold ?? 2;
-      document.getElementById("prodWarranty").value = p.warranty_default || "";
-      document.getElementById("prodSpecs").value = p.specs || "";
-      if (document.getElementById("prodSpecsEn")) document.getElementById("prodSpecsEn").value = p.specs_en || "";
-      document.getElementById("prodDescription").value = p.description || "";
-      if (document.getElementById("prodDescriptionEn")) document.getElementById("prodDescriptionEn").value = p.description_en || "";
-      const landEl = document.getElementById("prodShowLanding");
-      const featEl = document.getElementById("prodFeatured");
-      if (landEl) landEl.value = Number(p.show_on_landing) === 1 ? "1" : "0";
-      if (featEl) featEl.value = Number(p.is_featured) === 1 ? "1" : "0";
-      document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${tr("تعديل بيانات المنتج:", "Edit Product:")} ${esc(p.display_name || p.name)}`;
-      document.getElementById("existingProdAlert").style.display = "none";
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      set("prodName", p.name || "");
+      set("prodNameEn", p.name_en || "");
+      set("prodCategory", p.category || "accessories");
+      set("prodCondition", p.condition_status || "new");
+      set("prodBrand", p.brand || "");
+      set("prodPurchasePrice", p.purchase_price ?? 0);
+      set("prodSellPrice", p.sell_price ?? 0);
+      set("prodMinSellPrice", p.min_sell_price ?? 0);
+      set("prodQuantity", p.quantity ?? 1);
+      set("prodLowStock", p.low_stock_threshold ?? 2);
+      set("prodWarranty", p.warranty_default || "");
+      set("prodSpecs", p.specs || "");
+      set("prodSpecsEn", p.specs_en || "");
+      set("prodDescription", p.description || "");
+      set("prodShowLanding", Number(p.show_on_landing) === 1 ? "1" : "0");
+      set("prodFeatured", Number(p.is_featured) === 1 ? "1" : "0");
+      const alertBox = document.getElementById("existingProdAlert");
+      if (alertBox) alertBox.style.display = "none";
+      const nf = document.getElementById("newProductFields");
+      if (nf) nf.style.display = "block";
+      const qtyBar = document.getElementById("scanQtyBar");
+      if (qtyBar) qtyBar.style.display = "none";
+      scannedExistingProduct = null;
+      syncSlimCodeStrip();
       updateLiveStickerPreview();
       updateLiveProfitHint();
+      showStage("form");
     };
-    document.getElementById("btnResetProductForm")?.addEventListener("click", resetProductForm);
+
     document.getElementById("productSaveForm")?.addEventListener("submit", async e => {
       e.preventDefault();
       const form = e.currentTarget;
       const fd = new FormData(form);
       const captured = document.getElementById("prodImageCapture");
-      if (captured && captured.files && captured.files[0]) {
-        fd.set("image", captured.files[0], captured.files[0].name || "product.jpg");
-      }
+      let photo = null;
+      if (captured && captured.files && captured.files[0]) photo = captured.files[0];
+      if (!photo && capturedProdFile) photo = capturedProdFile;
+      if (photo) fd.set("image", photo, photo.name || "product.jpg");
       fd.set("action", "save");
       fd.set("show_on_landing", "0");
       fd.set("is_featured", "0");
@@ -1398,8 +1564,15 @@
         document.getElementById("prodBarcode").value = res.barcode;
         updateLiveStickerPreview();
         if (document.getElementById("prodId").value === "0") {
+          const pName = (document.getElementById("prodName")?.value || "").trim();
+          const pQty = document.getElementById("prodQuantity")?.value || "1";
           document.getElementById("btnClearProdImage")?.click();
-          closeProductFormAfterSave();
+          showDone(
+            tr("تم حفظ المنتج", "Product saved"),
+            tr("المنتج بقى داخل المخزون جاهز للبيع.", "The product is now in stock."),
+            `<strong>${esc(pName)}</strong><br><span style="font-size:0.82rem;color:var(--db-muted);">${tr("الكمية", "Qty")}: <strong>${esc(pQty)}</strong> • ${tr("الكود", "Code")}: <strong style="direction:ltr;display:inline-block;">${esc(res.barcode || "")}</strong></span>`
+          );
+          loadInventoryTable();
         }
       } catch (err) {
         showToast(err.message, true);
