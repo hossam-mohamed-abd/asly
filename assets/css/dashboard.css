@@ -2156,3 +2156,12 @@ html[lang="en"] .kpi-value {
   color: #0f172a;
   direction: ltr;
 }
+
+.quick-price-phone {
+  margin-top: 8px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--db-teal-800, #0d9297);
+  font-family: monospace;
+  letter-spacing: 0.6px;
+}

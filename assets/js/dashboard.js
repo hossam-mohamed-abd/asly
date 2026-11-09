@@ -226,6 +226,7 @@
     if (tabName === "maintenance") loadMaintenanceList();
     if (tabName === "staff" && IS_ADMIN) loadUsersList();
     if (tabName === "settings" && IS_ADMIN) loadSettingsData();
+    if (tabName === "quick-scanner") showQuickStage("scan");
     if (tabName === "add-product") {
       if (window.AslyAddFlow) {
         window.AslyAddFlow.clear();
@@ -387,6 +388,7 @@
             <div style="font-size:1.3rem;font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.display_floor_price)}</div>
           </div>
           <div class="quick-price-code"><span>${tr("الكود", "Code")}</span> <strong style="direction:ltr;display:inline-block;">${esc(p.barcode || data.scanned_code || "")}</strong></div>
+          <div class="quick-price-phone"><i class="fa-solid fa-phone"></i> <span style="direction:ltr;display:inline-block;">01154639718</span></div>
         </div>
       `;
       document.getElementById("btnShowDecoyCost")?.addEventListener("click", ev => {
