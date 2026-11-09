@@ -379,6 +379,96 @@
     }
   }
 
+  const psGrid = document.querySelector("[data-ps-grid]");
+  const psTiles = Array.prototype.slice.call(document.querySelectorAll("[data-ps-tile]"));
+  if (psGrid && psTiles.length) {
+    let psActive = null;
+    let psPinned = false;
+
+    function psExpand(tile) {
+      if (psActive === tile) return;
+      if (psActive) psActive.classList.remove("is-wide");
+      psActive = tile;
+      tile.classList.add("is-wide");
+      psGrid.classList.add("has-open");
+    }
+
+    function psCollapse() {
+      if (psActive) psActive.classList.remove("is-wide");
+      psActive = null;
+      psPinned = false;
+      psGrid.classList.remove("has-open");
+    }
+
+    function psPin(tile) {
+      if (psActive === tile && psPinned) {
+        psCollapse();
+        return;
+      }
+      psExpand(tile);
+      psPinned = true;
+    }
+
+    psTiles.forEach(tile => {
+      tile.setAttribute("role", "button");
+      tile.setAttribute("tabindex", "0");
+      tile.addEventListener("mouseenter", () => {
+        if (psPinned) return;
+        psExpand(tile);
+      });
+      tile.addEventListener("focus", () => {
+        if (psPinned) return;
+        psExpand(tile);
+      });
+      tile.addEventListener("click", () => psPin(tile));
+      tile.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          psPin(tile);
+        }
+        if (e.key === "Escape") psCollapse();
+      });
+    });
+
+    psGrid.addEventListener("mouseleave", () => {
+      if (psPinned) return;
+      psCollapse();
+    });
+
+    const psChips = Array.prototype.slice.call(document.querySelectorAll("[data-ps-filter]"));
+    psChips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        const key = chip.getAttribute("data-ps-filter");
+        psChips.forEach(c => c.classList.toggle("is-on", c === chip));
+        psCollapse();
+        psTiles.forEach(tile => {
+          const match = key === "all" || tile.getAttribute("data-cat") === key;
+          tile.classList.toggle("is-muted", !match);
+        });
+      });
+    });
+
+    if ("IntersectionObserver" in window) {
+      const psObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            psTiles.forEach(tile => tile.classList.add("ps-in"));
+          } else if (entry.boundingClientRect.top > (window.innerHeight || 800) * 1.03) {
+            psTiles.forEach(tile => tile.classList.remove("ps-in"));
+            psCollapse();
+          }
+        });
+      }, { threshold: 0.1 });
+      psObserver.observe(psGrid);
+    } else {
+      psTiles.forEach(tile => tile.classList.add("ps-in"));
+    }
+
+    document.addEventListener("click", e => {
+      if (psActive && psPinned && !psGrid.contains(e.target)) psCollapse();
+    });
+  }
+
   document.querySelectorAll(".faq-trigger").forEach(btn => {
     btn.addEventListener("click", () => {
       const item = btn.closest(".faq-item");
