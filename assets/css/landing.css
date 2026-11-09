@@ -1340,13 +1340,6 @@ html.js-motion .craft-card.deck-in {
   max-width: 660px;
 }
 
-.ps-head-sub {
-  margin: 14px 0 0;
-  font-size: 0.95rem;
-  line-height: 1.95;
-  color: var(--ink-3);
-}
-
 .ps-filters {
   display: flex;
   flex-wrap: wrap;

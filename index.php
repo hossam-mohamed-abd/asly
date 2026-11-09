@@ -227,7 +227,6 @@ $assetVer = (string)max(
             <span><?= e($en ? 'WHAT WE HANDLE' : 'اللي بنشتغل فيه') ?></span>
           </div>
           <h2 class="section-title" data-scroll-write><?= e($en ? 'The Categories Behind The ASLY Counter' : 'الأقسام اللي بتشوفها في أصلي') ?></h2>
-          <p class="ps-head-sub"><?= e($en ? 'Illustrative visuals that show who we are and what we work on. Hover any item for a quick look.' : 'صور توضيحية بتوريك إحنا مين وإيه اللي بنشتغل فيه. حوّم على أي عنصر تشوف نظرة سريعة.') ?></p>
         </div>
         <div class="ps-filters" data-ps-filters>
           <button type="button" class="ps-chip is-on" data-ps-filter="all"><?= e($en ? 'All' : 'الكل') ?></button>
