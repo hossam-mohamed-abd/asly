@@ -527,123 +527,69 @@ $jsConfig = [
 
             <form id="productSaveForm" enctype="multipart/form-data">
               <input type="hidden" name="id" id="prodId" value="0">
+              <input type="hidden" name="barcode" id="prodBarcode" value="">
+              <input type="hidden" name="code_type" id="prodCodeType" value="qr">
+              <div class="form-group" style="margin-bottom:14px;">
+                <label><?= $en ? 'Product Name *' : 'اسم المنتج *' ?></label>
+                <input type="text" name="name" id="prodName" class="form-control" placeholder="<?= $en ? 'Dell XPS 15 Laptop' : 'لابتوب ديل Dell XPS 15' ?>" required>
+              </div>
+              <input type="hidden" name="name_en" id="prodNameEn" value="">
+              <input type="hidden" name="category" id="prodCategory" value="accessories">
+              <input type="hidden" name="condition_status" id="prodCondition" value="new">
+              <input type="hidden" name="brand" id="prodBrand" value="">
+              <input type="hidden" name="specs" id="prodSpecs" value="">
+              <input type="hidden" name="specs_en" id="prodSpecsEn" value="">
+              <input type="hidden" name="description" id="prodDescription" value="">
+              <input type="hidden" name="low_stock_threshold" id="prodLowStock" value="2">
+              <input type="hidden" name="warranty_default" id="prodWarranty" value="<?= e($en ? 'Certified ASLY Testing Warranty' : 'ضمان الفحص والتجربة - أصلي تك ستور') ?>">
+              <input type="hidden" name="show_on_landing" id="prodShowLanding" value="0">
+              <input type="hidden" name="is_featured" id="prodFeatured" value="0">
 
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? '1D Barcode / QR Code *' : 'الباركود المطاول / كود الـ QR *' ?></label>
-                  <input type="text" name="barcode" id="prodBarcode" class="form-control" placeholder="<?= $en ? 'Scan or click Generate Auto QR' : 'امسح الكود أو اضغط توليد QR تلقائي' ?>" style="direction:ltr;font-weight:800;">
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Code Type' : 'نوع الكود' ?></label>
-                  <select name="code_type" id="prodCodeType" class="form-control">
-                    <option value="qr"><?= $en ? 'QR Code (Generated or Scanned)' : 'QR Code (مولّد أو ممسوح)' ?></option>
-                    <option value="barcode"><?= $en ? '1D Elongated Box Barcode' : 'باركود مطاول 1D (علبة أصلية)' ?></option>
-                  </select>
-                </div>
+              <div class="slim-code-strip">
+                <span class="slim-code-label"><?= $en ? 'Registered code' : 'الكود المسجل' ?></span>
+                <strong id="slimCodeText" style="direction:ltr;">—</strong>
+                <span class="slim-code-tag" id="slimCodeType">QR</span>
               </div>
 
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? 'Product Name (Arabic) *' : 'اسم وموديل المنتج (عربي) *' ?></label>
-                  <input type="text" name="name" id="prodName" class="form-control" placeholder="لابتوب ديل Dell XPS 15" required>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Product Name (English — Optional)' : 'اسم المنتج بالإنجليزية (اختياري)' ?></label>
-                  <input type="text" name="name_en" id="prodNameEn" class="form-control" placeholder="Dell XPS 15 Workstation" style="direction:ltr;">
-                </div>
-              </div>
-
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? 'Category *' : 'القسم *' ?></label>
-                  <select name="category" id="prodCategory" class="form-control">
-                    <option value="laptops">Laptops • لابتوب</option>
-                    <option value="mobiles">Smartphones • هواتف ذكية</option>
-                    <option value="accessories">Accessories • إكسسوارات</option>
-                    <option value="wearables">Wearables • ساعات ذكية</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Condition *' : 'حالة المنتج *' ?></label>
-                  <select name="condition_status" id="prodCondition" class="form-control">
-                    <option value="new"><?= $en ? 'Brand New • Sealed' : 'جديد متبرشم' ?></option>
-                    <option value="open_box"><?= $en ? 'Open Box • Like New' : 'كسر زيرو' ?></option>
-                    <option value="used"><?= $en ? 'Certified Pre-Owned' : 'مستعمل فرز أول' ?></option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Brand' : 'الماركة (Brand)' ?></label>
-                  <input type="text" name="brand" id="prodBrand" class="form-control" placeholder="Apple / Dell / HP / Samsung">
-                </div>
-              </div>
-
-              
-              <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-gold-500);margin-bottom:16px;">
+              <div style="background:linear-gradient(135deg,var(--db-teal-50) 0%,var(--db-gold-50) 100%);padding:18px;border-radius:18px;border:1.5px solid var(--db-teal-100);margin-bottom:16px;">
                 <div style="font-weight:800;color:var(--db-teal-800);margin-bottom:10px;font-size:0.92rem;">
-                  <i class="fa-solid fa-coins" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Smart 3-Tier Pricing System (Role-Protected)' : 'نظام التسعير الثلاثي الذكي (سري ومحمي بالصلاحيات)' ?>
+                  <i class="fa-solid fa-coins" style="color:var(--db-gold-600);margin-inline-end:6px;"></i><?= $en ? 'Smart 3-Tier Pricing' : 'نظام التسعير الثلاثي الذكي' ?>
                 </div>
                 <div class="form-grid">
                   <div class="form-group">
-                    <label style="color:#b45309;"><?= $en ? '1. True Purchase Cost (Admin Only) *' : '1. سعر الشراء الحقيقي (للمدير فقط) *' ?></label>
+                    <label style="color:#b45309;"><?= $en ? '1. True Purchase Cost (Admin Only) *' : '1. سعر الشراء الحقيقي (سري — للأدمن فقط) *' ?></label>
                     <input type="number" step="0.01" min="0" name="purchase_price" id="prodPurchasePrice" class="form-control" placeholder="0.00" required>
                   </div>
                   <div class="form-group">
-                    <label style="color:var(--db-teal-800);"><?= $en ? '2. Selling Price (Shown on Scan) *' : '2. سعر البيع الأساسي (يظهر بالاسكان) *' ?></label>
+                    <label style="color:var(--db-teal-800);"><?= $en ? '2. Selling Price (Shown on Scan) *' : '2. سعر البيع الأساسي (يظهر عند المسح) *' ?></label>
                     <input type="number" step="0.01" min="0" name="sell_price" id="prodSellPrice" class="form-control" placeholder="0.00" required>
                   </div>
                   <div class="form-group">
-                    <label style="color:#059669;"><?= $en ? '3. Min Floor Price (Decoy Button) *' : '3. أقل سعر بيع (يظهر بزر سعر الشراء) *' ?></label>
-                    <input type="number" step="0.01" min="0" name="min_sell_price" id="prodMinSellPrice" class="form-control" placeholder="0.00" required>
+                    <label style="color:#059669;"><?= $en ? '3. Min Floor Price (Decoy Button) *' : '3. أقل سعر بيع (يظهر بزر التمويه) *' ?></label>
+                    <input type="number" step="0.01" min="0" name="min_sell_price" id="prodMinSellPrice" class="form-control" placeholder="0.00">
                   </div>
                 </div>
                 <div id="liveProfitHint" style="margin-top:10px;font-size:0.82rem;color:var(--db-text);font-weight:700;"></div>
               </div>
 
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? 'Stock Quantity *' : 'الكمية المتوفرة بالمخزن *' ?></label>
-                  <input type="number" min="0" name="quantity" id="prodQuantity" class="form-control" value="1" required>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Low Stock Alert' : 'حد التنبيه بالنواقص' ?></label>
-                  <input type="number" min="0" name="low_stock_threshold" id="prodLowStock" class="form-control" value="2">
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Default Invoice Warranty' : 'فترة ونوع الضمان الافتراضي' ?></label>
-                  <input type="text" name="warranty_default" id="prodWarranty" class="form-control" value="ضمان الفحص والتجربة - أصلي تك ستور">
-                </div>
+              <div class="form-group" style="margin-bottom:16px;">
+                <label><?= $en ? 'Stock Quantity *' : 'الكمية المتوفرة بالمخزن *' ?></label>
+                <input type="number" min="0" name="quantity" id="prodQuantity" class="form-control" value="1" required>
               </div>
 
-              <div class="form-grid" style="margin-bottom:14px;">
-                <div class="form-group">
-                  <label><?= $en ? 'Specs (Arabic)' : 'المواصفات الفنية (عربي)' ?></label>
-                  <input type="text" name="specs" id="prodSpecs" class="form-control" placeholder="Core i7 • RAM 16GB • SSD 512GB">
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Specs (English — Optional)' : 'المواصفات بالإنجليزية (اختياري)' ?></label>
-                  <input type="text" name="specs_en" id="prodSpecsEn" class="form-control" placeholder="Core i7 • 16GB DDR5 • 512GB NVMe" style="direction:ltr;">
-                </div>
-              </div>
-
-              <div class="form-grid" style="margin-bottom:16px;">
-                <div class="form-group">
-                  <label><i class="fa-solid fa-image" style="color:var(--db-teal-700);margin-inline-end:5px;"></i><?= $en ? 'Product Image (Internal POS & Scanner)' : 'صورة المنتج (تظهر بالاسكان ونقطة البيع)' ?></label>
-                  <div class="img-capture-row">
-                    <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
-                    <input type="file" id="prodImageCapture" accept="image/*" capture="environment" style="display:none;">
-                    <div class="img-capture-actions">
-                      <button type="button" class="btn btn-teal btn-sm" id="btnCaptureProdImage"><i class="fa-solid fa-camera"></i> <?= $en ? 'Take Photo Now' : 'صور بالكاميرا الآن' ?></button>
-                    </div>
-                    <div class="img-capture-preview" id="prodImagePreview">
-                      <img alt="" id="prodImagePreviewThumb">
-                      <span style="flex:1;font-size:0.78rem;color:var(--db-muted);" id="prodImagePreviewName"></span>
-                      <button type="button" id="btnClearProdImage"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Remove' : 'حذف' ?></button>
-                    </div>
+              <div class="form-group" style="margin-bottom:16px;">
+                <label><i class="fa-solid fa-image" style="color:var(--db-teal-700);margin-inline-end:5px;"></i><?= $en ? 'Product Image' : 'الصورة الخاصة بالمنتج' ?></label>
+                <div class="img-capture-row">
+                  <input type="file" name="image" id="prodImageInput" accept="image/*" class="form-control">
+                  <input type="file" id="prodImageCapture" accept="image/*" capture="environment" style="display:none;">
+                  <div class="img-capture-actions">
+                    <button type="button" class="btn btn-teal btn-sm" id="btnCaptureProdImage"><i class="fa-solid fa-camera"></i> <?= $en ? 'Take Photo Now' : 'صور بالكاميرا الآن' ?></button>
                   </div>
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Internal Notes / Description' : 'ملاحظات أو وصف المنتج' ?></label>
-                  <input type="text" name="description" id="prodDescription" class="form-control">
+                  <div class="img-capture-preview" id="prodImagePreview">
+                    <img alt="" id="prodImagePreviewThumb">
+                    <span style="flex:1;font-size:0.78rem;color:var(--db-muted);" id="prodImagePreviewName"></span>
+                    <button type="button" id="btnClearProdImage"><i class="fa-solid fa-xmark"></i> <?= $en ? 'Remove' : 'حذف' ?></button>
+                  </div>
                 </div>
               </div>
 

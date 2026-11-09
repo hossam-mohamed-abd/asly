@@ -1063,7 +1063,15 @@
       printHtmlSnippet(`Invoice ${activeInvoiceData.invoice.invoice_number}`, el.outerHTML);
     }
   });
+  function syncSlimCodeStrip() {
+    const codeEl = document.getElementById("slimCodeText");
+    const typeEl = document.getElementById("slimCodeType");
+    const code = (document.getElementById("prodBarcode")?.value || "").trim();
+    if (codeEl) codeEl.textContent = code || "—";
+    if (typeEl) typeEl.textContent = code.toUpperCase().startsWith("ASLY-") ? "QR" : "BARCODE";
+  }
   function updateLiveStickerPreview() {
+    syncSlimCodeStrip();
     const code = document.getElementById("prodBarcode")?.value.trim() || "";
     const name = document.getElementById("prodName")?.value.trim() || document.getElementById("prodNameEn")?.value.trim() || "ASLY TECH STORE";
     const nameEl = document.getElementById("stickerProdName");
@@ -1282,6 +1290,28 @@
       }
     });
 
+    function closeProductFormAfterSave() {
+      document.getElementById("productSaveForm").reset();
+      document.getElementById("prodId").value = "0";
+      const bc = document.getElementById("prodBarcode");
+      const ct = document.getElementById("prodCodeType");
+      const cat = document.getElementById("prodCategory");
+      const cond = document.getElementById("prodCondition");
+      if (bc) bc.value = "";
+      if (ct) ct.value = "qr";
+      if (cat) cat.value = "accessories";
+      if (cond) cond.value = "new";
+      const qty = document.getElementById("prodQuantity");
+      if (qty) qty.value = "1";
+      document.getElementById("existingProdAlert").style.display = "none";
+      document.getElementById("liveProfitHint").textContent = "";
+      resetScanQtyBar();
+      syncSlimCodeStrip();
+      if (prodGate) prodGate.style.display = "flex";
+      if (prodFormWrap) prodFormWrap.style.display = "none";
+      updateLiveStickerPreview();
+    }
+
     document.getElementById("btnGenerateQrFromGate")?.addEventListener("click", () => {
       document.getElementById("btnGenerateAutoQr")?.click();
       openProductForm();
@@ -1304,6 +1334,9 @@
     function resetProductForm() {
       document.getElementById("productSaveForm").reset();
       document.getElementById("prodId").value = "0";
+      const bcField = document.getElementById("prodBarcode");
+      if (bcField) bcField.value = "";
+      syncSlimCodeStrip();
       resetScanQtyBar();
       if (prodGate) prodGate.style.display = "flex";
       if (prodFormWrap) prodFormWrap.style.display = "none";
@@ -1331,8 +1364,10 @@
       if (document.getElementById("prodSpecsEn")) document.getElementById("prodSpecsEn").value = p.specs_en || "";
       document.getElementById("prodDescription").value = p.description || "";
       if (document.getElementById("prodDescriptionEn")) document.getElementById("prodDescriptionEn").value = p.description_en || "";
-      if (document.getElementById("prodShowLanding")) document.getElementById("prodShowLanding").checked = Number(p.show_on_landing) === 1;
-      if (document.getElementById("prodFeatured")) document.getElementById("prodFeatured").checked = Number(p.is_featured) === 1;
+      const landEl = document.getElementById("prodShowLanding");
+      const featEl = document.getElementById("prodFeatured");
+      if (landEl) landEl.value = Number(p.show_on_landing) === 1 ? "1" : "0";
+      if (featEl) featEl.value = Number(p.is_featured) === 1 ? "1" : "0";
       document.getElementById("productFormHeading").innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${tr("تعديل بيانات المنتج:", "Edit Product:")} ${esc(p.display_name || p.name)}`;
       document.getElementById("existingProdAlert").style.display = "none";
       updateLiveStickerPreview();
@@ -1348,8 +1383,12 @@
         fd.set("image", captured.files[0], captured.files[0].name || "product.jpg");
       }
       fd.set("action", "save");
-      fd.set("show_on_landing", document.getElementById("prodShowLanding")?.checked ? "1" : "0");
-      fd.set("is_featured", document.getElementById("prodFeatured")?.checked ? "1" : "0");
+      fd.set("show_on_landing", "0");
+      fd.set("is_featured", "0");
+      const pCat = document.getElementById("prodCategory");
+      const pCond = document.getElementById("prodCondition");
+      if (pCat) fd.set("category", pCat.value || "accessories");
+      if (pCond) fd.set("condition_status", pCond.value || "new");
       try {
         const res = await apiFetch("api/products.php", {
           method: "POST",
@@ -1360,7 +1399,7 @@
         updateLiveStickerPreview();
         if (document.getElementById("prodId").value === "0") {
           document.getElementById("btnClearProdImage")?.click();
-          resetProductForm();
+          closeProductFormAfterSave();
         }
       } catch (err) {
         showToast(err.message, true);
