@@ -1370,10 +1370,6 @@ $jsConfig = [
 <div class="toast-container" id="toastContainer"></div>
 
 <script>window.ASLY_CFG = <?= json_encode($jsConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;</script>
-<script src="<?= e(appUrl('assets/vendor/qrcode.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/vendor/qrcode_UTF8.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/vendor/JsBarcode.all.min.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js')) ?>"></script>
 <script src="<?= e(assetUrl('assets/js/turbo-scanner.js')) ?>"></script>
 <script src="<?= e(assetUrl('assets/js/dashboard.js')) ?>"></script>
 <script>
