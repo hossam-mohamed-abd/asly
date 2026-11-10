@@ -1,8 +1,68 @@
 (function() {
   "use strict";
 
+  window.AslyFresh = function() {
+    try {
+      const base = (window.ASLY_CFG && window.ASLY_CFG.baseUrl) || "";
+      if (window.__aslyFreshBusy) return;
+      window.__aslyFreshBusy = true;
+      fetch(base + "/version.php?t=" + Date.now(), { cache: "no-store" })
+        .then(r => r.text())
+        .then(rev => {
+          window.__aslyFreshBusy = false;
+          rev = (rev || "").trim();
+          if (!rev) return;
+          const seen = localStorage.getItem("asly_rev");
+          localStorage.setItem("asly_rev", rev);
+          if (!seen || seen === rev) return;
+          if (sessionStorage.getItem("asly_reloaded") === "1") return;
+          if (window.AslyTurboScanner && window.AslyTurboScanner.isRunning && window.AslyTurboScanner.isRunning()) return;
+          if (document.querySelector(".prod-cam-overlay.visible")) return;
+          sessionStorage.setItem("asly_reloaded", "1");
+          window.location.reload();
+        })
+        .catch(() => { window.__aslyFreshBusy = false; });
+    } catch (_) {}
+  };
+
+  let lastFreshCheck = 0;
+  function freshTick() {
+    if (document.visibilityState !== "visible") return;
+    const now = Date.now();
+    if (now - lastFreshCheck < 45000) return;
+    lastFreshCheck = now;
+    window.AslyFresh();
+  }
+  document.addEventListener("visibilitychange", freshTick);
+  window.addEventListener("pageshow", e => {
+    if (e.persisted) freshTick();
+  });
+  window.setTimeout(freshTick, 2500);
+
+  window.AslyBust = function(url) {
+    if (!url) return url;
+    try {
+      const u = new URL(url, window.location.href);
+      u.searchParams.set("t", String(Date.now()));
+      return u.pathname + u.search;
+    } catch (_) {
+      return url + (url.indexOf("?") > -1 ? "&" : "?") + "t=" + Date.now();
+    }
+  };
+
   let zbarScannerPromise = null;
   let nativeDetectorPromise = null;
+
+  function loadVendor(name) {
+    if (typeof window.AslyLazy !== "function") return Promise.resolve(false);
+    const base = (window.ASLY_CFG && window.ASLY_CFG.baseUrl) || "";
+    return window.AslyLazy(`${base}/assets/vendor/${name}`).then(() => true).catch(() => false);
+  }
+
+  async function ensureScannerLibs() {
+    if (typeof window.zbarWasm === "undefined") await loadVendor("zbar-wasm.min.js");
+    if (typeof window.Html5Qrcode === "undefined") await loadVendor("html5-qrcode.min.js");
+  }
 
   function getZbarScanner() {
     if (zbarScannerPromise) return zbarScannerPromise;
@@ -226,6 +286,8 @@
       mount.innerHTML = `<div style="padding:18px;color:#dc2626;font-size:0.85rem;font-weight:700;">${tr("المتصفح لا يدعم تشغيل الكاميرا مباشرة (يتطلب HTTPS أو localhost). استخدم زر مسح صورة الكود أو قارئ الباركود.", "Direct camera requires HTTPS or localhost. Use image scan or a barcode gun.")}</div>`;
       return false;
     }
+
+    await ensureScannerLibs();
 
     getZbarScanner();
     getNativeDetector();
@@ -518,6 +580,7 @@
 
   async function scanFile(file) {
     if (!file) throw new Error("No file");
+    await ensureScannerLibs();
     const bitmapUrl = URL.createObjectURL(file);
     try {
       const img = await new Promise((resolve, reject) => {

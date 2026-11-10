@@ -2663,7 +2663,7 @@ html[lang="en"] .footer-links-list a:hover {
 
 .tw-word {
   display: inline-block;
-  will-change: clip-path, opacity, transform;
+  backface-visibility: hidden;
 }
 
 html.js-motion [data-hero-write] .tw-word,

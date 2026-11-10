@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 $user = requireLoginPage();
 $isAdmin = ($user['role'] === 'admin');
 $pdo = Database::getConnection();
@@ -78,7 +81,7 @@ $jsConfig = [
   <title><?= $en ? 'Smart Dashboard' : 'لوحة التحكم الذكية' ?> | <?= e($displayStore) ?></title>
   <link rel="icon" type="image/svg+xml" href="<?= e(appUrl('assets/brand/favicon.svg')) ?>">
   <link rel="stylesheet" href="<?= e(appUrl('assets/vendor/fontawesome/css/all.min.css')) ?>">
-  <link rel="stylesheet" href="<?= e(appUrl('assets/css/dashboard.css')) ?>">
+  <link rel="stylesheet" href="<?= e(assetUrl('assets/css/dashboard.css')) ?>">
 </head>
 <body>
 
@@ -1371,9 +1374,22 @@ $jsConfig = [
 <script src="<?= e(appUrl('assets/vendor/qrcode_UTF8.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/JsBarcode.all.min.js')) ?>"></script>
 <script src="<?= e(appUrl('assets/vendor/zbar-wasm.min.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/vendor/html5-qrcode.min.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/js/turbo-scanner.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/vendor/html2canvas.min.js')) ?>"></script>
-<script src="<?= e(appUrl('assets/js/dashboard.js')) ?>"></script>
+<script src="<?= e(assetUrl('assets/js/turbo-scanner.js')) ?>"></script>
+<script src="<?= e(assetUrl('assets/js/dashboard.js')) ?>"></script>
+<script>
+window.AslyLazy = function (src) {
+  if (!window.__aslyLazy) window.__aslyLazy = {};
+  if (window.__aslyLazy[src]) return window.__aslyLazy[src];
+  window.__aslyLazy[src] = new Promise(function (resolve, reject) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.onload = function () { resolve(true); };
+    s.onerror = function () { reject(new Error("load failed")); };
+    document.head.appendChild(s);
+  });
+  return window.__aslyLazy[src];
+};
+</script>
 </body>
 </html>

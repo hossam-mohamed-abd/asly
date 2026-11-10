@@ -184,16 +184,16 @@
 
     for (let i = 0; i < scrollBlocks.length; i++) {
       const blk = scrollBlocks[i];
+      if (blk.done) continue;
       const rect = blk.el.getBoundingClientRect();
 
       if (rect.top >= vh * 0.99) {
-        blk.target = 0;
-        blk.current = 0;
-        applyWriteProgress(blk, 0);
+        if (blk.current !== 0) {
+          blk.current = 0;
+          applyWriteProgress(blk, 0);
+        }
         continue;
       }
-
-      blk.target = 1;
 
       if (blk.current < 0.999) {
         keepRunning = true;
@@ -205,6 +205,12 @@
       }
 
       applyWriteProgress(blk, blk.current);
+
+      if (blk.current >= 1) {
+        blk.done = true;
+        blk.el.classList.add("tw-complete");
+        if (blk.caret && blk.caret.parentNode) blk.caret.remove();
+      }
     }
 
     if (keepRunning) {
@@ -270,20 +276,32 @@
     revealItems.forEach(el => el.classList.add("in-view"));
   }
 
-  const parallaxNodes = document.querySelectorAll("[data-parallax]");
-  if (parallaxNodes.length && window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
+  const parallaxNodes = Array.prototype.slice.call(document.querySelectorAll("[data-parallax]"));
+  const finePointer = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  const lightDevice = !finePointer || (window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
+  if (parallaxNodes.length && !lightDevice) {
+    let parallaxRaf = 0;
+    let lastX = 0;
+    let lastY = 0;
     window.addEventListener("mousemove", e => {
-      const rx = (e.clientX / window.innerWidth - 0.5) * 2;
-      const ry = (e.clientY / window.innerHeight - 0.5) * 2;
-      parallaxNodes.forEach(node => {
-        const factor = parseFloat(node.getAttribute("data-parallax") || "10");
-        const px = `${(rx * factor).toFixed(1)}px`;
-        const py = `${(ry * factor).toFixed(1)}px`;
-        if (node.hasAttribute("data-side")) {
-          node.style.setProperty("--px", px);
-          node.style.setProperty("--py", py);
-        } else {
-          node.style.translate = `${px} ${py}`;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (parallaxRaf) return;
+      parallaxRaf = requestAnimationFrame(() => {
+        parallaxRaf = 0;
+        const rx = (lastX / window.innerWidth - 0.5) * 2;
+        const ry = (lastY / window.innerHeight - 0.5) * 2;
+        for (let i = 0; i < parallaxNodes.length; i++) {
+          const node = parallaxNodes[i];
+          const factor = parseFloat(node.getAttribute("data-parallax") || "10");
+          const px = `${(rx * factor).toFixed(1)}px`;
+          const py = `${(ry * factor).toFixed(1)}px`;
+          if (node.hasAttribute("data-side")) {
+            node.style.setProperty("--px", px);
+            node.style.setProperty("--py", py);
+          } else {
+            node.style.translate = `${px} ${py}`;
+          }
         }
       });
     }, { passive: true });
@@ -341,14 +359,14 @@
       card.addEventListener("mouseenter", () => {
         craftPaused = true;
         stopCraftAuto();
-        setCraft(i, true);
+        setCraft(i, false);
       });
       card.addEventListener("focusin", () => {
         craftPaused = true;
         stopCraftAuto();
-        setCraft(i, true);
+        setCraft(i, false);
       });
-      card.addEventListener("click", () => setCraft(i, true));
+      card.addEventListener("click", () => setCraft(i, false));
     });
 
     deck.addEventListener("mouseleave", () => {
@@ -365,9 +383,6 @@
               card.classList.add("deck-in");
             });
             startCraftAuto();
-          } else if (entry.boundingClientRect.top > (window.innerHeight || 800) * 1.03) {
-            craftCards.forEach(card => card.classList.remove("deck-in"));
-            stopCraftAuto();
           } else {
             stopCraftAuto();
           }

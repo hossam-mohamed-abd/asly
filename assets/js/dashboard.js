@@ -155,7 +155,15 @@
   function renderQrInto(el, text, cellSize = 4) {
     if (!el) return;
     el.innerHTML = "";
-    if (!text || typeof window.qrcode !== "function") return;
+    if (!text) return;
+    if (typeof window.qrcode !== "function") {
+      if (typeof window.AslyLazy === "function") {
+        window.AslyLazy(apiUrl("assets/vendor/qrcode.js")).then(() => {
+          renderQrInto(el, text, cellSize);
+        }).catch(() => {});
+      }
+      return;
+    }
     try {
       const qr = window.qrcode(0, "M");
       qr.addData(String(text));
@@ -172,7 +180,15 @@
   function renderBarcodeInto(svgEl, code) {
     if (!svgEl) return;
     svgEl.innerHTML = "";
-    if (!code || typeof window.JsBarcode !== "function") return;
+    if (!code) return;
+    if (typeof window.JsBarcode !== "function") {
+      if (typeof window.AslyLazy === "function") {
+        window.AslyLazy(apiUrl("assets/vendor/JsBarcode.all.min.js")).then(() => {
+          renderBarcodeInto(svgEl, code);
+        }).catch(() => {});
+      }
+      return;
+    }
     try {
       window.JsBarcode(svgEl, String(code), {
         format: "CODE128",
@@ -1048,8 +1064,20 @@
       showToast(err.message, true);
     }
   };
+  async function ensureHtml2Canvas() {
+    if (typeof window.html2canvas === "function") return true;
+    if (typeof window.AslyLazy !== "function") return false;
+    try {
+      await window.AslyLazy(apiUrl("assets/vendor/html2canvas.min.js"));
+      return typeof window.html2canvas === "function";
+    } catch (_) {
+      return false;
+    }
+  }
   async function generateInvoiceCanvas() {
     const el = document.getElementById("modalInvoiceCapture");
+    const ready = await ensureHtml2Canvas();
+    if (!ready) throw new Error(tr("تعذر تجهيز الصورة، جرّب تاني", "Could not prepare the image, try again"));
     return await window.html2canvas(el, {
       scale: 2,
       useCORS: true,

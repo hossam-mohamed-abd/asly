@@ -286,6 +286,24 @@ function getMaintenanceStages(): array
     ];
 }
 
+function assetVer(string $relPath): string
+{
+    static $cache = [];
+    $key = ltrim($relPath, '/');
+    if (isset($cache[$key])) {
+        return $cache[$key];
+    }
+    $full = dirname(__DIR__) . '/' . $key;
+    $stamp = @filemtime($full) ?: 0;
+    $cache[$key] = (string)$stamp;
+    return $cache[$key];
+}
+
+function assetUrl(string $relPath): string
+{
+    return appUrl($relPath) . '?v=' . assetVer($relPath);
+}
+
 function generateUniqueProductCode(PDO $pdo, string $category = 'laptops'): string
 {
     $cats = getCategoryMeta();

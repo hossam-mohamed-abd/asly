@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 require_once __DIR__ . '/includes/seo_meta.php';
 
 $pdo = Database::getConnection();
@@ -38,8 +41,10 @@ $lookbookStamp = (int)(@max(array_map('filemtime', (array)@glob(__DIR__ . '/asse
 $assetVer = (string)max(
     (int)@filemtime(__DIR__ . '/assets/css/landing.css'),
     (int)@filemtime(__DIR__ . '/assets/js/landing.js'),
+    (int)@filemtime(__DIR__ . '/includes/helpers.php'),
+    (int)@filemtime(__FILE__),
     $lookbookStamp,
-    20261120
+    (int)@filemtime(__DIR__ . '/assets/vendor/fontawesome/css/all.min.css')
 );
 ?>
 <!DOCTYPE html>
@@ -63,7 +68,7 @@ $assetVer = (string)max(
   <header class="nav-shell">
     <nav class="nav-capsule" aria-label="Main navigation">
       <a href="<?= e(appUrl('index.php')) ?>" class="brand-mark">
-        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY TECH STORE">
+        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY TECH STORE" width="180" height="44" decoding="async">
       </a>
 
       <div class="nav-links">
@@ -868,7 +873,7 @@ $assetVer = (string)max(
     <div class="container">
       <div class="footer-top-grid">
         <div>
-          <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY TECH STORE" class="footer-logo">
+          <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY TECH STORE" class="footer-logo" width="160" height="40" loading="lazy" decoding="async">
           <p style="color: var(--ink-2); max-width: 430px; margin: 0 0 18px; font-size: 0.94rem;"><?= e($tagline) ?></p>
           <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             <?php foreach ($socialPlatforms as $sp): ?>
@@ -940,7 +945,7 @@ $assetVer = (string)max(
   <div class="bright-modal-backdrop" id="mobileNavModal" aria-hidden="true">
     <div class="bright-modal-card">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
-        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY" style="height: 40px;">
+        <img src="<?= e(appUrl('assets/brand/logo-transparent.png')) ?>" alt="ASLY" style="height: 40px;" width="150" height="40" loading="lazy" decoding="async">
         <button type="button" class="icon-pill-btn" id="closeMobileDrawerBtn">
           <i class="fa-solid fa-xmark"></i>
         </button>
