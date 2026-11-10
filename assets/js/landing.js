@@ -155,7 +155,13 @@
         const prog = Math.min(1, elapsed / h.duration);
         const eased = 1 - Math.pow(1 - prog, 1.65);
         applyWriteProgress(h.blk, eased);
-        if (prog < 1) active = true;
+        if (prog < 1) {
+          active = true;
+        } else if (!h.blk.done) {
+          h.blk.done = true;
+          h.blk.el.classList.add("tw-complete");
+          if (h.blk.caret && h.blk.caret.parentNode) h.blk.caret.remove();
+        }
       }
       if (active) requestAnimationFrame(tickHero);
     }

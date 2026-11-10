@@ -3383,3 +3383,22 @@ html.js-motion [data-side].side-in {
   }
 }
 
+@media (max-width: 900px) {
+  .craft-card-img {
+    will-change: auto;
+    transform: none;
+    filter: saturate(0.92);
+  }
+  .craft-card.is-active .craft-card-img {
+    transform: none;
+    filter: saturate(1);
+  }
+  html.js-motion [data-side] {
+    will-change: auto;
+  }
+}
+
+html.js-motion .tw-complete .tw-word,
+html.js-motion .tw-complete .tw-word:nth-child(n) {
+  opacity: 1 !important;
+}
