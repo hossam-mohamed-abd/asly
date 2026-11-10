@@ -263,6 +263,13 @@
           <span class="turbo-toast-ico" data-toast-ico><i class="fa-solid fa-qrcode"></i></span>
           <span class="turbo-toast-text" data-toast-text>${tr("وجّه الكاميرا نحو الباركود أو الـ QR", "Point the camera at the barcode or QR")}</span>
         </div>
+        <div class="turbo-cam-fallback">
+          <label class="turbo-cam-file-btn">
+            <i class="fa-solid fa-image"></i>
+            <span>${tr("صورة", "Image")}</span>
+            <input type="file" accept="image/*" data-cam-file style="display:none;">
+          </label>
+        </div>
         <div class="turbo-cam-controls">
           <button type="button" class="turbo-ctrl-btn active" data-zoom="1">1×</button>
           <button type="button" class="turbo-ctrl-btn" data-zoom="1.6">1.6×</button>
@@ -275,6 +282,24 @@
     `;
 
     const shell = mount.querySelector(".turbo-cam-shell");
+    const fileInput = mount.querySelector("[data-cam-file]");
+    fileInput?.addEventListener("change", async ev => {
+      const file = ev.target.files && ev.target.files[0];
+      ev.target.value = "";
+      if (!file) return;
+      camToast(tr("جاري قراءة الصورة...", "Reading image..."), "info", 2000);
+      try {
+        const text = await scanFile(file);
+        if (text) {
+          camToast(tr("تم قراءة الكود", "Code read"), "ok", 1400);
+          emitHit(text);
+        } else {
+          camToast(tr("مش لاقي كود واضح في الصورة", "No clear code in the image"), "err", 3200);
+        }
+      } catch (err) {
+        camToast(tr("تعذر قراءة الصورة، جرّب صورة أوضح", "Could not read the image, try a clearer one"), "err", 3400);
+      }
+    });
     const video = mount.querySelector(".turbo-cam-video");
     const toastEl = mount.querySelector("[data-cam-toast]");
     const toastIco = mount.querySelector("[data-toast-ico]");
@@ -394,6 +419,8 @@
       onScanSuccess(clean);
     }
 
+    let consecutiveLoopErrors = 0;
+
     async function processFrame() {
       if (!inst.running) return;
       inst.rafId = requestAnimationFrame(processFrame);
@@ -471,10 +498,15 @@
         }
 
         const decoded = await decodeCanvasWithZbar(grayToScan, dw, dh);
+        consecutiveLoopErrors = 0;
         if (decoded && inst.running) {
           emitHit(decoded);
         }
-      } catch (_) {
+      } catch (err) {
+        consecutiveLoopErrors += 1;
+        if (consecutiveLoopErrors === 4) {
+          camToast(tr("إذا لم يقرأ الكود: قرّب الكاميرا وأضف إضاءة", "If it will not read: move closer and add light"), "err", 4200);
+        }
       } finally {
         busy = false;
       }
