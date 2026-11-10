@@ -457,7 +457,6 @@
       const inp = document.getElementById("quickCodeInput");
       if (inp) inp.value = "";
     }
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
   document.getElementById("btnQuickScanNext")?.addEventListener("click", () => {
     showQuickStage("scan");
@@ -521,7 +520,7 @@
   let posSearchDebounce = null;
   function scrollToPosInvoice() {
     const invCard = document.getElementById("posInvoiceCard");
-    if (invCard) {
+    if (invCard && window.innerWidth > 860) {
       invCard.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
@@ -1247,7 +1246,6 @@
         dot.classList.toggle("is-current", dotIdx === idx);
         dot.classList.toggle("is-done", dotIdx < idx);
       });
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function setQtyPreview() {

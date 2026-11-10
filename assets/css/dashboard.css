@@ -2445,3 +2445,28 @@ html[dir="rtl"] .sidebar-edge-btn {
     font-size: 0.68rem;
   }
 }
+
+@media (max-width: 860px) {
+  body,
+  .app-layout,
+  .main-area,
+  .content-wrap {
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar {
+    overflow-y: auto;
+  }
+  .topbar-admin {
+    position: static;
+  }
+  .global-scan-hud {
+    top: 10px;
+  }
+  .prod-cam-overlay,
+  .db-modal-backdrop {
+    overflow-y: auto;
+  }
+}
