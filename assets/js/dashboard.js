@@ -222,6 +222,11 @@
     staff: tr("إدارة الموظفين وصلاحيات النظام", "Staff Accounts & Role Permissions"),
     settings: tr("الهوية البصرية وقنوات التواصل وإعدادات البريد", "Brand Identity, Contact Channels & SMTP")
   };
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("tab-screens")) bootScreens();
+    if (document.getElementById("prodKindRow")) initAddKind();
+  });
+
   window.switchTab = async tabName => {
     if (!IS_ADMIN && !staffAllowedTabs.has(tabName)) {
       tabName = "quick-scanner";
@@ -239,6 +244,7 @@
     if (tabName === "overview" && IS_ADMIN) loadOverviewReport();
     if (tabName === "pos") loadPosCatalog();
     if (tabName === "inventory" && IS_ADMIN) loadInventoryTable();
+    if (tabName === "screens") bootScreens();
     if (tabName === "maintenance") loadMaintenanceList();
     if (tabName === "staff" && IS_ADMIN) loadUsersList();
     if (tabName === "settings" && IS_ADMIN) loadSettingsData();
@@ -1700,6 +1706,44 @@
       const pCond = document.getElementById("prodCondition");
       if (pCat) fd.set("category", pCat.value || "accessories");
       if (pCond) fd.set("condition_status", pCond.value || "new");
+      if (ADDKIND.kind === "screen") {
+        const sf = new FormData();
+        sf.set("action", "save");
+        sf.set("id", document.getElementById("prodId")?.value || "0");
+        sf.set("barcode", (document.getElementById("prodBarcode")?.value || "").trim());
+        sf.set("code_type", document.getElementById("prodCodeType")?.value || "qr");
+        sf.set("name", (document.getElementById("prodName")?.value || "").trim());
+        sf.set("name_en", (document.getElementById("prodNameEn")?.value || "").trim());
+        sf.set("quality", document.getElementById("prodQuality")?.value || "standard");
+        sf.set("shelf_code", document.getElementById("prodShelf")?.value || "");
+        sf.set("drawer_label", document.getElementById("prodDrawer")?.value || "");
+        sf.set("purchase_price", document.getElementById("prodPurchasePrice")?.value || "0");
+        sf.set("sell_price", document.getElementById("prodSellPrice")?.value || "0");
+        sf.set("min_sell_price", document.getElementById("prodMinSellPrice")?.value || "0");
+        sf.set("quantity", document.getElementById("prodQuantity")?.value || "0");
+        sf.set("low_stock_threshold", document.getElementById("prodLowStock")?.value || "3");
+        sf.set("model_ids", ADDKIND.selected.map(m => m.id).join(","));
+        try {
+          const sres = await apiFetch("api/screens.php", { method: "POST", body: sf });
+          showToast(sres.message);
+          document.getElementById("prodBarcode").value = sres.barcode;
+          updateLiveStickerPreview();
+          const sName = (document.getElementById("prodName")?.value || "").trim();
+          const sQty = document.getElementById("prodQuantity")?.value || "0";
+          if (document.getElementById("prodId").value === "0") {
+            showDone(
+              tr("تم حفظ الاسكرينة", "Screen saved"),
+              tr("الاسكرينة بقت على الرف وجاهزة للبيع.", "The screen is now on the shelf and ready to sell."),
+              `<strong>${esc(sName)}</strong><br><span style="font-size:0.82rem;color:var(--db-muted);">${tr("تركب على", "Fits")}: <strong>${ADDKIND.selected.length}</strong> • ${tr("الكمية", "Qty")}: <strong>${esc(sQty)}</strong> • ${tr("الكود", "Code")}: <strong style="direction:ltr;display:inline-block;">${esc(sres.barcode || "")}</strong></span>`
+            );
+            loadInventoryTable();
+            loadScreens();
+          }
+        } catch (err) {
+          showToast(err.message, true);
+        }
+        return;
+      }
       try {
         const res = await apiFetch("api/products.php", {
           method: "POST",
@@ -1724,6 +1768,483 @@
       }
     });
   }
+  const ADDKIND = {
+    kind: "product",
+    selected: [],
+    models: [],
+    shelves: []
+  };
+
+  function paintAddModelChips() {
+    const wrap = document.getElementById("prodModelChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (!ADDKIND.selected.length) {
+      wrap.innerHTML = `<span class="scr-chip-empty">${tr("لسه مضفتش أجهزة", "No devices added yet")}</span>`;
+      return;
+    }
+    ADDKIND.selected.forEach(m => {
+      const el = scrChip(m.label, () => {
+        ADDKIND.selected = ADDKIND.selected.filter(x => x.id !== m.id);
+        paintAddModelChips();
+      });
+      wrap.appendChild(el);
+    });
+    const hidden = document.getElementById("prodModelIds");
+    if (hidden) hidden.value = ADDKIND.selected.map(m => m.id).join(",");
+  }
+
+  function paintAddModelResults(list) {
+    const box = document.getElementById("prodModelResults");
+    if (!box) return;
+    const chosen = new Set(ADDKIND.selected.map(x => x.id));
+    const free = list.filter(m => !chosen.has(m.id)).slice(0, 12);
+    box.innerHTML = free.map(m => `<button type="button" class="scr-model-option" data-add-model="${m.id}"><i class="fa-solid fa-plus"></i> ${esc(m.label)}</button>`).join("");
+    box.querySelectorAll("[data-add-model]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const model = ADDKIND.models.find(m => m.id === Number(btn.getAttribute("data-add-model")));
+        if (model && !ADDKIND.selected.some(x => x.id === model.id)) {
+          ADDKIND.selected.push(model);
+          paintAddModelChips();
+          paintAddModelResults(ADDKIND.models);
+        }
+      });
+    });
+  }
+
+  function setAddKind(kind) {
+    ADDKIND.kind = kind;
+    document.querySelectorAll(".prod-kind-btn").forEach(b => {
+      b.classList.toggle("is-active", b.getAttribute("data-kind") === kind);
+    });
+    const isScreen = kind === "screen";
+    const block = document.getElementById("prodScreenBlock");
+    const place = document.getElementById("prodPlaceRow");
+    if (block) block.style.display = isScreen ? "block" : "none";
+    if (place) place.style.display = isScreen ? "grid" : "none";
+    const cat = document.getElementById("prodCategory");
+    if (cat) cat.value = isScreen ? "screens" : "accessories";
+    if (!isScreen) {
+      ADDKIND.selected = [];
+      paintAddModelChips();
+    }
+  }
+
+  async function initAddKind() {
+    document.querySelectorAll(".prod-kind-btn").forEach(btn => {
+      btn.addEventListener("click", () => setAddKind(btn.getAttribute("data-kind")));
+    });
+    try {
+      const [modelsRes, shelvesRes] = await Promise.all([
+        apiFetch("api/screens.php?action=models"),
+        apiFetch("api/screens.php?action=shelves")
+      ]);
+      ADDKIND.models = modelsRes.models || [];
+      ADDKIND.shelves = shelvesRes.shelves || [];
+      const shelfSel = document.getElementById("prodShelfSelect");
+      if (shelfSel) {
+        shelfSel.innerHTML = `<option value="">${tr("بدون رف", "No shelf")}</option>` +
+          ADDKIND.shelves.map(sh => `<option value="${esc(sh.shelf_code)}">${esc(sh.label)}</option>`).join("");
+        shelfSel.addEventListener("change", () => {
+          const hidden = document.getElementById("prodShelf");
+          if (hidden) hidden.value = shelfSel.value;
+        });
+      }
+      const drawerInput = document.getElementById("prodDrawerInput");
+      drawerInput?.addEventListener("input", () => {
+        const hidden = document.getElementById("prodDrawer");
+        if (hidden) hidden.value = drawerInput.value.trim();
+      });
+      const search = document.getElementById("prodModelSearch");
+      search?.addEventListener("input", () => {
+        const q = search.value.trim().toLowerCase();
+        const filtered = !q ? ADDKIND.models : ADDKIND.models.filter(m =>
+          m.label.toLowerCase().includes(q) || String(m.model_name_ar || "").includes(q)
+        );
+        paintAddModelResults(filtered);
+      });
+      paintAddModelChips();
+      paintAddModelResults(ADDKIND.models);
+    } catch (_) {}
+  }
+
+  const SCR = {
+    models: [],
+    shelves: [],
+    selected: [],
+    missingOnly: false,
+    currentModel: 0
+  };
+
+  function scrChip(label, onRemove) {
+    const el = document.createElement("span");
+    el.className = "scr-chip";
+    el.innerHTML = `<span>${esc(label)}</span>`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    btn.addEventListener("click", onRemove);
+    el.appendChild(btn);
+    return el;
+  }
+
+  function renderScrChips() {
+    const wrap = document.getElementById("scrModelChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (!SCR.selected.length) {
+      wrap.innerHTML = `<span class="scr-chip-empty">${tr("لسه مضفتش أجهزة", "No devices added yet")}</span>`;
+      return;
+    }
+    SCR.selected.forEach(item => {
+      wrap.appendChild(scrChip(item.label, () => {
+        SCR.selected = SCR.selected.filter(x => x.id !== item.id);
+        renderScrChips();
+      }));
+    });
+  }
+
+  function screenPlace(screen) {
+    return screen.place_label || (EN ? "Not placed" : "غير محدد");
+  }
+
+  function screenCardHtml(screen) {
+    const models = (screen.models || []).map(m => `<span class="scr-mini">${esc(m.label)}</span>`).join("");
+    const badgeClass = screen.is_out ? "is-out" : (screen.is_low ? "is-low" : "is-ok");
+    const badgeText = screen.is_out
+      ? tr("ناقص خالص", "Out of stock")
+      : (screen.is_low ? tr("قرب يخلص", "Low stock") : tr("متاح", "In stock"));
+    const img = screen.image_path
+      ? `<img src="${esc(apiUrl(screen.image_path))}" onerror="aslyImgErr(this)" alt="">`
+      : `<span class="scr-card-ico"><i class="fa-solid fa-mobile-screen"></i></span>`;
+    return `
+      <article class="scr-card" data-screen-id="${screen.id}">
+        <div class="scr-card-main">
+          ${img}
+          <div class="scr-card-body">
+            <div class="scr-card-title">${esc(screen.display_name)}</div>
+            <div class="scr-place"><i class="fa-solid fa-location-dot"></i> ${esc(screenPlace(screen))}</div>
+            <div class="scr-price">${fmtMoney(screen.sell_price)}</div>
+            <div class="scr-card-meta">
+              <span class="scr-badge ${badgeClass}">${badgeText}</span>
+              <span class="scr-qty">${tr("المتاح:", "Stock:")} <strong>${screen.quantity}</strong></span>
+            </div>
+          </div>
+        </div>
+        ${models ? `<div class="scr-models-line">${models}</div>` : ""}
+        <div class="scr-card-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-scr-copy="${screen.barcode}"><i class="fa-solid fa-barcode"></i> ${esc(screen.barcode)}</button>
+          ${IS_ADMIN ? `<button type="button" class="btn btn-teal btn-sm" data-scr-edit="${screen.id}"><i class="fa-solid fa-pen"></i> ${tr("تعديل", "Edit")}</button>` : ""}
+          <button type="button" class="btn btn-gold btn-sm" data-scr-sell="${screen.id}"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function paintScreens(list, titleText) {
+    const wrap = document.getElementById("screenCards");
+    if (!wrap) return;
+    const titleEl = document.getElementById("screenResultsTitle");
+    if (titleEl && titleText) titleEl.textContent = titleText;
+    if (!list.length) {
+      wrap.innerHTML = `<div class="scr-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>${tr("مفيش اسكرينات مطابقة", "No matching protectors")}</strong><span>${tr("جرّب اسم موديل تاني أو امسح الباركود", "Try another device name or scan the barcode")}</span></div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(screenCardHtml).join("");
+    wrap.querySelectorAll("[data-scr-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit"))));
+    });
+    wrap.querySelectorAll("[data-scr-sell]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-scr-sell"));
+        const item = list.find(x => x.id === id);
+        if (!item) return;
+        window.switchTab("pos");
+        setTimeout(() => addToPosCart(item, { viaScan: true }), 120);
+      });
+    });
+    wrap.querySelectorAll("[data-scr-copy]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const code = btn.getAttribute("data-scr-copy") || "";
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(() => showToast(tr("تم نسخ الكود", "Code copied"))).catch(() => {});
+        }
+      });
+    });
+  }
+
+  function paintScreenStats(list) {
+    const total = document.getElementById("scrStatTotal");
+    const units = document.getElementById("scrStatUnits");
+    const missing = document.getElementById("scrStatMissing");
+    if (total) total.textContent = String(list.length);
+    if (units) units.textContent = String(list.reduce((sum, x) => sum + Number(x.quantity || 0), 0));
+    const missCount = list.filter(x => x.is_low).length;
+    if (missing) missing.textContent = String(missCount);
+    const badge = document.getElementById("scrNavBadge");
+    if (badge) {
+      badge.textContent = String(missCount);
+      badge.style.display = missCount > 0 ? "inline-block" : "none";
+    }
+  }
+
+  async function loadScreens(q) {
+    const params = new URLSearchParams();
+    params.set("action", "list");
+    if (q) params.set("q", q);
+    if (SCR.missingOnly) params.set("missing", "1");
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const list = res.screens || [];
+      paintScreens(list, q ? tr("نتيجة البحث", "Search results") : tr("كل الاسكرينات", "All protectors"));
+      if (!q) paintScreenStats(list);
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  async function searchScreensByModel(q) {
+    const params = new URLSearchParams();
+    params.set("action", "search_by_model");
+    params.set("q", q || "");
+    if (SCR.currentModel) params.set("model_id", String(SCR.currentModel));
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const box = document.getElementById("screenSuggestions");
+      const list = res.screens || [];
+      const suggestions = res.suggestions || [];
+      if (box) {
+        if (!q && !SCR.currentModel) {
+          box.innerHTML = "";
+        } else if (res.model) {
+          box.innerHTML = `<span class="scr-model-pill"><i class="fa-solid fa-mobile-screen"></i> ${esc(res.model.label)}</span>`;
+        } else if (suggestions.length) {
+          box.innerHTML = suggestions.slice(0, 8).map(m =>
+            `<button type="button" class="scr-suggest" data-model-id="${m.id}">${esc(m.label)}</button>`
+          ).join("");
+          box.querySelectorAll("[data-model-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              SCR.currentModel = Number(btn.getAttribute("data-model-id"));
+              const input = document.getElementById("screenModelSearch");
+              if (input) input.value = btn.textContent.trim();
+              searchScreensByModel(btn.textContent.trim());
+            });
+          });
+        } else if (q) {
+          box.innerHTML = `<span class="scr-model-none">${tr("مفيش موديل بالاسم ده — جرّب اسم تاني", "No device with this name — try another")}</span>`;
+        } else {
+          box.innerHTML = "";
+        }
+      }
+      paintScreens(
+        list,
+        res.model ? tr(`اسكرينات تركب على ${res.model.label}`, `Protectors for ${res.model.label}`) : (q ? tr("نتيجة البحث", "Search results") : tr("كل الاسكرينات", "All protectors"))
+      );
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  async function loadScreensMeta() {
+    try {
+      const [modelsRes, shelvesRes] = await Promise.all([
+        apiFetch("api/screens.php?action=models"),
+        apiFetch("api/screens.php?action=shelves")
+      ]);
+      SCR.models = modelsRes.models || [];
+      SCR.shelves = shelvesRes.shelves || [];
+      const shelfSelect = document.getElementById("scrShelf");
+      if (shelfSelect) {
+        shelfSelect.innerHTML = `<option value="">${tr("بدون رف", "No shelf")}</option>` +
+          SCR.shelves.map(sh => `<option value="${esc(sh.shelf_code)}">${esc(sh.label)}</option>`).join("");
+      }
+    } catch (_) {}
+  }
+
+  function renderScrModelResults(list) {
+    const box = document.getElementById("scrModelResults");
+    if (!box) return;
+    const chosen = new Set(SCR.selected.map(x => x.id));
+    const free = list.filter(m => !chosen.has(m.id)).slice(0, 12);
+    box.innerHTML = free.map(m => `<button type="button" class="scr-model-option" data-add-model="${m.id}"><i class="fa-solid fa-plus"></i> ${esc(m.label)}</button>`).join("");
+    box.querySelectorAll("[data-add-model]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-add-model"));
+        const model = SCR.models.find(m => m.id === id);
+        if (model && !SCR.selected.some(x => x.id === id)) {
+          SCR.selected.push(model);
+          renderScrChips();
+          const head = btn.textContent.trim();
+          renderScrModelResults(SCR.models);
+        }
+      });
+    });
+    const newBox = document.getElementById("scrNewModelBox");
+    if (newBox) {
+      const q = (document.getElementById("scrModelSearch")?.value || "").trim();
+      newBox.style.display = q.length >= 2 && !free.length ? "flex" : "none";
+      const nameEl = document.getElementById("scrNewModel");
+      if (nameEl && !nameEl.value) nameEl.value = q;
+    }
+  }
+
+  async function openScreenForm(id) {
+    const shell = document.getElementById("screenFormShell");
+    if (!shell) return;
+    await loadScreensMeta();
+    SCR.selected = [];
+    const form = document.getElementById("screenSaveForm");
+    if (form) form.reset();
+    document.getElementById("scrId").value = "0";
+    document.getElementById("scrBarcode").value = "";
+    document.getElementById("scrQty").value = "0";
+    document.getElementById("scrLow").value = "3";
+    const title = document.getElementById("screenFormTitle");
+    if (title) title.textContent = tr("اسكرينة جديدة", "New screen protector");
+
+    if (id) {
+      try {
+        const res = await apiFetch(`api/screens.php?action=get&id=${id}`);
+        const sc = res.screen;
+        document.getElementById("scrId").value = String(sc.id);
+        document.getElementById("scrBarcode").value = sc.barcode || "";
+        document.getElementById("scrName").value = sc.name || "";
+        document.getElementById("scrQuality").value = sc.quality || "standard";
+        document.getElementById("scrShelf").value = sc.shelf_code || "";
+        document.getElementById("scrDrawer").value = sc.drawer_label || "";
+        document.getElementById("scrSell").value = sc.sell_price || "";
+        document.getElementById("scrMin").value = sc.min_sell_price || "";
+        document.getElementById("scrPurchase").value = sc.purchase_price || "";
+        document.getElementById("scrQty").value = String(sc.quantity ?? 0);
+        document.getElementById("scrLow").value = String(sc.low_stock_threshold ?? 3);
+        SCR.selected = sc.models || [];
+        if (title) title.textContent = tr(`تعديل: ${sc.name}`, `Edit: ${sc.name}`);
+      } catch (err) {
+        showToast(err.message, true);
+        return;
+      }
+    }
+    renderScrChips();
+    renderScrModelResults(SCR.models);
+    shell.style.display = "block";
+    shell.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  let screensInited = false;
+  function bootScreens() {
+    if (screensInited) return;
+    screensInited = true;
+    initScreensTab();
+  }
+
+  function initScreensTab() {
+    const search = document.getElementById("screenModelSearch");
+    let timer = 0;
+    if (search) {
+      search.addEventListener("input", () => {
+        SCR.currentModel = 0;
+        window.clearTimeout(timer);
+        const q = search.value.trim();
+        timer = window.setTimeout(() => {
+          if (q.length >= 1) searchScreensByModel(q);
+          else { loadScreens(""); const box = document.getElementById("screenSuggestions"); if (box) box.innerHTML = ""; }
+        }, 260);
+      });
+      search.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const q = search.value.trim();
+          if (/^[A-Za-z0-9-]{4,}$/.test(q)) {
+            apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(q)}`)
+              .then(res => {
+                if (res.found) {
+                  playScanBeep();
+                  paintScreens([res.screen], tr("نتيجة المسح", "Scanned protector"));
+                  const box = document.getElementById("screenSuggestions");
+                  if (box) box.innerHTML = `<span class="scr-model-pill is-code"><i class="fa-solid fa-barcode"></i> ${esc(q)}</span>`;
+                  return;
+                }
+                searchScreensByModel(q);
+              })
+              .catch(() => searchScreensByModel(q));
+            return;
+          }
+          searchScreensByModel(q);
+        }
+      });
+    }
+    document.getElementById("btnScreenSearchClear")?.addEventListener("click", () => {
+      if (search) search.value = "";
+      SCR.currentModel = 0;
+      const box = document.getElementById("screenSuggestions");
+      if (box) box.innerHTML = "";
+      loadScreens("");
+    });
+    document.getElementById("btnToggleMissing")?.addEventListener("click", e => {
+      SCR.missingOnly = !SCR.missingOnly;
+      e.currentTarget.classList.toggle("is-on", SCR.missingOnly);
+      loadScreens(search ? search.value.trim() : "");
+    });
+    document.getElementById("btnNewScreen")?.addEventListener("click", () => openScreenForm(0));
+    document.getElementById("btnCloseScreenForm")?.addEventListener("click", () => {
+      const shell = document.getElementById("screenFormShell");
+      if (shell) shell.style.display = "none";
+    });
+
+    const modelSearch = document.getElementById("scrModelSearch");
+    modelSearch?.addEventListener("input", () => {
+      const q = modelSearch.value.trim().toLowerCase();
+      const filtered = !q ? SCR.models : SCR.models.filter(m => m.label.toLowerCase().includes(q) || (m.model_name_ar || "").includes(q));
+      renderScrModelResults(filtered);
+    });
+
+    document.getElementById("btnCreateModel")?.addEventListener("click", async () => {
+      const brand = document.getElementById("scrNewBrand")?.value.trim() || "";
+      const model = document.getElementById("scrNewModel")?.value.trim() || "";
+      if (!brand || !model) {
+        showToast(tr("اكتب الماركة والموديل", "Enter brand and model"), true);
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.set("action", "save_model");
+        fd.set("brand", brand);
+        fd.set("model_name", model);
+        const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+        await loadScreensMeta();
+        const created = SCR.models.find(m => m.id === res.id);
+        if (created && !SCR.selected.some(x => x.id === created.id)) SCR.selected.push(created);
+        renderScrChips();
+        renderScrModelResults(SCR.models);
+        showToast(res.message || tr("تمت إضافة الموديل", "Device added"));
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    document.getElementById("screenSaveForm")?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      fd.set("action", "save");
+      fd.set("model_ids", SCR.selected.map(m => m.id).join(","));
+      try {
+        const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+        showToast(res.message || tr("تم الحفظ", "Saved"));
+        const shell = document.getElementById("screenFormShell");
+        if (shell) shell.style.display = "none";
+        loadScreens(search ? search.value.trim() : "");
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    loadScreensMeta().then(() => loadScreens(""));
+  }
+
   let inventoryCache = [];
   async function loadInventoryTable() {
     if (!IS_ADMIN) return;
@@ -1742,7 +2263,8 @@
         const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
         const low = p.quantity <= p.low_stock_threshold;
         const pTitle = p.display_name || p.name;
-        return `\n          <tr>\n            <td><img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
+        return `\n          <tr>\n            <td><img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>
+              ${p.screen_shelf || p.screen_drawer ? `<div class="inv-place"><i class="fa-solid fa-location-dot"></i> ${esc([p.screen_shelf, p.screen_drawer].filter(Boolean).join(" - "))}</div>` : ""}\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
       }).join("");
     } catch (err) {
       showToast(err.message, true);

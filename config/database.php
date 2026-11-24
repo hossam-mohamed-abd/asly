@@ -30,6 +30,7 @@ class Database
                 self::initializeSqliteSchema(self::$pdo);
             } else {
                 self::ensureProductColumnsSqlite(self::$pdo);
+                self::ensureScreensSqlite(self::$pdo);
             }
             return self::$pdo;
         }
@@ -50,6 +51,7 @@ class Database
                 self::importMysqlDump(self::$pdo);
             } else {
                 self::ensureProductColumnsMysql(self::$pdo);
+                self::ensureScreensMysql(self::$pdo);
             }
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
@@ -87,6 +89,85 @@ class Database
         }
     }
 
+    private static function ensureScreensMysql(PDO $pdo): void
+    {
+        $needed = [
+            "CREATE TABLE IF NOT EXISTS `device_models` (
+              `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `brand` VARCHAR(60) NOT NULL,
+              `model_name` VARCHAR(120) NOT NULL,
+              `model_name_ar` VARCHAR(120) DEFAULT NULL,
+              `search_key` VARCHAR(220) NOT NULL DEFAULT '',
+              `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `uniq_device_model` (`brand`, `model_name`),
+              KEY `idx_device_search` (`search_key`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS `shelves` (
+              `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `shelf_code` VARCHAR(20) NOT NULL,
+              `label` VARCHAR(120) DEFAULT NULL,
+              `sort_order` INT NOT NULL DEFAULT 0,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `uniq_shelf_code` (`shelf_code`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS `screen_protectors` (
+              `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `barcode` VARCHAR(100) NOT NULL,
+              `code_type` VARCHAR(20) NOT NULL DEFAULT 'qr',
+              `product_id` INT UNSIGNED DEFAULT NULL,
+              `name` VARCHAR(200) NOT NULL,
+              `name_en` VARCHAR(200) DEFAULT NULL,
+              `quality` VARCHAR(40) DEFAULT 'standard',
+              `shelf_code` VARCHAR(20) DEFAULT NULL,
+              `drawer_label` VARCHAR(40) DEFAULT NULL,
+              `purchase_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              `sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              `min_sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              `quantity` INT NOT NULL DEFAULT 0,
+              `low_stock_threshold` INT NOT NULL DEFAULT 3,
+              `notes` TEXT DEFAULT NULL,
+              `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+              `created_by` INT UNSIGNED DEFAULT NULL,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `uniq_screen_barcode` (`barcode`),
+              KEY `idx_screen_shelf` (`shelf_code`),
+              KEY `idx_screen_qty` (`quantity`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS `screen_compatibility` (
+              `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `screen_id` INT UNSIGNED NOT NULL,
+              `model_id` INT UNSIGNED NOT NULL,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `uniq_screen_model` (`screen_id`, `model_id`),
+              KEY `idx_compat_model` (`model_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS `screen_movements` (
+              `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `screen_id` INT UNSIGNED NOT NULL,
+              `movement_type` VARCHAR(20) NOT NULL DEFAULT 'adjust',
+              `qty_before` INT NOT NULL DEFAULT 0,
+              `qty_after` INT NOT NULL DEFAULT 0,
+              `note` VARCHAR(200) DEFAULT NULL,
+              `user_name` VARCHAR(120) DEFAULT NULL,
+              `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              KEY `idx_screen_move` (`screen_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+        ];
+        foreach ($needed as $sql) {
+            $pdo->exec($sql);
+        }
+        $hasShelves = (int)$pdo->query("SELECT COUNT(*) FROM `shelves`")->fetchColumn();
+        if ($hasShelves === 0) {
+            $pdo->exec("INSERT IGNORE INTO `shelves` (`shelf_code`, `label`, `sort_order`) VALUES ('A','رف A',1),('B','رف B',2),('C','رف C',3),('D','رف D',4)");
+        }
+    }
+
     private static function ensureProductColumnsSqlite(PDO $pdo): void
     {
         $cols = [];
@@ -104,6 +185,66 @@ class Database
                 $pdo->exec($sql);
             }
         }
+    }
+
+    private static function ensureScreensSqlite(PDO $pdo): void
+    {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS device_models (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                brand TEXT NOT NULL,
+                model_name TEXT NOT NULL,
+                model_name_ar TEXT DEFAULT NULL,
+                search_key TEXT NOT NULL DEFAULT '',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                UNIQUE (brand, model_name)
+            );
+            CREATE TABLE IF NOT EXISTS shelves (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shelf_code TEXT NOT NULL UNIQUE,
+                label TEXT DEFAULT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS screen_protectors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                barcode TEXT NOT NULL UNIQUE,
+                code_type TEXT NOT NULL DEFAULT 'qr',
+                product_id INTEGER DEFAULT NULL,
+                name TEXT NOT NULL,
+                name_en TEXT DEFAULT NULL,
+                quality TEXT DEFAULT 'standard',
+                shelf_code TEXT DEFAULT NULL,
+                drawer_label TEXT DEFAULT NULL,
+                purchase_price REAL NOT NULL DEFAULT 0,
+                sell_price REAL NOT NULL DEFAULT 0,
+                min_sell_price REAL NOT NULL DEFAULT 0,
+                quantity INTEGER NOT NULL DEFAULT 0,
+                low_stock_threshold INTEGER NOT NULL DEFAULT 3,
+                notes TEXT DEFAULT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS screen_compatibility (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                screen_id INTEGER NOT NULL,
+                model_id INTEGER NOT NULL,
+                UNIQUE (screen_id, model_id)
+            );
+            CREATE TABLE IF NOT EXISTS screen_movements (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                screen_id INTEGER NOT NULL,
+                movement_type TEXT NOT NULL DEFAULT 'adjust',
+                qty_before INTEGER NOT NULL DEFAULT 0,
+                qty_after INTEGER NOT NULL DEFAULT 0,
+                note TEXT DEFAULT NULL,
+                user_name TEXT DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+        ");
     }
 
     public static function importMysqlDump(PDO $pdo): void
@@ -278,6 +419,60 @@ class Database
                 status TEXT NOT NULL DEFAULT 'logged',
                 body_preview TEXT DEFAULT NULL,
                 error_message TEXT DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS device_models (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                brand TEXT NOT NULL,
+                model_name TEXT NOT NULL,
+                model_name_ar TEXT DEFAULT NULL,
+                search_key TEXT NOT NULL DEFAULT '',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                UNIQUE (brand, model_name)
+            );
+            CREATE TABLE IF NOT EXISTS shelves (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shelf_code TEXT NOT NULL UNIQUE,
+                label TEXT DEFAULT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS screen_protectors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                barcode TEXT NOT NULL UNIQUE,
+                code_type TEXT NOT NULL DEFAULT 'qr',
+                product_id INTEGER DEFAULT NULL,
+                name TEXT NOT NULL,
+                name_en TEXT DEFAULT NULL,
+                quality TEXT DEFAULT 'standard',
+                shelf_code TEXT DEFAULT NULL,
+                drawer_label TEXT DEFAULT NULL,
+                purchase_price REAL NOT NULL DEFAULT 0,
+                sell_price REAL NOT NULL DEFAULT 0,
+                min_sell_price REAL NOT NULL DEFAULT 0,
+                quantity INTEGER NOT NULL DEFAULT 0,
+                low_stock_threshold INTEGER NOT NULL DEFAULT 3,
+                notes TEXT DEFAULT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_by INTEGER DEFAULT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS screen_compatibility (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                screen_id INTEGER NOT NULL,
+                model_id INTEGER NOT NULL,
+                UNIQUE (screen_id, model_id)
+            );
+            CREATE TABLE IF NOT EXISTS screen_movements (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                screen_id INTEGER NOT NULL,
+                movement_type TEXT NOT NULL DEFAULT 'adjust',
+                qty_before INTEGER NOT NULL DEFAULT 0,
+                qty_after INTEGER NOT NULL DEFAULT 0,
+                note TEXT DEFAULT NULL,
+                user_name TEXT DEFAULT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
             );
         ");

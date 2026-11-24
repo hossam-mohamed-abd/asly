@@ -31,11 +31,24 @@ if ($method === 'GET') {
         array_push($params, $like, $like, $like, $likeAlt, $like, $like);
     }
 
-    $sql = 'SELECT * FROM products';
-    if ($where) {
-        $sql .= ' WHERE ' . implode(' AND ', $where);
+    $sql = 'SELECT p.*';
+    $joinPlace = false;
+    if (DB_DRIVER === 'sqlite') {
+        $hasSp = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='screen_protectors'")->fetchColumn();
+    } else {
+        $hasSp = $pdo->query("SHOW TABLES LIKE 'screen_protectors'")->fetchColumn();
     }
-    $sql .= ' ORDER BY id DESC';
+    if ($hasSp) {
+        $sql .= ', s.shelf_code AS screen_shelf, s.drawer_label AS screen_drawer, s.id AS screen_id_ref FROM products p LEFT JOIN screen_protectors s ON s.product_id = p.id';
+        $joinPlace = true;
+    } else {
+        $sql .= ' FROM products p';
+    }
+    if ($where) {
+        $w = str_replace(['category = ?', 'quantity > 0', 'name LIKE ?', "COALESCE(name_en, '') LIKE ?", 'barcode LIKE ?', 'brand LIKE ?', 'specs LIKE ?'], ['p.category = ?', 'p.quantity > 0', 'p.name LIKE ?', "COALESCE(p.name_en, '') LIKE ?", 'p.barcode LIKE ?', 'p.brand LIKE ?', 'p.specs LIKE ?'], $where);
+        $sql .= ' WHERE ' . implode(' AND ', $w);
+    }
+    $sql .= ' ORDER BY p.id DESC';
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);

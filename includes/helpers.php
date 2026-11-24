@@ -197,6 +197,7 @@ function getCategoryMeta(): array
         'mobiles'     => ['ar' => 'هواتف ذكية', 'en' => 'Smartphones', 'prefix' => 'MOB'],
         'accessories' => ['ar' => 'إكسسوارات وصوتيات', 'en' => 'Audio & Accessories', 'prefix' => 'ACC'],
         'wearables'   => ['ar' => 'ساعات وأجهزة ذكية', 'en' => 'Smart Wearables', 'prefix' => 'WRB'],
+        'screens'     => ['ar' => 'اسكرينات حماية', 'en' => 'Screen Protectors', 'prefix' => 'SCR'],
     ];
 }
 
@@ -311,6 +312,16 @@ function generateUniqueProductCode(PDO $pdo, string $category = 'laptops'): stri
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE barcode = ?");
     do {
         $code = 'ASLY' . $prefix . random_int(1000, 9999);
+        $stmt->execute([$code]);
+    } while ((int)$stmt->fetchColumn() > 0);
+    return $code;
+}
+
+function generateUniqueScreenCode(PDO $pdo): string
+{
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM screen_protectors WHERE barcode = ?");
+    do {
+        $code = 'ASLYSCR' . random_int(1000, 9999);
         $stmt->execute([$code]);
     } while ((int)$stmt->fetchColumn() > 0);
     return $code;

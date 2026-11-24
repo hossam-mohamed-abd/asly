@@ -102,6 +102,10 @@ if (session_status() === PHP_SESSION_NONE) {
         'samesite' => $isHttpsReq ? 'None' : 'Lax',
     ]);
     ini_set('session.use_strict_mode', '1');
+    $sessPathOverride = aslyEnv('SESSION_SAVE_PATH', '');
+    if ($sessPathOverride !== '' && is_dir($sessPathOverride) && is_writable($sessPathOverride)) {
+        session_save_path($sessPathOverride);
+    }
     session_start();
 }
 

@@ -65,6 +65,120 @@ CREATE TABLE IF NOT EXISTS `products` (
   KEY `idx_products_landing` (`show_on_landing`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `device_models` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `brand` VARCHAR(60) NOT NULL,
+  `model_name` VARCHAR(120) NOT NULL,
+  `model_name_ar` VARCHAR(120) DEFAULT NULL,
+  `search_key` VARCHAR(220) NOT NULL DEFAULT '',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_device_model` (`brand`, `model_name`),
+  KEY `idx_device_search` (`search_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `shelves` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelf_code` VARCHAR(20) NOT NULL,
+  `label` VARCHAR(120) DEFAULT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_shelf_code` (`shelf_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `screen_protectors` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `barcode` VARCHAR(100) NOT NULL,
+  `code_type` VARCHAR(20) NOT NULL DEFAULT 'qr',
+  `product_id` INT UNSIGNED DEFAULT NULL,
+  `name` VARCHAR(200) NOT NULL,
+  `name_en` VARCHAR(200) DEFAULT NULL,
+  `quality` VARCHAR(40) DEFAULT 'standard',
+  `shelf_code` VARCHAR(20) DEFAULT NULL,
+  `drawer_label` VARCHAR(40) DEFAULT NULL,
+  `purchase_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `min_sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  `quantity` INT NOT NULL DEFAULT 0,
+  `low_stock_threshold` INT NOT NULL DEFAULT 3,
+  `notes` TEXT DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_by` INT UNSIGNED DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_screen_barcode` (`barcode`),
+  KEY `idx_screen_shelf` (`shelf_code`),
+  KEY `idx_screen_qty` (`quantity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `screen_compatibility` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `screen_id` INT UNSIGNED NOT NULL,
+  `model_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_screen_model` (`screen_id`, `model_id`),
+  KEY `idx_compat_model` (`model_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `screen_movements` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `screen_id` INT UNSIGNED NOT NULL,
+  `movement_type` VARCHAR(20) NOT NULL DEFAULT 'adjust',
+  `qty_before` INT NOT NULL DEFAULT 0,
+  `qty_after` INT NOT NULL DEFAULT 0,
+  `note` VARCHAR(200) DEFAULT NULL,
+  `user_name` VARCHAR(120) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_screen_move` (`screen_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO `shelves` (`id`, `shelf_code`, `label`, `sort_order`) VALUES
+(1, 'A', 'رف A', 1),
+(2, 'B', 'رف B', 2),
+(3, 'C', 'رف C', 3),
+(4, 'D', 'رف D', 4);
+
+INSERT IGNORE INTO `device_models` (`id`, `brand`, `model_name`, `model_name_ar`, `search_key`) VALUES
+(1, 'Apple', 'iPhone 11', 'ايفون 11', 'apple iphone 11 ايفون'),
+(2, 'Apple', 'iPhone 11 Pro', 'ايفون 11 برو', 'apple iphone 11 pro ايفون برو'),
+(3, 'Apple', 'iPhone 12', 'ايفون 12', 'apple iphone 12 ايفون'),
+(4, 'Apple', 'iPhone 12 Pro', 'ايفون 12 برو', 'apple iphone 12 pro ايفون برو'),
+(5, 'Apple', 'iPhone 13', 'ايفون 13', 'apple iphone 13 ايفون'),
+(6, 'Apple', 'iPhone 13 Pro', 'ايفون 13 برو', 'apple iphone 13 pro ايفون برو'),
+(7, 'Apple', 'iPhone 14', 'ايفون 14', 'apple iphone 14 ايفون'),
+(8, 'Apple', 'iPhone 14 Pro', 'ايفون 14 برو', 'apple iphone 14 pro ايفون برو'),
+(9, 'Apple', 'iPhone 15', 'ايفون 15', 'apple iphone 15 ايفون'),
+(10, 'Apple', 'iPhone 15 Pro', 'ايفون 15 برو', 'apple iphone 15 pro ايفون برو'),
+(11, 'Apple', 'iPhone XR', 'ايفون XR', 'apple iphone xr ايفون'),
+(12, 'Apple', 'iPhone X', 'ايفون X', 'apple iphone x ايفون'),
+(13, 'Samsung', 'Galaxy A12', 'سامسونج A12', 'samsung galaxy a12 سامسونج'),
+(14, 'Samsung', 'Galaxy A13', 'سامسونج A13', 'samsung galaxy a13 سامسونج'),
+(15, 'Samsung', 'Galaxy A23', 'سامسونج A23', 'samsung galaxy a23 سامسونج'),
+(16, 'Samsung', 'Galaxy A32', 'سامسونج A32', 'samsung galaxy a32 سامسونج'),
+(17, 'Samsung', 'Galaxy A52', 'سامسونج A52', 'samsung galaxy a52 سامسونج'),
+(18, 'Samsung', 'Galaxy A72', 'سامسونج A72', 'samsung galaxy a72 سامسونج'),
+(19, 'Samsung', 'Galaxy S21', 'سامسونج S21', 'samsung galaxy s21 سامسونج'),
+(20, 'Samsung', 'Galaxy S22', 'سامسونج S22', 'samsung galaxy s22 سامسونج'),
+(21, 'Xiaomi', 'Redmi Note 10', 'شاومي نوت 10', 'xiaomi redmi note 10 شاومي ريدمي'),
+(22, 'Xiaomi', 'Redmi Note 11', 'شاومي نوت 11', 'xiaomi redmi note 11 شاومي ريدمي'),
+(23, 'Xiaomi', 'Redmi Note 12', 'شاومي نوت 12', 'xiaomi redmi note 12 شاومي ريدمي'),
+(24, 'Xiaomi', 'Redmi 9', 'شاومي 9', 'xiaomi redmi 9 شاومي ريدمي'),
+(25, 'Oppo', 'Reno 6', 'اوبو رينو 6', 'oppo reno 6 اوبو'),
+(26, 'Oppo', 'Reno 8', 'اوبو رينو 8', 'oppo reno 8 اوبو'),
+(27, 'Oppo', 'A53', 'اوبو A53', 'oppo a53 اوبو'),
+(28, 'Infinix', 'Hot 11', 'انفينكس هوت 11', 'infinix hot 11 انفينكس'),
+(29, 'Infinix', 'Smart 6', 'انفينكس سمارت 6', 'infinix smart 6 انفينكس'),
+(30, 'Vivo', 'Y21', 'فيفو Y21', 'vivo y21 فيفو'),
+(31, 'Realme', 'C25', 'ريلمي C25', 'realme c25 ريلمي'),
+(32, 'Nokia', 'G20', 'نوكيا G20', 'nokia g20 نوكيا'),
+(33, 'Huawei', 'Y9 Prime', 'هواوي Y9 برايم', 'huawei y9 prime هواوي'),
+(34, 'Honor', 'X7', 'هونر X7', 'honor x7 هونر'),
+(35, 'Tecno', 'Spark 8', 'تكنو سبارك 8', 'tecno spark 8 تكنو');
+
 CREATE TABLE IF NOT EXISTS `invoices` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `invoice_number` VARCHAR(40) NOT NULL,
