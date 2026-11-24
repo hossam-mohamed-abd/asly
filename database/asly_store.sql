@@ -295,4 +295,6 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `users` (`id`, `full_name`, `username`, `password_hash`, `role`, `phone`, `is_active`) VALUES
-(1, 'Admin', 'admin', '$2y$12$jBd7WV5q5n2oxJwsLwmnWumXxQ/XFovzZi3XTFZXfT9UDXKNPj3ai', 'admin', NULL, 1);
+(1, 'Admin', 'admin', '$2y$12$jBd7WV5q5n2oxJwsLwmnWumXxQ/XFovzZi3XTFZXfT9UDXKNPj3ai', 'admin', NULL, 1),
+(2, 'Ramadan Sallam', 'ramadan', '$2y$12$jBd7WV5q5n2oxJwsLwmnWumXxQ/XFovzZi3XTFZXfT9UDXKNPj3ai', 'admin', NULL, 1),
+(3, 'Staff', 'staff1', '$2y$12$crDS8MaU/MJRyvgekhKwqO3LlyIuk37XR1vncbdxKH1bkKOyut1g.', 'staff', NULL, 1);
