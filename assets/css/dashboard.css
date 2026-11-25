@@ -2652,120 +2652,65 @@ html[dir="rtl"] .sidebar-edge-btn {
 }
 
 .scr-card {
+  position: relative;
   background: #ffffff;
   border: 1.5px solid var(--db-border, #e2e8f0);
-  border-radius: 18px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .scr-card:hover {
   border-color: var(--db-teal-100, #bcecef);
-  box-shadow: 0 12px 26px rgba(13, 148, 153, 0.1);
+  box-shadow: 0 10px 22px rgba(13, 148, 153, 0.12);
+  transform: translateY(-1px);
 }
 
-.scr-card-main {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
+.scr-card.is-missing {
+  border-color: #fecaca;
+  background: #fffafa;
 }
 
-.scr-card-main img,
-.scr-card-ico {
-  width: 52px;
-  height: 52px;
-  border-radius: 13px;
-  object-fit: cover;
-  flex: none;
-  background: var(--db-teal-50, #eefbfb);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--db-teal-700, #0d9499);
-  font-size: 1.2rem;
-  border: 1px solid var(--db-teal-100, #bcecef);
+.scr-card-hit {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 18px 16px 16px;
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
 }
 
-.scr-card-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.scr-card-title {
-  font-size: 0.92rem;
+.scr-card-name {
+  display: block;
+  font-size: 0.95rem;
   font-weight: 900;
   color: var(--db-text, #1e293b);
-  line-height: 1.5;
+  line-height: 1.6;
+  word-break: break-word;
 }
 
-.scr-place {
-  font-size: 0.76rem;
-  font-weight: 800;
-  color: #b45309;
-  margin-top: 2px;
-}
-
-.scr-price {
-  font-size: 1.15rem;
+.scr-card-price {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.12rem;
   font-weight: 900;
   color: var(--db-teal-800, #0d9297);
   direction: ltr;
-  margin-top: 4px;
 }
 
-.scr-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.scr-badge {
-  font-size: 0.7rem;
+.scr-card-flag {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  font-size: 0.66rem;
   font-weight: 900;
-  padding: 2px 9px;
-  border-radius: 999px;
-}
-
-.scr-badge.is-ok {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.scr-badge.is-low {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.scr-badge.is-out {
-  background: #fef2f2;
-  color: #b91c1c;
-}
-
-.scr-qty {
-  font-size: 0.74rem;
-  font-weight: 800;
-  color: var(--db-muted, #64748b);
-}
-
-.scr-models-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.scr-mini {
-  font-size: 0.68rem;
-  font-weight: 800;
-  background: #f8fafc;
-  border: 1px solid var(--db-border, #e2e8f0);
-  color: #475569;
-  border-radius: 999px;
   padding: 2px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .scr-card-actions {

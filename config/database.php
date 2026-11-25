@@ -252,19 +252,31 @@ class Database
     private static function seedScreenCatalog(PDO $pdo): void
     {
         try {
-            $count = (int)$pdo->query("SELECT COUNT(*) FROM `device_models`")->fetchColumn();
+            $pdo->query("SELECT COUNT(*) FROM `device_models`")->fetchColumn();
         } catch (Throwable $e) {
-            return;
-        }
-        if ($count >= 300) {
             return;
         }
         $sqlFile = APP_ROOT . '/database/asly_store.sql';
         if (!is_file($sqlFile)) {
             return;
         }
+        // Cheap marker: skip the whole replay once the shipped catalog is in place and intact.
+        try {
+            $marker = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'screens_catalog_seeded'")->fetchColumn();
+            if ((string)$marker === '2') {
+                $models = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
+                $screens = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors`')->fetchColumn();
+                if ($models >= 300 && $screens > 0) {
+                    return;
+                }
+            }
+        } catch (Throwable $e) {
+            // settings table missing: fall through to the replay
+        }
         $raw = (string)file_get_contents($sqlFile);
         $statements = preg_split('/;\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $inserted = false;
+        $modelCount = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
         $wanted = ['INSERT IGNORE INTO `device_models`', 'INSERT IGNORE INTO `screen_protectors`', 'INSERT IGNORE INTO `screen_compatibility`', 'INSERT OR IGNORE INTO `screen_compatibility`', 'INSERT IGNORE INTO `products`', 'UPDATE `screen_protectors`'];
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
@@ -285,6 +297,7 @@ class Database
                 $stmt = preg_replace('/^INSERT\s+IGNORE\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt) ?: $stmt;
                 $stmt = preg_replace('/^INSERT\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt) ?: $stmt;
             }
+            $before = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
             try {
                 $pdo->exec($stmt);
             } catch (Throwable $e) {
@@ -292,6 +305,19 @@ class Database
                     throw $e;
                 }
             }
+            $after = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
+            if ($after > $before) {
+                $inserted = true;
+            }
+        }
+
+        try {
+            if ($inserted || $modelCount >= 300) {
+                $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
+                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '2')");
+            }
+        } catch (Throwable $e) {
+            // marker is an optimisation only
         }
     }
 

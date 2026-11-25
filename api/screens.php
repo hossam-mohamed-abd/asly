@@ -36,13 +36,15 @@ function modelAliases(): array
 {
     return [
         'جلاكسي' => 'galaxy', 'جالاكسي' => 'galaxy', 'جلاكسى' => 'galaxy', 'جالكسي' => 'galaxy',
-        'سامسونج' => 'samsung', 'سامسونغ' => 'samsung',
+        'جلاكسى' => 'galaxy', 'سامسونج' => 'samsung', 'سامسونغ' => 'samsung', 'سامسونق' => 'samsung',
         'ايفون' => 'iphone', 'ايفوون' => 'iphone', 'ابل' => 'apple', 'أبل' => 'apple',
-        'شاومي' => 'xiaomi', 'شياومي' => 'xiaomi', 'ريدمي' => 'redmi', 'ريدمى' => 'redmi',
-        'هواوي' => 'huawei', 'اوبو' => 'oppo', 'أوبو' => 'oppo', 'انفينكس' => 'infinix',
-        'فيفو' => 'vivo', 'ريلمي' => 'realme', 'ريلمى' => 'realme', 'نوكيا' => 'nokia',
-        'هونر' => 'honor', 'تكنو' => 'tecno', 'نوت' => 'note', 'برو' => 'pro', 'ماكس' => 'max',
-        'بلس' => 'plus', 'لايت' => 'lite', 'ايه' => 'a', 'ايج' => 'a', 'بي' => 'b', 'سي' => 'c',
+        'شاومي' => 'xiaomi', 'شياومي' => 'xiaomi', 'ريدمي' => 'redmi', 'ريدمى' => 'redmi', 'ريدمة' => 'redmi',
+        'هواوي' => 'huawei', 'هوواوي' => 'huawei', 'اوبو' => 'oppo', 'أوبو' => 'oppo', 'انفينكس' => 'infinix',
+        'انفنكس' => 'infinix', 'فيفو' => 'vivo', 'ريلمي' => 'realme', 'ريلمى' => 'realme', 'نوكيا' => 'nokia',
+        'هونر' => 'honor', 'تكنو' => 'tecno', 'موتورولا' => 'motorola', 'بيكسل' => 'pixel',
+        'نوثينج' => 'nothing', 'ايتل' => 'itel', 'لينوفو' => 'lenovo', 'ون' => 'one',
+        'نوت' => 'note', 'برو' => 'pro', 'ماكس' => 'max', 'بلس' => 'plus', 'بلص' => 'plus',
+        'لايت' => 'lite', 'ايه' => 'a', 'ايج' => 'a', 'بي' => 'b', 'سي' => 'c',
         'دي' => 'd', 'اكس' => 'x', 'اس' => 's', 'جي' => 'g', 'ام' => 'm', 'تي' => 't',
     ];
 }
@@ -67,12 +69,47 @@ function modelMatchesQuery(string $haystack, array $tokens): bool
     if (!$tokens) {
         return false;
     }
+    $words = preg_split('/\s+/u', trim($haystack)) ?: [];
     foreach ($tokens as $token) {
-        if (mb_strpos($haystack, $token, 0, 'UTF-8') === false) {
+        $found = false;
+        if (mb_strpos($haystack, $token, 0, 'UTF-8') !== false) {
+            foreach ($words as $word) {
+                if ($word === '') {
+                    continue;
+                }
+                if ($word === $token || mb_strpos($word, $token, 0, 'UTF-8') === 0) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found && mb_strlen($token, 'UTF-8') >= 5) {
+                $found = true;
+            }
+        }
+        if (!$found) {
             return false;
         }
     }
     return true;
+}
+
+function modelScoreQuery(string $haystack, array $tokens): int
+{
+    $score = 0;
+    foreach ($tokens as $token) {
+        if (preg_match('/(^|\s)' . preg_quote($token, '/') . '(\s|$)/u', $haystack)) {
+            $score += 3;
+        } elseif (mb_strpos($haystack, $token, 0, 'UTF-8') !== false) {
+            $score += 1;
+        }
+    }
+    return $score;
+}
+
+function screenQtyExpr(string $alias = ''): string
+{
+    $p = $alias !== '' ? $alias . '.' : '';
+    return "CASE WHEN {$p}product_id IS NOT NULL THEN COALESCE((SELECT p.quantity FROM products p WHERE p.id = {$p}product_id), {$p}quantity) ELSE {$p}quantity END";
 }
 
 function screenRow(array $row, bool $en): array
@@ -156,7 +193,7 @@ if ($method === 'GET') {
         $where = [];
         $params = [];
         if ($missing) {
-            $where[] = 'quantity <= low_stock_threshold';
+            $where[] = screenQtyExpr() . ' <= low_stock_threshold';
         }
         if ($shelf !== '') {
             $where[] = 'shelf_code = ?';
@@ -194,7 +231,7 @@ if ($method === 'GET') {
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
-        $sql .= ' ORDER BY (quantity <= low_stock_threshold) DESC, name ASC';
+        $sql .= ' ORDER BY (' . screenQtyExpr() . ' <= low_stock_threshold) ASC, ' . screenQtyExpr() . ' DESC, name ASC';
         if (DB_DRIVER === 'sqlite') {
             $sql .= ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
             $stmt = $pdo->prepare($sql);
@@ -214,8 +251,8 @@ if ($method === 'GET') {
         unset($r);
         $stats = [
             'total' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors')->fetchColumn(),
-            'units' => (int)$pdo->query('SELECT COALESCE(SUM(quantity), 0) FROM screen_protectors')->fetchColumn(),
-            'missing' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors WHERE quantity <= low_stock_threshold')->fetchColumn(),
+            'units' => (int)$pdo->query('SELECT COALESCE(SUM(' . screenQtyExpr() . '), 0) FROM screen_protectors')->fetchColumn(),
+            'missing' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors WHERE ' . screenQtyExpr() . ' <= low_stock_threshold')->fetchColumn(),
         ];
         jsonResponse([
             'ok' => true,
@@ -244,11 +281,12 @@ if ($method === 'GET') {
             $tokens = modelTokens($q);
             $all = $pdo->query('SELECT * FROM device_models WHERE is_active = 1 ORDER BY brand ASC, model_name ASC')->fetchAll();
             $matched = [];
+            $scored = [];
             $loose = [];
             foreach ($all as $m) {
                 $hay = norm($m['search_key'] . ' ' . $m['brand'] . ' ' . $m['model_name'] . ' ' . (string)$m['model_name_ar']);
                 if ($tokens && modelMatchesQuery($hay, $tokens)) {
-                    $matched[] = $m;
+                    $scored[] = [modelScoreQuery($hay, $tokens), mb_strlen($m['model_name'], 'UTF-8'), $m];
                     continue;
                 }
                 foreach ($tokens as $token) {
@@ -258,12 +296,39 @@ if ($method === 'GET') {
                     }
                 }
             }
+            usort($scored, function ($a, $b) {
+                if ($a[0] === $b[0]) {
+                    return $a[1] <=> $b[1];
+                }
+                return $b[0] <=> $a[0];
+            });
+            foreach ($scored as $row) {
+                $matched[] = $row[2];
+            }
             if (!$matched && $loose) {
                 $matched = $loose;
             }
             if ($modelId === 0 && count($matched) === 1) {
                 $model = $matched[0];
                 $modelId = (int)$matched[0]['id'];
+            }
+            if ($modelId === 0 && count($matched) > 1) {
+                $qNorm = norm($q);
+                $qTokenNorm = implode(' ', $tokens);
+                if ($qNorm !== '') {
+                    foreach ($matched as $candidate) {
+                        $candAr = norm((string)($candidate['model_name_ar'] ?? ''));
+                        $candFull = norm($candidate['brand'] . ' ' . $candidate['model_name']);
+                        $candShort = norm($candidate['model_name']);
+                        foreach ([$qNorm, $qTokenNorm] as $probe) {
+                            if ($probe !== '' && ($probe === $candAr || $probe === $candFull || $probe === $candShort)) {
+                                $model = $candidate;
+                                $modelId = (int)$candidate['id'];
+                                break 2;
+                            }
+                        }
+                    }
+                }
             }
             $stocks = [];
             foreach ($matched as $m) {
@@ -278,13 +343,14 @@ if ($method === 'GET') {
         }
 
         $screens = [];
+        $qtyS = screenQtyExpr('s');
         if ($modelId === 0 && $stocks) {
             $unionIds = implode(',', array_map('intval', array_column($stocks, 'id')));
             $stmtAll = $pdo->query("
                 SELECT DISTINCT s.* FROM screen_protectors s
                 INNER JOIN screen_compatibility c ON c.screen_id = s.id
                 WHERE c.model_id IN ({$unionIds}) AND s.is_active = 1
-                ORDER BY (s.quantity <= s.low_stock_threshold) ASC, s.quantity DESC, s.sell_price ASC
+                ORDER BY ({$qtyS} <= s.low_stock_threshold) ASC, {$qtyS} DESC, s.sell_price ASC
             ");
             $screens = array_map(fn($r) => screenRow($r, $en), $stmtAll->fetchAll());
             $models = modelsForScreens($pdo, array_column($screens, 'id'));
@@ -298,7 +364,7 @@ if ($method === 'GET') {
                 SELECT s.* FROM screen_protectors s
                 INNER JOIN screen_compatibility c ON c.screen_id = s.id
                 WHERE c.model_id = ? AND s.is_active = 1
-                ORDER BY (s.quantity <= s.low_stock_threshold) ASC, s.quantity DESC, s.sell_price ASC
+                ORDER BY ({$qtyS} <= s.low_stock_threshold) ASC, {$qtyS} DESC, s.sell_price ASC
             ");
             $stmt->execute([$modelId]);
             $screens = array_map(fn($r) => screenRow($r, $en), $stmt->fetchAll());
@@ -307,6 +373,17 @@ if ($method === 'GET') {
                 $r['models'] = $models[$r['id']] ?? [];
             }
             unset($r);
+        }
+
+        if ($model) {
+            $deviceLabel = $en
+                ? trim($model['brand'] . ' ' . $model['model_name'])
+                : (trim((string)($model['model_name_ar'] ?? '')) !== '' ? trim((string)$model['model_name_ar']) : trim($model['brand'] . ' ' . $model['model_name']));
+            foreach ($screens as &$scRow) {
+                $scRow['device_label'] = $deviceLabel;
+                $scRow['display_name'] = $deviceLabel;
+            }
+            unset($scRow);
         }
 
         jsonResponse([
@@ -360,8 +437,8 @@ if ($method === 'GET') {
     if ($action === 'missing') {
         $rows = $pdo->query("
             SELECT * FROM screen_protectors
-            WHERE is_active = 1 AND quantity <= low_stock_threshold
-            ORDER BY quantity ASC, name ASC
+            WHERE is_active = 1 AND " . screenQtyExpr() . " <= low_stock_threshold
+            ORDER BY " . screenQtyExpr() . " ASC, name ASC
         ")->fetchAll();
         $list = array_map(fn($r) => screenRow($r, $en), $rows);
         $models = modelsForScreens($pdo, array_column($list, 'id'));

@@ -1916,34 +1916,15 @@
   }
 
   function screenCardHtml(screen) {
-    const models = (screen.models || []).map(m => `<span class="scr-mini">${esc(m.label)}</span>`).join("");
-    const badgeClass = screen.is_out ? "is-out" : (screen.is_low ? "is-low" : "is-ok");
-    const badgeText = screen.is_out
-      ? tr("ناقص خالص", "Out of stock")
-      : (screen.is_low ? tr("قرب يخلص", "Low stock") : tr("متاح", "In stock"));
-    const img = screen.image_path
-      ? `<img src="${esc(apiUrl(screen.image_path))}" onerror="aslyImgErr(this)" alt="">`
-      : `<span class="scr-card-ico"><i class="fa-solid fa-mobile-screen"></i></span>`;
+    const low = screen.quantity <= screen.low_stock_threshold;
+    const title = screen.device_label || screen.display_name || screen.name || "";
     return `
-      <article class="scr-card" data-screen-id="${screen.id}">
-        <div class="scr-card-main">
-          ${img}
-          <div class="scr-card-body">
-            <div class="scr-card-title">${esc(screen.display_name)}</div>
-            <div class="scr-place"><i class="fa-solid fa-location-dot"></i> ${esc(screenPlace(screen))}</div>
-            <div class="scr-price">${fmtMoney(screen.sell_price)}</div>
-            <div class="scr-card-meta">
-              <span class="scr-badge ${badgeClass}">${badgeText}</span>
-              <span class="scr-qty">${tr("المتاح:", "Stock:")} <strong>${screen.quantity}</strong></span>
-            </div>
-          </div>
-        </div>
-        ${models ? `<div class="scr-models-line">${models}</div>` : ""}
-        <div class="scr-card-actions">
-          <button type="button" class="btn btn-ghost btn-sm" data-scr-copy="${screen.barcode}"><i class="fa-solid fa-barcode"></i> ${esc(screen.barcode)}</button>
-          ${IS_ADMIN ? `<button type="button" class="btn btn-teal btn-sm" data-scr-edit="${screen.id}"><i class="fa-solid fa-pen"></i> ${tr("تعديل", "Edit")}</button>` : ""}
-          <button type="button" class="btn btn-gold btn-sm" data-scr-sell="${screen.id}"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>
-        </div>
+      <article class="scr-card${low ? " is-missing" : ""}" data-screen-id="${screen.id}">
+        <button type="button" class="scr-card-hit" data-scr-sell="${screen.id}" title="${esc(title)}">
+          <span class="scr-card-name">${esc(title)}</span>
+          <span class="scr-card-price">${fmtMoney(screen.sell_price)}</span>
+        </button>
+        ${low ? `<span class="scr-card-flag">${tr("ناقص", "Missing")}</span>` : ""}
       </article>
     `;
   }
@@ -1977,15 +1958,12 @@
     const titleEl = document.getElementById("screenResultsTitle");
     if (titleEl && titleText) titleEl.textContent = titleText;
     if (!list.length) {
-      wrap.innerHTML = `<div class="scr-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>${tr("مفيش اسكرينات مطابقة", "No matching protectors")}</strong><span>${tr("جرّب اسم موديل تاني أو امسح الباركود", "Try another device name or scan the barcode")}</span></div>`;
+      wrap.innerHTML = `<div class="scr-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>${tr("مفيش اسكرينة للموديل ده", "No protector for this model")}</strong><span>${tr("جرّب اسم موديل تاني أو امسح الباركود", "Try another device name or scan the barcode")}</span></div>`;
       return;
     }
     SCR.lastList = list;
     wrap.innerHTML = list.map(screenCardHtml).join("");
     paintScreenPager();
-    wrap.querySelectorAll("[data-scr-edit]").forEach(btn => {
-      btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit"))));
-    });
     wrap.querySelectorAll("[data-scr-sell]").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = Number(btn.getAttribute("data-scr-sell"));
