@@ -170,6 +170,13 @@ $jsConfig = [
             <?= $unreadMaintNotes ?> <?= $en ? 'new' : 'جديد' ?>
           </span>
         </button>
+
+        <div class="nav-section-label"><?= $en ? 'Screen Protectors' : 'الاسكرينات' ?></div>
+
+        <button type="button" class="side-btn" data-tab="screens">
+          <span class="side-btn-left"><i class="fa-solid fa-mobile-screen"></i> <?= $en ? 'Find a Screen Protector' : 'دوّر على اسكرينة' ?></span>
+          <span id="scrNavBadgeStaff" class="badge-alert" style="display:none;">0</span>
+        </button>
       <?php endif; ?>
     </nav>
 
@@ -660,6 +667,7 @@ $jsConfig = [
 
         </div>
       </section>
+      <?php endif; ?>
 
       <section class="tab-panel" id="tab-screens">
         <div class="screens-wrap">
@@ -696,6 +704,13 @@ $jsConfig = [
           </div>
 
           <div class="scr-cards" id="screenCards"></div>
+
+          <?php if (!$isAdmin): ?>
+          <div class="scr-staff-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span><?= $en ? 'You can search any protector, scan its barcode, and see its shelf and price. Adding or editing protectors is for the admin only.' : 'تقدر تبحث عن أي اسكرينة أو تمسح باركودها وتشوف رفها وسعرها. إضافة أو تعديل الاسكرينات للمدير فقط.' ?></span>
+          </div>
+          <?php endif; ?>
 
           <?php if ($isAdmin): ?>
           <div class="scr-form-shell" id="screenFormShell" style="display:none;">
@@ -785,6 +800,7 @@ $jsConfig = [
         </div>
       </section>
 
+      <?php if ($isAdmin): ?>
       <section class="tab-panel" id="tab-inventory">
         <div class="card">
           <div class="card-header">
@@ -828,7 +844,6 @@ $jsConfig = [
       </section>
       <?php endif; ?>
 
-      
       <section class="tab-panel" id="tab-maintenance">
         <div class="card">
           <div class="card-header">

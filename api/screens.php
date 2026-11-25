@@ -9,6 +9,12 @@ $pdo = Database::getConnection();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $action = trim((string)($_GET['action'] ?? $_POST['action'] ?? 'list'));
 $en = isEn();
+$isAdmin = ($user['role'] ?? '') === 'admin';
+$GLOBALS['ASLY_IS_ADMIN'] = $isAdmin;
+$writeActions = ['save', 'adjust', 'delete', 'move', 'save_model'];
+if (in_array($action, $writeActions, true)) {
+    requireAdminApi();
+}
 
 function norm(string $value): string
 {
@@ -75,6 +81,10 @@ function screenRow(array $row, bool $en): array
     $row['quantity'] = (int)$row['quantity'];
     $row['low_stock_threshold'] = (int)$row['low_stock_threshold'];
     $row['purchase_price'] = (float)$row['purchase_price'];
+    if (empty($GLOBALS['ASLY_IS_ADMIN'])) {
+        $row['purchase_price'] = 0.0;
+        $row['no_cost'] = true;
+    }
     $row['sell_price'] = (float)$row['sell_price'];
     $row['min_sell_price'] = (float)$row['min_sell_price'];
     $row['display_name'] = $en && !empty($row['name_en']) ? $row['name_en'] : $row['name'];
@@ -153,7 +163,7 @@ if ($method === 'GET') {
             $r['models'] = $models[$r['id']] ?? [];
         }
         unset($r);
-        jsonResponse(['ok' => true, 'screens' => $rows]);
+        jsonResponse(['ok' => true, 'screens' => $rows, 'is_admin' => $isAdmin]);
     }
 
     if ($action === 'search_by_model') {
@@ -248,6 +258,7 @@ if ($method === 'GET') {
             ] : null,
             'suggestions' => $stocks,
             'screens' => $screens,
+            'is_admin' => $isAdmin,
         ]);
     }
 

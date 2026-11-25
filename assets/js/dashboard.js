@@ -211,13 +211,14 @@
   }
   window.openModal = id => document.getElementById(id)?.classList.add("open");
   window.closeModal = id => document.getElementById(id)?.classList.remove("open");
-  const staffAllowedTabs = new Set([ "quick-scanner", "pos", "maintenance" ]);
+  const staffAllowedTabs = new Set([ "quick-scanner", "pos", "maintenance", "screens" ]);
   const tabTitles = {
     overview: tr("لوحة المبيعات اليومية والأرباح الصافية", "Daily Sales & Net Profit Overview"),
     "quick-scanner": tr("كاشف السعر السريع", "Quick Price Scanner"),
     pos: tr("نقطة البيع وإصدار الفواتير الرسمية", "Point of Sale & Official Invoicing"),
     "add-product": tr("إضافة منتج جديد (مسح الكود أو توليد QR تلقائي)", "Add Product (Scan Barcode or Generate Auto QR)"),
     inventory: tr("إدارة المخزون والأجهزة واستيكرات الأكواد", "Inventory Catalog & Printable Stickers"),
+    screens: tr("البحث عن الاسكرينات ومكانها على الرف", "Screen Protectors Search & Shelf Location"),
     maintenance: tr("إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل", "Interactive QR Maintenance, Stages & Email"),
     staff: tr("إدارة الموظفين وصلاحيات النظام", "Staff Accounts & Role Permissions"),
     settings: tr("الهوية البصرية وقنوات التواصل وإعدادات البريد", "Brand Identity, Contact Channels & SMTP")
@@ -1981,11 +1982,12 @@
     if (units) units.textContent = String(list.reduce((sum, x) => sum + Number(x.quantity || 0), 0));
     const missCount = list.filter(x => x.is_low).length;
     if (missing) missing.textContent = String(missCount);
-    const badge = document.getElementById("scrNavBadge");
-    if (badge) {
+    ["scrNavBadge", "scrNavBadgeStaff"].forEach(id => {
+      const badge = document.getElementById(id);
+      if (!badge) return;
       badge.textContent = String(missCount);
       badge.style.display = missCount > 0 ? "inline-block" : "none";
-    }
+    });
   }
 
   async function loadScreens(q) {
@@ -2698,6 +2700,26 @@
     }
     if (tab === "add-product" && IS_ADMIN) {
       await checkBarcodeForAddProduct(code);
+      return;
+    }
+    if (tab === "screens") {
+      playScanBeep();
+      const scrInp = document.getElementById("screenModelSearch");
+      if (scrInp) scrInp.value = code;
+      try {
+        const scrRes = await apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(code)}`);
+        if (scrRes.found && scrRes.screen) {
+          paintScreens([ scrRes.screen ], tr("نتيجة المسح", "Scanned protector"));
+          showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-mobile-screen" style="color:#059669;font-size:1.3rem;"></i><strong>${esc(scrRes.screen.display_name)}</strong> <span style="font-size:0.82rem;color:var(--db-muted);">${esc(scrRes.screen.place_label || "")} • ${tr("المتاح", "Stock")}: ${scrRes.screen.quantity}</span></div>
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>`, "hud-success", 4200);
+        } else {
+          await searchScreensByModel(code);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      }
       return;
     }
     if (tab === "quick-scanner") {

@@ -3032,3 +3032,5 @@ html[dir="rtl"] .sidebar-edge-btn {
   font-size: 0.95rem;
 }
 .inv-place{display:inline-flex;align-items:center;gap:5px;margin-top:4px;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:0.74rem;font-weight:900;}
+.scr-staff-note{display:flex;align-items:flex-start;gap:10px;margin-top:16px;padding:14px 16px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:0.86rem;font-weight:800;line-height:1.7;}
+.scr-staff-note i{font-size:1rem;margin-top:3px;}
