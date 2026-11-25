@@ -11,6 +11,7 @@ $action = trim((string)($_GET['action'] ?? $_POST['action'] ?? 'list'));
 $en = isEn();
 $isAdmin = ($user['role'] ?? '') === 'admin';
 $GLOBALS['ASLY_IS_ADMIN'] = $isAdmin;
+$GLOBALS['ASLY_PDO'] = $pdo;
 $writeActions = ['save', 'adjust', 'delete', 'move', 'save_model'];
 if (in_array($action, $writeActions, true)) {
     requireAdminApi();
@@ -88,6 +89,22 @@ function screenRow(array $row, bool $en): array
     $row['sell_price'] = (float)$row['sell_price'];
     $row['min_sell_price'] = (float)$row['min_sell_price'];
     $row['display_name'] = $en && !empty($row['name_en']) ? $row['name_en'] : $row['name'];
+    if (!empty($row['product_id'])) {
+        static $liveQty = [];
+        $pid = (int)$row['product_id'];
+        if (!isset($liveQty[$pid])) {
+            $liveQty[$pid] = null;
+            if (isset($GLOBALS['ASLY_PDO']) && $GLOBALS['ASLY_PDO'] instanceof PDO) {
+                $q = $GLOBALS['ASLY_PDO']->prepare('SELECT quantity FROM products WHERE id = ?');
+                $q->execute([$pid]);
+                $val = $q->fetchColumn();
+                $liveQty[$pid] = $val === false ? null : (int)$val;
+            }
+        }
+        if ($liveQty[$pid] !== null) {
+            $row['quantity'] = $liveQty[$pid];
+        }
+    }
     $row['is_low'] = $row['quantity'] <= $row['low_stock_threshold'];
     $row['is_out'] = $row['quantity'] <= 0;
     $row['place_label'] = trim((string)($row['shelf_code'] ?? ''));
@@ -150,20 +167,65 @@ if ($method === 'GET') {
             $where[] = "(name LIKE ? OR COALESCE(name_en,'') LIKE ? OR barcode LIKE ? OR COALESCE(shelf_code,'') LIKE ? OR COALESCE(drawer_label,'') LIKE ?)";
             array_push($params, $like, $like, $like, $like, $like);
         }
+        $brand = trim((string)($_GET['brand'] ?? ''));
+        if ($brand !== '') {
+            $where[] = "id IN (SELECT c.screen_id FROM screen_compatibility c INNER JOIN device_models m ON m.id = c.model_id WHERE m.brand = ?)";
+            $params[] = $brand;
+        }
+        $countSql = 'SELECT COUNT(*) FROM screen_protectors';
+        if ($where) {
+            $countSql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute($params);
+        $totalCount = (int)$countStmt->fetchColumn();
+
+        $perPage = (int)($_GET['per_page'] ?? 24);
+        if ($perPage < 6) {
+            $perPage = 24;
+        }
+        if ($perPage > 60) {
+            $perPage = 60;
+        }
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $offset = ($page - 1) * $perPage;
+
         $sql = 'SELECT * FROM screen_protectors';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
         $sql .= ' ORDER BY (quantity <= low_stock_threshold) DESC, name ASC';
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $rows = array_map(fn($r) => screenRow($r, $en), $stmt->fetchAll());
+        if (DB_DRIVER === 'sqlite') {
+            $sql .= ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $rawRows = $stmt->fetchAll();
+        } else {
+            $sql .= ' LIMIT ' . $offset . ', ' . $perPage;
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $rawRows = $stmt->fetchAll();
+        }
+        $rows = array_map(fn($r) => screenRow($r, $en), $rawRows);
         $models = modelsForScreens($pdo, array_column($rows, 'id'));
         foreach ($rows as &$r) {
             $r['models'] = $models[$r['id']] ?? [];
         }
         unset($r);
-        jsonResponse(['ok' => true, 'screens' => $rows, 'is_admin' => $isAdmin]);
+        $stats = [
+            'total' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors')->fetchColumn(),
+            'units' => (int)$pdo->query('SELECT COALESCE(SUM(quantity), 0) FROM screen_protectors')->fetchColumn(),
+            'missing' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors WHERE quantity <= low_stock_threshold')->fetchColumn(),
+        ];
+        jsonResponse([
+            'ok' => true,
+            'screens' => $rows,
+            'total' => $totalCount,
+            'page' => $page,
+            'per_page' => $perPage,
+            'stats' => $stats,
+            'is_admin' => $isAdmin,
+        ]);
     }
 
     if ($action === 'search_by_model') {

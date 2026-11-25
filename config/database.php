@@ -32,6 +32,7 @@ class Database
                 self::ensureProductColumnsSqlite(self::$pdo);
                 self::ensureScreensSqlite(self::$pdo);
             }
+            self::seedScreenCatalog(self::$pdo);
             return self::$pdo;
         }
 
@@ -53,6 +54,7 @@ class Database
                 self::ensureProductColumnsMysql(self::$pdo);
                 self::ensureScreensMysql(self::$pdo);
             }
+            self::seedScreenCatalog(self::$pdo);
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
                 $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', DB_HOST, DB_PORT, DB_CHARSET);
@@ -245,6 +247,52 @@ class Database
                 created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
             );
         ");
+    }
+
+    private static function seedScreenCatalog(PDO $pdo): void
+    {
+        try {
+            $count = (int)$pdo->query("SELECT COUNT(*) FROM `device_models`")->fetchColumn();
+        } catch (Throwable $e) {
+            return;
+        }
+        if ($count >= 300) {
+            return;
+        }
+        $sqlFile = APP_ROOT . '/database/asly_store.sql';
+        if (!is_file($sqlFile)) {
+            return;
+        }
+        $raw = (string)file_get_contents($sqlFile);
+        $statements = preg_split('/;\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $wanted = ['INSERT IGNORE INTO `device_models`', 'INSERT IGNORE INTO `screen_protectors`', 'INSERT IGNORE INTO `screen_compatibility`', 'INSERT OR IGNORE INTO `screen_compatibility`', 'INSERT IGNORE INTO `products`', 'UPDATE `screen_protectors`'];
+        foreach ($statements as $stmt) {
+            $stmt = trim($stmt);
+            if ($stmt === '') {
+                continue;
+            }
+            $ok = false;
+            foreach ($wanted as $prefix) {
+                if (strpos($stmt, $prefix) === 0) {
+                    $ok = true;
+                    break;
+                }
+            }
+            if (!$ok) {
+                continue;
+            }
+            if (DB_DRIVER === 'sqlite') {
+                $stmt = preg_replace('/^INSERT\s+IGNORE\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt) ?: $stmt;
+                $stmt = preg_replace('/^INSERT\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt) ?: $stmt;
+            }
+            try {
+                $pdo->exec($stmt);
+            } catch (Throwable $e) {
+                if (DB_DRIVER !== 'sqlite' && stripos($e->getMessage(), 'Duplicate') === false) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     public static function importMysqlDump(PDO $pdo): void

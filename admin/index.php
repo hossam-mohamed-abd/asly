@@ -40,6 +40,13 @@ if ($isAdmin) {
     }
 }
 
+$screenBrands = [];
+try {
+    $screenBrands = $pdo->query("SELECT DISTINCT brand FROM device_models WHERE is_active = 1 ORDER BY brand ASC")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+} catch (Throwable $e) {
+    $screenBrands = [];
+}
+
 $storeNameAr = $settings['store_name_ar'] ?: 'أصلي تك ستور';
 $storeNameEn = $settings['store_name_en'] ?: 'ASLY TECH STORE';
 $displayStore = $en ? $storeNameEn : $storeNameAr;
@@ -696,6 +703,12 @@ $jsConfig = [
           <div class="scr-results-head">
             <h3 id="screenResultsTitle"><?= $en ? 'All protectors' : 'كل الاسكرينات' ?></h3>
             <div class="scr-head-actions">
+              <select id="scrBrandFilter" class="form-control scp-brand-select">
+                <option value=""><?= $en ? 'All brands' : 'كل الماركات' ?></option>
+                <?php foreach (($screenBrands ?? []) as $brandName): ?>
+                  <option value="<?= e($brandName) ?>"><?= e($brandName) ?></option>
+                <?php endforeach; ?>
+              </select>
               <button type="button" class="btn btn-ghost btn-sm" id="btnToggleMissing"><i class="fa-solid fa-triangle-exclamation"></i> <?= $en ? 'Missing only' : 'الناقص فقط' ?></button>
               <?php if ($isAdmin): ?>
               <button type="button" class="btn btn-teal btn-sm" id="btnNewScreen"><i class="fa-solid fa-plus"></i> <?= $en ? 'New protector' : 'اسكرينة جديدة' ?></button>
@@ -704,6 +717,7 @@ $jsConfig = [
           </div>
 
           <div class="scr-cards" id="screenCards"></div>
+          <div class="scr-pager" id="scrPager"></div>
 
           <?php if (!$isAdmin): ?>
           <div class="scr-staff-note">

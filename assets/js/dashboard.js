@@ -1869,7 +1869,13 @@
     } catch (_) {}
   }
 
+  const SCR_PAGE_SIZE = 24;
   const SCR = {
+    page: 1,
+    total: 0,
+    brand: "",
+    lastQuery: "",
+    lastList: [],
     models: [],
     shelves: [],
     selected: [],
@@ -1942,6 +1948,29 @@
     `;
   }
 
+  function paintScreenPager() {
+    const bar = document.getElementById("scrPager");
+    if (!bar) return;
+    const pages = Math.max(1, Math.ceil(SCR.total / SCR_PAGE_SIZE));
+    if (SCR.total <= SCR_PAGE_SIZE) {
+      bar.innerHTML = SCR.total ? `<span class="scr-pager-info">${tr("عدد النتائج", "Results")}: <strong>${SCR.total}</strong></span>` : "";
+      return;
+    }
+    bar.innerHTML = `
+      <span class="scr-pager-info">${tr("صفحة", "Page")} <strong>${SCR.page}</strong> / ${pages} • ${tr("النتائج", "Results")}: <strong>${SCR.total}</strong></span>
+      <div class="scr-pager-btns">
+        <button type="button" class="btn btn-ghost btn-sm" data-scr-page="prev" ${SCR.page <= 1 ? "disabled" : ""}><i class="fa-solid fa-chevron-right"></i> ${tr("السابق", "Prev")}</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-scr-page="next" ${SCR.page >= pages ? "disabled" : ""}>${tr("التالي", "Next")} <i class="fa-solid fa-chevron-left"></i></button>
+      </div>`;
+    bar.querySelectorAll("[data-scr-page]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const dir = btn.getAttribute("data-scr-page");
+        SCR.page = Math.max(1, SCR.page + (dir === "next" ? 1 : -1));
+        loadScreens(SCR.lastQuery);
+      });
+    });
+  }
+
   function paintScreens(list, titleText) {
     const wrap = document.getElementById("screenCards");
     if (!wrap) return;
@@ -1951,7 +1980,9 @@
       wrap.innerHTML = `<div class="scr-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>${tr("مفيش اسكرينات مطابقة", "No matching protectors")}</strong><span>${tr("جرّب اسم موديل تاني أو امسح الباركود", "Try another device name or scan the barcode")}</span></div>`;
       return;
     }
+    SCR.lastList = list;
     wrap.innerHTML = list.map(screenCardHtml).join("");
+    paintScreenPager();
     wrap.querySelectorAll("[data-scr-edit]").forEach(btn => {
       btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit"))));
     });
@@ -1974,13 +2005,16 @@
     });
   }
 
-  function paintScreenStats(list) {
+  function paintScreenStats(list, stats) {
     const total = document.getElementById("scrStatTotal");
     const units = document.getElementById("scrStatUnits");
     const missing = document.getElementById("scrStatMissing");
-    if (total) total.textContent = String(list.length);
-    if (units) units.textContent = String(list.reduce((sum, x) => sum + Number(x.quantity || 0), 0));
-    const missCount = list.filter(x => x.is_low).length;
+    const statTotal = stats ? Number(stats.total || 0) : list.length;
+    const statUnits = stats ? Number(stats.units || 0) : list.reduce((sum, x) => sum + Number(x.quantity || 0), 0);
+    const statMissing = stats ? Number(stats.missing || 0) : list.filter(x => x.is_low).length;
+    if (total) total.textContent = String(statTotal);
+    if (units) units.textContent = String(statUnits);
+    const missCount = statMissing;
     if (missing) missing.textContent = String(missCount);
     ["scrNavBadge", "scrNavBadgeStaff"].forEach(id => {
       const badge = document.getElementById(id);
@@ -1990,16 +2024,21 @@
     });
   }
 
-  async function loadScreens(q) {
+  async function loadScreens(q, keepPage) {
     const params = new URLSearchParams();
     params.set("action", "list");
     if (q) params.set("q", q);
     if (SCR.missingOnly) params.set("missing", "1");
+    if (SCR.brand) params.set("brand", SCR.brand);
+    params.set("page", String(keepPage ? SCR.page : (SCR.page = 1)));
+    params.set("per_page", String(SCR_PAGE_SIZE));
+    SCR.lastQuery = q || "";
     try {
       const res = await apiFetch(`api/screens.php?${params.toString()}`);
       const list = res.screens || [];
-      paintScreens(list, q ? tr("نتيجة البحث", "Search results") : tr("كل الاسكرينات", "All protectors"));
-      if (!q) paintScreenStats(list);
+      SCR.total = Number(res.total || list.length);
+      paintScreens(list, q ? tr("نتيجة البحث", "Search results") : (SCR.missingOnly ? tr("الاسكرينات الناقصة", "Missing protectors") : tr("كل الاسكرينات", "All protectors")));
+      paintScreenStats(list, res.stats || null);
       return list;
     } catch (err) {
       showToast(err.message, true);
@@ -2188,7 +2227,14 @@
     });
     document.getElementById("btnToggleMissing")?.addEventListener("click", e => {
       SCR.missingOnly = !SCR.missingOnly;
+      SCR.page = 1;
       e.currentTarget.classList.toggle("is-on", SCR.missingOnly);
+      loadScreens(search ? search.value.trim() : "");
+    });
+
+    document.getElementById("scrBrandFilter")?.addEventListener("change", e => {
+      SCR.brand = e.currentTarget.value;
+      SCR.page = 1;
       loadScreens(search ? search.value.trim() : "");
     });
     document.getElementById("btnNewScreen")?.addEventListener("click", () => openScreenForm(0));

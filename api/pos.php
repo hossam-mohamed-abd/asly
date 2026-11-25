@@ -221,6 +221,12 @@ if ($method === 'POST') {
                     throw new RuntimeException("تعذر خصم المخزون للمنتج: {$product['name']}");
                 }
 
+                try {
+                    $syncScreen = $pdo->prepare('UPDATE screen_protectors SET quantity = (SELECT quantity FROM products WHERE id = ?), updated_at = ? WHERE product_id = ?');
+                    $syncScreen->execute([$prodId, $now, $prodId]);
+                } catch (Throwable $syncErr) {
+                }
+
                 $totalAmount += $subtotal;
                 $totalCost += $itemCost;
                 $totalProfit += $itemProfit;
