@@ -31,8 +31,11 @@ class Database
             } else {
                 self::ensureProductColumnsSqlite(self::$pdo);
                 self::ensureScreensSqlite(self::$pdo);
+                self::migrateScreensColumns(self::$pdo);
+                self::rebuildLegacyProtectors(self::$pdo);
             }
             self::seedScreenCatalog(self::$pdo);
+            self::migrateLegacyProtectors(self::$pdo);
             return self::$pdo;
         }
 
@@ -53,8 +56,11 @@ class Database
             } else {
                 self::ensureProductColumnsMysql(self::$pdo);
                 self::ensureScreensMysql(self::$pdo);
+                self::migrateScreensColumns(self::$pdo);
+                self::rebuildLegacyProtectors(self::$pdo);
             }
             self::seedScreenCatalog(self::$pdo);
+            self::migrateLegacyProtectors(self::$pdo);
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), '1049') !== false || stripos($e->getMessage(), 'Unknown database') !== false) {
                 $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', DB_HOST, DB_PORT, DB_CHARSET);
@@ -79,6 +85,9 @@ class Database
             $cols[$c['Field']] = true;
         }
         $alterations = [
+            'screen_type'          => "ALTER TABLE `products` ADD COLUMN `screen_type` VARCHAR(40) DEFAULT NULL AFTER `brand`",
+            'width_mm'             => "ALTER TABLE `products` ADD COLUMN `width_mm` DECIMAL(6,2) DEFAULT NULL AFTER `screen_type`",
+            'height_mm'            => "ALTER TABLE `products` ADD COLUMN `height_mm` DECIMAL(6,2) DEFAULT NULL AFTER `width_mm`",
             'name_en'              => "ALTER TABLE `products` ADD COLUMN `name_en` VARCHAR(200) DEFAULT NULL AFTER `name`",
             'specs_en'             => "ALTER TABLE `products` ADD COLUMN `specs_en` TEXT DEFAULT NULL AFTER `specs`",
             'description_en'       => "ALTER TABLE `products` ADD COLUMN `description_en` TEXT DEFAULT NULL AFTER `description`",
@@ -94,17 +103,39 @@ class Database
     private static function ensureScreensMysql(PDO $pdo): void
     {
         $needed = [
+            "CREATE TABLE IF NOT EXISTS `screen_types` (
+              `slug` VARCHAR(40) NOT NULL,
+              `name_ar` VARCHAR(80) NOT NULL,
+              `name_en` VARCHAR(80) NOT NULL,
+              `sort_order` INT NOT NULL DEFAULT 0,
+              `notes` VARCHAR(200) DEFAULT NULL,
+              `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+              PRIMARY KEY (`slug`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+            "CREATE TABLE IF NOT EXISTS `screen_type_prices` (
+              `type_slug` VARCHAR(40) NOT NULL,
+              `size_tier` TINYINT NOT NULL DEFAULT 1,
+              `sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              `cost_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              `min_sell_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+              PRIMARY KEY (`type_slug`, `size_tier`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             "CREATE TABLE IF NOT EXISTS `device_models` (
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
               `brand` VARCHAR(60) NOT NULL,
               `model_name` VARCHAR(120) NOT NULL,
               `model_name_ar` VARCHAR(120) DEFAULT NULL,
               `search_key` VARCHAR(220) NOT NULL DEFAULT '',
+              `screen_inch` DECIMAL(4,2) DEFAULT NULL,
+              `width_mm` DECIMAL(6,2) DEFAULT NULL,
+              `height_mm` DECIMAL(6,2) DEFAULT NULL,
+              `device_kind` VARCHAR(20) NOT NULL DEFAULT 'phone',
               `is_active` TINYINT(1) NOT NULL DEFAULT 1,
               `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
               PRIMARY KEY (`id`),
               UNIQUE KEY `uniq_device_model` (`brand`, `model_name`),
-              KEY `idx_device_search` (`search_key`)
+              KEY `idx_device_search` (`search_key`),
+              KEY `idx_device_size` (`width_mm`, `height_mm`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
             "CREATE TABLE IF NOT EXISTS `shelves` (
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -120,9 +151,11 @@ class Database
               `barcode` VARCHAR(100) NOT NULL,
               `code_type` VARCHAR(20) NOT NULL DEFAULT 'qr',
               `product_id` INT UNSIGNED DEFAULT NULL,
-              `name` VARCHAR(200) NOT NULL,
-              `name_en` VARCHAR(200) DEFAULT NULL,
-              `quality` VARCHAR(40) DEFAULT 'standard',
+              `type_slug` VARCHAR(40) NOT NULL DEFAULT 'clear',
+              `width_mm` DECIMAL(6,2) NOT NULL DEFAULT 0.00,
+              `height_mm` DECIMAL(6,2) NOT NULL DEFAULT 0.00,
+              `diag_inch` DECIMAL(4,2) DEFAULT NULL,
+              `size_tier` TINYINT NOT NULL DEFAULT 1,
               `shelf_code` VARCHAR(20) DEFAULT NULL,
               `drawer_label` VARCHAR(40) DEFAULT NULL,
               `purchase_price` DECIMAL(12,2) NOT NULL DEFAULT 0.00,
@@ -177,6 +210,9 @@ class Database
             $cols[$c['name']] = true;
         }
         $alterations = [
+            'screen_type'          => "ALTER TABLE products ADD COLUMN screen_type TEXT DEFAULT NULL",
+            'width_mm'             => "ALTER TABLE products ADD COLUMN width_mm REAL DEFAULT NULL",
+            'height_mm'            => "ALTER TABLE products ADD COLUMN height_mm REAL DEFAULT NULL",
             'name_en'              => "ALTER TABLE products ADD COLUMN name_en TEXT DEFAULT NULL",
             'specs_en'             => "ALTER TABLE products ADD COLUMN specs_en TEXT DEFAULT NULL",
             'description_en'       => "ALTER TABLE products ADD COLUMN description_en TEXT DEFAULT NULL",
@@ -192,12 +228,32 @@ class Database
     private static function ensureScreensSqlite(PDO $pdo): void
     {
         $pdo->exec("
+            CREATE TABLE IF NOT EXISTS screen_types (
+                slug TEXT PRIMARY KEY,
+                name_ar TEXT NOT NULL,
+                name_en TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                notes TEXT DEFAULT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1
+            );
+            CREATE TABLE IF NOT EXISTS screen_type_prices (
+                type_slug TEXT NOT NULL,
+                size_tier INTEGER NOT NULL DEFAULT 1,
+                sell_price REAL NOT NULL DEFAULT 0,
+                cost_price REAL NOT NULL DEFAULT 0,
+                min_sell_price REAL NOT NULL DEFAULT 0,
+                PRIMARY KEY (type_slug, size_tier)
+            );
             CREATE TABLE IF NOT EXISTS device_models (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 brand TEXT NOT NULL,
                 model_name TEXT NOT NULL,
                 model_name_ar TEXT DEFAULT NULL,
                 search_key TEXT NOT NULL DEFAULT '',
+                screen_inch REAL DEFAULT NULL,
+                width_mm REAL DEFAULT NULL,
+                height_mm REAL DEFAULT NULL,
+                device_kind TEXT NOT NULL DEFAULT 'phone',
                 is_active INTEGER NOT NULL DEFAULT 1,
                 created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
                 UNIQUE (brand, model_name)
@@ -214,9 +270,11 @@ class Database
                 barcode TEXT NOT NULL UNIQUE,
                 code_type TEXT NOT NULL DEFAULT 'qr',
                 product_id INTEGER DEFAULT NULL,
-                name TEXT NOT NULL,
-                name_en TEXT DEFAULT NULL,
-                quality TEXT DEFAULT 'standard',
+                type_slug TEXT NOT NULL DEFAULT 'clear',
+                width_mm REAL NOT NULL DEFAULT 0,
+                height_mm REAL NOT NULL DEFAULT 0,
+                diag_inch REAL DEFAULT NULL,
+                size_tier INTEGER NOT NULL DEFAULT 1,
                 shelf_code TEXT DEFAULT NULL,
                 drawer_label TEXT DEFAULT NULL,
                 purchase_price REAL NOT NULL DEFAULT 0,
@@ -249,6 +307,176 @@ class Database
         ");
     }
 
+    /** brings an older install up to the current screens schema */
+    private static function migrateScreensColumns(PDO $pdo): void
+    {
+        $specs = [
+            'device_models' => [
+                'screen_inch' => ['sqlite' => 'REAL DEFAULT NULL', 'mysql' => 'DECIMAL(4,2) DEFAULT NULL'],
+                'width_mm'    => ['sqlite' => 'REAL DEFAULT NULL', 'mysql' => 'DECIMAL(6,2) DEFAULT NULL'],
+                'height_mm'   => ['sqlite' => 'REAL DEFAULT NULL', 'mysql' => 'DECIMAL(6,2) DEFAULT NULL'],
+                'device_kind' => ['sqlite' => "TEXT NOT NULL DEFAULT 'phone'", 'mysql' => "VARCHAR(20) NOT NULL DEFAULT 'phone'"],
+            ],
+            'screen_protectors' => [
+                'type_slug'   => ['sqlite' => "TEXT NOT NULL DEFAULT 'clear'", 'mysql' => "VARCHAR(40) NOT NULL DEFAULT 'clear'"],
+                'width_mm'    => ['sqlite' => 'REAL NOT NULL DEFAULT 0', 'mysql' => 'DECIMAL(6,2) NOT NULL DEFAULT 0.00'],
+                'height_mm'   => ['sqlite' => 'REAL NOT NULL DEFAULT 0', 'mysql' => 'DECIMAL(6,2) NOT NULL DEFAULT 0.00'],
+                'diag_inch'   => ['sqlite' => 'REAL DEFAULT NULL', 'mysql' => 'DECIMAL(4,2) DEFAULT NULL'],
+                'size_tier'   => ['sqlite' => 'INTEGER NOT NULL DEFAULT 1', 'mysql' => 'TINYINT NOT NULL DEFAULT 1'],
+            ],
+        ];
+        foreach ($specs as $table => $columns) {
+            try {
+                if (DB_DRIVER === 'sqlite') {
+                    $have = [];
+                    foreach ($pdo->query("PRAGMA table_info({$table})")->fetchAll() as $c) {
+                        $have[$c['name']] = true;
+                    }
+                } else {
+                    $have = [];
+                    foreach ($pdo->query("SHOW COLUMNS FROM `{$table}`")->fetchAll() as $c) {
+                        $have[$c['Field']] = true;
+                    }
+                }
+                foreach ($columns as $col => $def) {
+                    if (isset($have[$col])) {
+                        continue;
+                    }
+                    $pdo->exec('ALTER TABLE ' . $table . ' ADD COLUMN ' . $col . ' ' . $def[DB_DRIVER === 'sqlite' ? 'sqlite' : 'mysql']);
+                }
+            } catch (Throwable $e) {
+                // table not there yet or no permission: the schema creation step handles it
+            }
+        }
+    }
+
+    /** older installs carry NOT NULL legacy columns (name/quality) that block the new inserts */
+    private static function rebuildLegacyProtectors(PDO $pdo): void
+    {
+        try {
+            if (DB_DRIVER === 'sqlite') {
+                $cols = [];
+                foreach ($pdo->query('PRAGMA table_info(screen_protectors)')->fetchAll() as $c) {
+                    $cols[$c['name']] = true;
+                }
+                if (!isset($cols['name'])) {
+                    return;
+                }
+                $pdo->exec('
+                    CREATE TABLE screen_protectors_mig (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        barcode TEXT NOT NULL UNIQUE,
+                        code_type TEXT NOT NULL DEFAULT \'qr\',
+                        product_id INTEGER DEFAULT NULL,
+                        type_slug TEXT NOT NULL DEFAULT \'clear\',
+                        width_mm REAL NOT NULL DEFAULT 0,
+                        height_mm REAL NOT NULL DEFAULT 0,
+                        diag_inch REAL DEFAULT NULL,
+                        size_tier INTEGER NOT NULL DEFAULT 1,
+                        shelf_code TEXT DEFAULT NULL,
+                        drawer_label TEXT DEFAULT NULL,
+                        purchase_price REAL NOT NULL DEFAULT 0,
+                        sell_price REAL NOT NULL DEFAULT 0,
+                        min_sell_price REAL NOT NULL DEFAULT 0,
+                        quantity INTEGER NOT NULL DEFAULT 0,
+                        low_stock_threshold INTEGER NOT NULL DEFAULT 3,
+                        notes TEXT DEFAULT NULL,
+                        is_active INTEGER NOT NULL DEFAULT 1,
+                        created_by INTEGER DEFAULT NULL,
+                        created_at TEXT DEFAULT NULL,
+                        updated_at TEXT DEFAULT NULL,
+                        name TEXT DEFAULT NULL,
+                        name_en TEXT DEFAULT NULL,
+                        quality TEXT DEFAULT NULL
+                    )
+                ');
+                $pdo->exec('
+                    INSERT INTO screen_protectors_mig
+                        (id, barcode, code_type, product_id, type_slug, width_mm, height_mm, diag_inch, size_tier,
+                         shelf_code, drawer_label, purchase_price, sell_price, min_sell_price, quantity,
+                         low_stock_threshold, notes, is_active, created_by, created_at, updated_at, name, name_en, quality)
+                    SELECT id, barcode, code_type, product_id, COALESCE(type_slug, \'clear\'), COALESCE(width_mm, 0),
+                           COALESCE(height_mm, 0), diag_inch, COALESCE(size_tier, 1), shelf_code, drawer_label,
+                           purchase_price, sell_price, min_sell_price, quantity, low_stock_threshold, notes,
+                           is_active, created_by, created_at, updated_at, name, name_en, quality
+                    FROM screen_protectors
+                ');
+                $pdo->exec('DROP TABLE screen_protectors');
+                $pdo->exec('ALTER TABLE screen_protectors_mig RENAME TO screen_protectors');
+                return;
+            }
+            // mysql: just relax the legacy NOT NULL columns
+            $pdo->exec('ALTER TABLE `screen_protectors` MODIFY `name` VARCHAR(200) NULL DEFAULT NULL');
+            $pdo->exec('ALTER TABLE `screen_protectors` MODIFY `name_en` VARCHAR(200) NULL DEFAULT NULL');
+            $pdo->exec('ALTER TABLE `screen_protectors` MODIFY `quality` VARCHAR(40) NULL DEFAULT NULL');
+        } catch (Throwable $e) {
+            // nothing to migrate
+        }
+    }
+
+    /** folds protectors created before the size-based catalog into the new rows, keeping their stock */
+    private static function migrateLegacyProtectors(PDO $pdo): void
+    {
+        try {
+            $legacy = $pdo->query('SELECT * FROM screen_protectors WHERE width_mm IS NULL OR width_mm <= 0')->fetchAll();
+        } catch (Throwable $e) {
+            return;
+        }
+        if (!$legacy) {
+            return;
+        }
+        $validTypes = [];
+        try {
+            foreach ($pdo->query('SELECT slug FROM screen_types')->fetchAll() as $row) {
+                $validTypes[$row['slug']] = true;
+            }
+        } catch (Throwable $e) {
+            return;
+        }
+        $avgStmt = $pdo->prepare('
+            SELECT AVG(m.width_mm) AS w, AVG(m.height_mm) AS h, COUNT(*) AS total
+            FROM screen_compatibility c
+            INNER JOIN device_models m ON m.id = c.model_id
+            WHERE c.screen_id = ? AND m.width_mm IS NOT NULL
+        ');
+        $findStmt = $pdo->prepare('
+            SELECT id FROM screen_protectors
+            WHERE is_active = 1 AND width_mm > 0 AND type_slug = ? AND width_mm BETWEEN ? AND ? AND height_mm BETWEEN ? AND ?
+            ORDER BY ABS(width_mm - ?) + ABS(height_mm - ?) ASC LIMIT 1
+        ');
+        $qtyStmt = $pdo->prepare('SELECT quantity FROM screen_protectors WHERE id = ?');
+        $off = $pdo->prepare('UPDATE screen_protectors SET is_active = 0, updated_at = ? WHERE id = ?');
+        $merge = $pdo->prepare('UPDATE screen_protectors SET quantity = ?, shelf_code = COALESCE(shelf_code, ?), drawer_label = COALESCE(drawer_label, ?), updated_at = ? WHERE id = ?');
+        $resize = $pdo->prepare('UPDATE screen_protectors SET width_mm = ?, height_mm = ?, diag_inch = ?, size_tier = ?, updated_at = ? WHERE id = ?');
+        $now = date('Y-m-d H:i:s');
+        foreach ($legacy as $row) {
+            $type = (string)($row['type_slug'] ?? '');
+            if (!isset($validTypes[$type])) {
+                $type = isset($validTypes['9h']) ? '9h' : array_key_first($validTypes);
+            }
+            $avgStmt->execute([(int)$row['id']]);
+            $avg = $avgStmt->fetch() ?: null;
+            $width = $avg && $avg['w'] !== null ? round((float)$avg['w'], 2) : 0.0;
+            $height = $avg && $avg['h'] !== null ? round((float)$avg['h'], 2) : 0.0;
+            if ($width <= 0 || $height <= 0) {
+                $off->execute([$now, (int)$row['id']]);
+                continue;
+            }
+            $diag = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
+            $tier = $diag >= 6.6 ? 3 : ($diag >= 6.0 ? 2 : 1);
+            $findStmt->execute([$type, $width - 1, $width + 1, $height - 1.5, $height + 1.5, $width, $height]);
+            $targetId = (int)$findStmt->fetchColumn();
+            if ($targetId > 0) {
+                $qtyStmt->execute([$targetId]);
+                $targetQty = (int)$qtyStmt->fetchColumn();
+                $merge->execute([$targetQty + (int)$row['quantity'], $row['shelf_code'] ?? null, $row['drawer_label'] ?? null, $now, $targetId]);
+                $off->execute([$now, (int)$row['id']]);
+            } else {
+                $resize->execute([$width, $height, $diag, $tier, $now, (int)$row['id']]);
+            }
+        }
+    }
+
     private static function seedScreenCatalog(PDO $pdo): void
     {
         try {
@@ -266,18 +494,47 @@ class Database
             if ((string)$marker === '2') {
                 $models = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
                 $screens = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors`')->fetchColumn();
-                if ($models >= 300 && $screens > 0) {
+                $types = (int)$pdo->query('SELECT COUNT(*) FROM `screen_types`')->fetchColumn();
+                if ($models >= 1000 && $screens > 0 && $types > 0) {
                     return;
                 }
             }
         } catch (Throwable $e) {
             // settings table missing: fall through to the replay
         }
+        // already fully shipped (fresh installs come from the dump): remember it and skip the replay
+        $pricesReady = false;
+        try {
+            $haveModels = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
+            $haveScreens = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors`')->fetchColumn();
+            $haveTypes = (int)$pdo->query('SELECT COUNT(*) FROM `screen_types`')->fetchColumn();
+            $haveLinks = (int)$pdo->query('SELECT COUNT(*) FROM `screen_compatibility`')->fetchColumn();
+            $pricesReady = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors` WHERE `sell_price` > 0')->fetchColumn() > 0;
+            if ($haveModels >= 1000 && $haveScreens > 0 && $haveTypes > 0 && $haveLinks > 0 && $pricesReady) {
+                $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
+                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '2')");
+                return;
+            }
+        } catch (Throwable $e) {
+            // fall through to the replay
+        }
         $raw = (string)file_get_contents($sqlFile);
+        // the shipped dump is minified into one line; statements are split on ';' only
         $statements = preg_split('/;\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $inserted = false;
         $modelCount = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
-        $wanted = ['INSERT IGNORE INTO `device_models`', 'INSERT IGNORE INTO `screen_protectors`', 'INSERT IGNORE INTO `screen_compatibility`', 'INSERT OR IGNORE INTO `screen_compatibility`', 'INSERT IGNORE INTO `products`', 'UPDATE `screen_protectors`'];
+        $wanted = [
+            'INSERT IGNORE INTO `screen_types`',
+            'INSERT IGNORE INTO `screen_type_prices`',
+            'INSERT IGNORE INTO `device_models`',
+            'INSERT IGNORE INTO `screen_protectors`',
+            'INSERT IGNORE INTO `screen_compatibility`',
+            'INSERT OR IGNORE INTO `screen_compatibility`',
+            'INSERT IGNORE INTO `products`',
+            'UPDATE `screen_protectors`',
+            'UPDATE `products`',
+            'SET SQL_MODE',
+        ];
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
             if ($stmt === '') {
@@ -312,7 +569,7 @@ class Database
         }
 
         try {
-            if ($inserted || $modelCount >= 300) {
+            if ($inserted || $modelCount >= 1000) {
                 $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
                 $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '2')");
             }
@@ -350,6 +607,7 @@ class Database
 
     private static function initializeSqliteSchema(PDO $pdo): void
     {
+        self::ensureScreensSqlite($pdo);
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -384,6 +642,9 @@ class Database
                 category TEXT NOT NULL DEFAULT 'laptops',
                 condition_status TEXT NOT NULL DEFAULT 'new',
                 brand TEXT DEFAULT NULL,
+                screen_type TEXT DEFAULT NULL,
+                width_mm REAL DEFAULT NULL,
+                height_mm REAL DEFAULT NULL,
                 specs TEXT DEFAULT NULL,
                 specs_en TEXT DEFAULT NULL,
                 description TEXT DEFAULT NULL,

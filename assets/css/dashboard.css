@@ -2645,18 +2645,21 @@ html[dir="rtl"] .sidebar-edge-btn {
   color: #b91c1c;
 }
 
+/* screens: card = device → drawer → price → compatibility */
 .scr-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 12px;
 }
 
 .scr-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
   border: 1.5px solid var(--db-border, #e2e8f0);
   border-radius: 16px;
-  padding: 0;
+  padding: 10px 12px 8px;
   overflow: hidden;
   transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
@@ -2672,39 +2675,25 @@ html[dir="rtl"] .sidebar-edge-btn {
   background: #fffafa;
 }
 
-.scr-card-hit {
-  display: block;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  padding: 18px 16px 16px;
-  font-family: inherit;
-  text-align: center;
-  cursor: pointer;
+.scr-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.scr-card-name {
-  display: block;
-  font-size: 0.95rem;
+.scr-card-type {
+  font-size: 0.7rem;
   font-weight: 900;
-  color: var(--db-text, #1e293b);
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-.scr-card-price {
-  display: block;
-  margin-top: 6px;
-  font-size: 1.12rem;
-  font-weight: 900;
-  color: var(--db-teal-800, #0d9297);
-  direction: ltr;
+  letter-spacing: 0.2px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
 }
 
 .scr-card-flag {
-  position: absolute;
-  top: 8px;
-  inset-inline-end: 8px;
   font-size: 0.66rem;
   font-weight: 900;
   padding: 2px 8px;
@@ -2713,25 +2702,351 @@ html[dir="rtl"] .sidebar-edge-btn {
   color: #b91c1c;
 }
 
+.scr-card-qty {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--db-muted, #64748b);
+}
+
+.scr-card-hit {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 2px 0 8px;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.scr-card-name {
+  display: block;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--db-text, #1e293b);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.scr-card-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.scr-card-price {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.16rem;
+  font-weight: 900;
+  color: var(--db-teal-800, #0d9297);
+  direction: ltr;
+}
+
+.scr-card-compat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-top: 1px dashed var(--db-border, #e2e8f0);
+  padding-top: 7px;
+}
+
+.scr-compat-line {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scr-compat-line em {
+  font-style: normal;
+  font-weight: 900;
+  color: var(--db-teal-700, #0d9499);
+}
+
+.scr-compat-toggle {
+  border: 1px solid var(--db-border, #e2e8f0);
+  background: #f8fafc;
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--db-muted, #64748b);
+  transition: transform 0.16s ease;
+}
+
+.scr-compat-toggle.is-open {
+  transform: rotate(180deg);
+}
+
+.scr-compat-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  max-height: 150px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.scr-compat-item {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--db-text, #1e293b);
+}
+
+.scr-compat-more {
+  font-size: 0.74rem;
+  font-weight: 900;
+  color: var(--db-muted, #64748b);
+}
+
 .scr-card-actions {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  margin-top: auto;
+  margin-top: 8px;
   padding-top: 8px;
   border-top: 1px dashed var(--db-border, #e2e8f0);
 }
 
 .scr-card-actions .btn {
   flex: 1;
-  min-width: 76px;
+  min-width: 92px;
   justify-content: center;
-  font-family: monospace;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
 }
 
-.scr-card-actions .btn i.fa-barcode {
-  font-family: inherit;
+.scr-card-actions .btn b {
+  color: var(--db-teal-700, #0d9499);
+}
+
+/* types & prices panel */
+.scr-type-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.scr-type-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.scr-type-info strong {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--db-text, #1e293b);
+}
+
+.scr-type-meta {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+}
+
+.scr-type-prices {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.scr-type-price {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--db-teal-800, #0d9297);
+  background: #ecfdf5;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.scr-type-price b {
+  color: #047857;
+  margin-inline-end: 3px;
+}
+
+.scr-type-price.is-empty {
+  background: #f1f5f9;
+  color: var(--db-muted, #64748b);
+}
+
+.scr-type-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.scr-type-form .scr-type-prices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.scr-price-box {
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  background: #f8fafc;
+}
+
+.scr-price-box strong {
+  font-size: 0.85rem;
+  color: var(--db-teal-800, #0d9297);
+}
+
+.scr-price-box label {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--db-muted, #64748b);
+}
+
+.scr-price-box input {
+  padding: 6px 8px;
+  font-size: 0.82rem;
+}
+
+.scr-suggest-sep {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--db-muted, #64748b);
+  align-self: center;
+}
+
+.scr-suggest.is-alt {
+  background: #f8fafc;
+  border-style: dashed;
+}
+
+.scr-pick-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.scr-pick-head {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--db-muted, #64748b);
+}
+
+.scr-pick-head b {
+  color: var(--db-teal-800, #0d9297);
+}
+
+.scr-pick-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--db-border, #e2e8f0);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--db-text, #1e293b);
+}
+
+.scr-pick-item button {
+  border: 0;
+  background: #fee2e2;
+  color: #b91c1c;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+}
+
+.scr-pick-more {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--db-muted, #64748b);
+  padding: 4px 2px;
+}
+
+.scr-type-checks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scr-type-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--db-border, #e2e8f0);
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scr-type-check input {
+  accent-color: var(--db-teal-700, #0d9499);
+}
+
+.scr-hint {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+  margin: 6px 0;
+  line-height: 1.7;
+}
+
+.scr-form-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.scr-form-shell.is-inner {
+  margin-top: 12px;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.scr-chip.is-more {
+  background: #f1f5f9;
+  color: var(--db-muted, #64748b);
+  font-weight: 900;
 }
 
 .scr-empty {

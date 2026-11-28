@@ -681,13 +681,13 @@ $jsConfig = [
 
           <div class="scr-hero">
             <div class="scr-hero-head">
-              <h2><i class="fa-solid fa-mobile-screen"></i> <?= $en ? 'Find the screen protector by device' : 'دوّر على الاسكرينة بالموديل' ?></h2>
-              <p><?= $en ? 'Type the device name and see every protector that fits it, its price, stock and shelf.' : 'اكتب اسم الجهاز وهتلاقي كل الاسكرينات اللي تركب عليه، بسعرها ورصيدها ومكانها.' ?></p>
+              <h2><i class="fa-solid fa-mobile-screen"></i> <?= $en ? 'Screen protectors by device' : 'الاسكرينات بالموديل' ?></h2>
+              <p><?= $en ? 'Search the device, find the protector: its drawer and its price. Devices and prices are managed here too.' : 'اكتب اسم الجهاز، هتلاقي الاسكرينة اللي تركب عليه ومكانها في الدرج وسعرها. وكل الأجهزة والأنواع والأسعار بتتظبط من هنا.' ?></p>
             </div>
             <div class="scr-search-row">
               <div class="scr-search-field">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="screenModelSearch" autocomplete="off" placeholder="<?= $en ? 'iPhone 11 … Samsung A12 … or barcode' : 'ايفون 11 … سامسونج A12 … أو الباركود' ?>">
+                <input type="text" id="screenModelSearch" autocomplete="off" placeholder="<?= $en ? 'iPhone 15 / A54 / C17 … or barcode' : 'iPhone 15 / A54 / C17 … أو الباركود' ?>">
                 <button type="button" id="btnScreenSearchClear"><i class="fa-solid fa-xmark"></i></button>
               </div>
             </div>
@@ -695,23 +695,25 @@ $jsConfig = [
           </div>
 
           <div class="scr-stats">
-            <div class="scr-stat"><span><?= $en ? 'Protector types' : 'عدد الانواع' ?></span><strong id="scrStatTotal">0</strong></div>
-            <div class="scr-stat"><span><?= $en ? 'Pieces in stock' : 'القطع المتاحة' ?></span><strong id="scrStatUnits">0</strong></div>
-            <div class="scr-stat is-alert"><span><?= $en ? 'Missing now' : 'ناقص الآن' ?></span><strong id="scrStatMissing">0</strong></div>
+            <div class="scr-stat"><span><?= $en ? 'Sizes' : 'المقاسات' ?></span><strong id="scrStatTotal">0</strong></div>
+            <div class="scr-stat"><span><?= $en ? 'Devices' : 'الأجهزة' ?></span><strong id="scrStatDevices">0</strong></div>
+            <div class="scr-stat"><span><?= $en ? 'Pieces' : 'القطع' ?></span><strong id="scrStatUnits">0</strong></div>
+            <div class="scr-stat is-alert"><span><?= $en ? 'Missing' : 'ناقص' ?></span><strong id="scrStatMissing">0</strong></div>
           </div>
 
           <div class="scr-results-head">
             <h3 id="screenResultsTitle"><?= $en ? 'All protectors' : 'كل الاسكرينات' ?></h3>
             <div class="scr-head-actions">
+              <select id="scrTypeFilter" class="form-control scp-brand-select">
+                <option value=""><?= $en ? 'All types' : 'كل الأنواع' ?></option>
+              </select>
               <select id="scrBrandFilter" class="form-control scp-brand-select">
                 <option value=""><?= $en ? 'All brands' : 'كل الماركات' ?></option>
-                <?php foreach (($screenBrands ?? []) as $brandName): ?>
-                  <option value="<?= e($brandName) ?>"><?= e($brandName) ?></option>
-                <?php endforeach; ?>
               </select>
               <button type="button" class="btn btn-ghost btn-sm" id="btnToggleMissing"><i class="fa-solid fa-triangle-exclamation"></i> <?= $en ? 'Missing only' : 'الناقص فقط' ?></button>
               <?php if ($isAdmin): ?>
-              <button type="button" class="btn btn-teal btn-sm" id="btnNewScreen"><i class="fa-solid fa-plus"></i> <?= $en ? 'New protector' : 'اسكرينة جديدة' ?></button>
+              <button type="button" class="btn btn-teal btn-sm" id="btnManageTypes"><i class="fa-solid fa-layer-group"></i> <?= $en ? 'Types & prices' : 'الأنواع والأسعار' ?></button>
+              <button type="button" class="btn btn-gold btn-sm" id="btnNewScreen"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add size' : 'إضافة مقاس' ?></button>
               <?php endif; ?>
             </div>
           </div>
@@ -722,50 +724,90 @@ $jsConfig = [
           <?php if (!$isAdmin): ?>
           <div class="scr-staff-note">
             <i class="fa-solid fa-circle-info"></i>
-            <span><?= $en ? 'You can search any protector, scan its barcode, and see its shelf and price. Adding or editing protectors is for the admin only.' : 'تقدر تبحث عن أي اسكرينة أو تمسح باركودها وتشوف رفها وسعرها. إضافة أو تعديل الاسكرينات للمدير فقط.' ?></span>
+            <span><?= $en ? 'Search any protector or scan its barcode, then see its drawer and price. Editing is admin only.' : 'تقدر تبحث عن أي اسكرينة أو تمسح باركودها وتشوف درجها وسعرها. التعديل للمدير فقط.' ?></span>
           </div>
           <?php endif; ?>
 
           <?php if ($isAdmin): ?>
+          <div class="scr-form-shell" id="screenTypesShell" style="display:none;">
+            <div class="scr-form-head">
+              <strong><i class="fa-solid fa-layer-group"></i> <?= $en ? 'Protector types & prices' : 'أنواع الاسكرينات وأسعارها' ?></strong>
+              <button type="button" data-close-shell="screenTypesShell"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="scr-hint"><?= $en ? 'Every protector of the same type takes the same price for its size tier: small, medium, large.' : 'كل اسكرينة من نفس النوع ليها نفس السعر حسب فئة المقاس: صغير، متوسط، كبير.' ?></p>
+            <div class="scr-type-list" id="scrTypeList"></div>
+            <form id="screenTypeForm" class="scr-type-form">
+              <input type="hidden" name="slug" id="scrTypeSlug" value="">
+              <div class="scr-two">
+                <div class="form-group">
+                  <label><?= $en ? 'Type name (Arabic)' : 'اسم النوع بالعربي' ?></label>
+                  <input type="text" name="name_ar" id="scrTypeAr" class="form-control" placeholder="زجاج 9H" required>
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Type name (English)' : 'اسم النوع بالإنجليزي' ?></label>
+                  <input type="text" name="name_en" id="scrTypeEn" class="form-control" placeholder="Tempered 9H" required>
+                </div>
+              </div>
+              <div class="scr-type-prices">
+                <?php foreach ([[1, $en ? 'Small' : 'صغير'], [2, $en ? 'Medium' : 'متوسط'], [3, $en ? 'Large' : 'كبير']] as [$tier, $tierLabel]): ?>
+                <div class="scr-price-box">
+                  <strong><?= e($tierLabel) ?></strong>
+                  <label><?= $en ? 'Sell' : 'البيع' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_sell" id="scrPrice<?= $tier ?>Sell"></label>
+                  <label><?= $en ? 'Cost' : 'التكلفة' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_cost" id="scrPrice<?= $tier ?>Cost"></label>
+                  <label><?= $en ? 'Min' : 'أقل سعر' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_min" id="scrPrice<?= $tier ?>Min"></label>
+                </div>
+                <?php endforeach; ?>
+              </div>
+              <div class="scr-form-actions">
+                <button type="submit" class="btn btn-teal"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save type' : 'حفظ النوع' ?></button>
+                <button type="button" class="btn btn-ghost" id="btnNewType"><i class="fa-solid fa-plus"></i> <?= $en ? 'New type' : 'نوع جديد' ?></button>
+              </div>
+            </form>
+          </div>
+
           <div class="scr-form-shell" id="screenFormShell" style="display:none;">
             <div class="scr-form-head">
-              <strong id="screenFormTitle"><?= $en ? 'New screen protector' : 'اسكرينة جديدة' ?></strong>
-              <button type="button" id="btnCloseScreenForm"><i class="fa-solid fa-xmark"></i></button>
+              <strong id="screenFormTitle"><?= $en ? 'New size' : 'مقاس جديد' ?></strong>
+              <button type="button" data-close-shell="screenFormShell"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="scr-form-shell is-inner" id="scrPickShell" style="display:none;">
+              <strong><?= $en ? 'Existing size — pick the types you stock' : 'مقاس موجود — اختار الأنواع اللي عندك' ?></strong>
+              <div class="scr-two">
+                <div class="form-group">
+                  <label><?= $en ? 'Size' : 'المقاس' ?></label>
+                  <select id="scrPickSize" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Devices on it' : 'الأجهزة عليه' ?></label>
+                  <input type="text" id="scrPickInfo" class="form-control" readonly value="—">
+                </div>
+              </div>
+              <div class="scr-type-checks" id="scrPickTypes"></div>
+              <div class="scr-form-actions">
+                <button type="button" class="btn btn-teal btn-sm" id="btnPickTypes"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add these types' : 'أضف الأنواع دي' ?></button>
+              </div>
             </div>
 
             <form id="screenSaveForm">
               <input type="hidden" name="id" id="scrId" value="0">
               <input type="hidden" name="barcode" id="scrBarcode" value="">
 
-              <div class="form-group">
-                <label><?= $en ? 'Protector name' : 'اسم الاسكرينة' ?></label>
-                <input type="text" name="name" id="scrName" class="form-control" placeholder="<?= $en ? 'Tempered glass 9H' : 'زجاج مقوي 9H' ?>">
+              <div class="scr-two">
+                <div class="form-group">
+                  <label><?= $en ? 'Width (mm)' : 'العرض (مم)' ?></label>
+                  <input type="number" step="0.1" min="0" name="width_mm" id="scrWidth" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Height (mm)' : 'الطول (مم)' ?></label>
+                  <input type="number" step="0.1" min="0" name="height_mm" id="scrHeight" class="form-control" required>
+                </div>
               </div>
 
               <div class="form-group">
-                <label><?= $en ? 'Type (optional)' : 'النوع (اختياري)' ?></label>
-                <select name="quality" id="scrQuality" class="form-control">
-                  <option value="standard"><?= $en ? 'Standard glass' : 'زجاج عادي' ?></option>
-                  <option value="9h"><?= $en ? 'Tempered 9H' : 'زجاج مقوي 9H' ?></option>
-                  <option value="nano"><?= $en ? 'Nano' : 'نانو' ?></option>
-                  <option value="privacy"><?= $en ? 'Privacy' : 'برايفسي' ?></option>
-                  <option value="ceramic"><?= $en ? 'Ceramic' : 'سيراميك' ?></option>
-                  <option value="matte"><?= $en ? 'Matte' : 'مات' ?></option>
-                </select>
-              </div>
-
-              <div class="scr-models-block">
-                <label><?= $en ? 'Fits these devices' : 'تركب على الأجهزة دي' ?></label>
-                <div class="scr-chips" id="scrModelChips"></div>
-                <div class="scr-model-add">
-                  <input type="text" id="scrModelSearch" class="form-control" autocomplete="off" placeholder="<?= $en ? 'Search a device to add…' : 'ابحث عن جهاز لإضافته…' ?>">
-                </div>
-                <div class="scr-model-results" id="scrModelResults"></div>
-                <div class="scr-new-model" id="scrNewModelBox" style="display:none;">
-                  <input type="text" id="scrNewBrand" class="form-control" placeholder="<?= $en ? 'Brand' : 'الماركة' ?>">
-                  <input type="text" id="scrNewModel" class="form-control" placeholder="<?= $en ? 'Model' : 'الموديل' ?>">
-                  <button type="button" class="btn btn-gold btn-sm" id="btnCreateModel"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add device' : 'أضف الجهاز' ?></button>
-                </div>
+                <label><?= $en ? 'Types to create for this size' : 'الأنواع المطلوب إنشاء اسكرينة منها للمقاس ده' ?></label>
+                <div class="scr-type-checks" id="scrTypeChecks"></div>
+                <p class="scr-hint" id="scrPriceHint"></p>
               </div>
 
               <div class="scr-two">
@@ -781,33 +823,47 @@ $jsConfig = [
 
               <div class="scr-two">
                 <div class="form-group">
-                  <label><?= $en ? 'Selling price' : 'سعر البيع' ?></label>
-                  <input type="number" inputmode="decimal" step="0.01" min="0" name="sell_price" id="scrSell" class="form-control">
-                </div>
-                <div class="form-group">
-                  <label><?= $en ? 'Minimum price' : 'أقل سعر' ?></label>
-                  <input type="number" inputmode="decimal" step="0.01" min="0" name="min_sell_price" id="scrMin" class="form-control">
-                </div>
-              </div>
-
-              <div class="scr-two">
-                <div class="form-group">
-                  <label><?= $en ? 'Purchase cost' : 'سعر الشراء' ?></label>
-                  <input type="number" inputmode="decimal" step="0.01" min="0" name="purchase_price" id="scrPurchase" class="form-control">
-                </div>
-                <div class="form-group">
                   <label><?= $en ? 'Quantity' : 'الكمية' ?></label>
                   <input type="number" inputmode="numeric" min="0" step="1" name="quantity" id="scrQty" class="form-control" value="0">
                 </div>
+                <div class="form-group">
+                  <label><?= $en ? 'Alert below' : 'ينبهني لما يوصل' ?></label>
+                  <input type="number" inputmode="numeric" min="0" step="1" name="low_stock_threshold" id="scrLow" class="form-control" value="3">
+                </div>
               </div>
 
-              <div class="form-group">
-                <label><?= $en ? 'Alert me when stock reaches' : 'ينبهني لما الرصيد يوصل' ?></label>
-                <input type="number" inputmode="numeric" min="0" step="1" name="low_stock_threshold" id="scrLow" class="form-control" value="3">
-              </div>
+              <p class="scr-hint"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Every device with the same glass size is linked automatically.' : 'كل جهاز بنفس مقاس الزجاج بيتربط تلقائيًا.' ?></p>
+              <div class="scr-chips" id="scrModelChips"></div>
 
-              <button type="submit" class="btn btn-teal scr-save-btn"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save protector' : 'حفظ الاسكرينة' ?></button>
+              <div class="scr-form-actions">
+                <button type="submit" class="btn btn-teal scr-save-btn"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save' : 'حفظ' ?></button>
+              </div>
             </form>
+          </div>
+
+          <div class="scr-form-shell" id="screenDevicesShell" style="display:none;">
+            <div class="scr-form-head">
+              <strong id="screenDevicesTitle"><?= $en ? 'Devices on this protector' : 'الأجهزة اللي تركب على الاسكرينة' ?></strong>
+              <button type="button" data-close-shell="screenDevicesShell"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="scr-model-add">
+              <input type="text" id="scrDevSearch" class="form-control" autocomplete="off" placeholder="<?= $en ? 'Search a device to link…' : 'ابحث عن جهاز لربطه…' ?>">
+            </div>
+            <div class="scr-model-results" id="scrDevResults"></div>
+            <p class="scr-hint"><?= $en ? 'Try the device code (C17) or the name. Click the right one to link it.' : 'جرّب كود الجهاز (C17) أو اسمه. دوس على الجهاز الصح عشان يتربط.' ?></p>
+            <div class="scr-pick-list" id="scrDevChips"></div>
+            <div class="scr-form-shell is-inner">
+              <strong><?= $en ? 'Add a new device' : 'أضف جهاز جديد' ?></strong>
+              <div class="scr-two">
+                <div class="form-group"><label><?= $en ? 'Brand' : 'الماركة' ?></label><input type="text" id="scrNewBrand" class="form-control" placeholder="Samsung"></div>
+                <div class="form-group"><label><?= $en ? 'Model' : 'الموديل' ?></label><input type="text" id="scrNewModel" class="form-control" placeholder="Galaxy A54"></div>
+              </div>
+              <div class="scr-two">
+                <div class="form-group"><label><?= $en ? 'Screen inch' : 'البوصة' ?></label><input type="number" step="0.01" min="0" id="scrNewInch" class="form-control" placeholder="6.4"></div>
+                <div class="form-group"><label><?= $en ? 'Glass size (optional)' : 'مقاس الزجاج (اختياري)' ?></label><div style="display:flex;gap:8px;"><input type="number" step="0.1" min="0" id="scrNewWidth" class="form-control" placeholder="68"><input type="number" step="0.1" min="0" id="scrNewHeight" class="form-control" placeholder="147"></div></div>
+              </div>
+              <button type="button" class="btn btn-gold btn-sm" id="btnCreateModel"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add device' : 'أضف الجهاز' ?></button>
+            </div>
           </div>
           <?php endif; ?>
 
