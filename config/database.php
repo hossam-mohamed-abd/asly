@@ -53,6 +53,8 @@ class Database
             $check = self::$pdo->query("SHOW TABLES LIKE 'users'")->fetchColumn();
             if (!$check) {
                 self::importMysqlDump(self::$pdo);
+                self::migrateScreensColumns(self::$pdo);
+                self::markZeusLinks(self::$pdo);
             } else {
                 self::ensureProductColumnsMysql(self::$pdo);
                 self::ensureScreensMysql(self::$pdo);
@@ -534,6 +536,16 @@ class Database
         }
     }
 
+    /** the shipped catalog comes from the ZEUS supplier sheets: label its links so the UI can tell them apart */
+    private static function markZeusLinks(PDO $pdo): void
+    {
+        try {
+            $pdo->exec("UPDATE screen_compatibility SET link_type = 'zeus' WHERE link_type = 'manual' AND screen_id IN (SELECT id FROM screen_protectors WHERE barcode LIKE 'ZS-%')");
+        } catch (Throwable $e) {
+            // pre-ZEUS install: nothing to label
+        }
+    }
+
     private static function seedScreenCatalog(PDO $pdo): void
     {
         try {
@@ -568,6 +580,7 @@ class Database
             $haveLinks = (int)$pdo->query('SELECT COUNT(*) FROM `screen_compatibility`')->fetchColumn();
             $pricesReady = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors` WHERE `sell_price` > 0')->fetchColumn() > 0;
             if ($haveModels >= 2000 && $haveScreens > 0 && $haveTypes === 3 && $haveLinks > 0 && $pricesReady) {
+                self::markZeusLinks($pdo);
                 $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
                 $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '3')");
                 return;
@@ -625,6 +638,8 @@ class Database
                 $inserted = true;
             }
         }
+
+        self::markZeusLinks($pdo);
 
         try {
             if ($inserted || $modelCount >= 2000) {
