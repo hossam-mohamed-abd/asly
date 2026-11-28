@@ -211,17 +211,23 @@
   }
   window.openModal = id => document.getElementById(id)?.classList.add("open");
   window.closeModal = id => document.getElementById(id)?.classList.remove("open");
-  const staffAllowedTabs = new Set([ "quick-scanner", "pos", "maintenance" ]);
+  const staffAllowedTabs = new Set([ "quick-scanner", "pos", "maintenance", "screens" ]);
   const tabTitles = {
     overview: tr("لوحة المبيعات اليومية والأرباح الصافية", "Daily Sales & Net Profit Overview"),
     "quick-scanner": tr("كاشف السعر السريع", "Quick Price Scanner"),
     pos: tr("نقطة البيع وإصدار الفواتير الرسمية", "Point of Sale & Official Invoicing"),
     "add-product": tr("إضافة منتج جديد (مسح الكود أو توليد QR تلقائي)", "Add Product (Scan Barcode or Generate Auto QR)"),
     inventory: tr("إدارة المخزون والأجهزة واستيكرات الأكواد", "Inventory Catalog & Printable Stickers"),
+    screens: tr("البحث عن الاسكرينات ومكانها على الرف", "Screen Protectors Search & Shelf Location"),
     maintenance: tr("إدارة الصيانة التفاعلية بالـ QR والمراحل والإيميل", "Interactive QR Maintenance, Stages & Email"),
     staff: tr("إدارة الموظفين وصلاحيات النظام", "Staff Accounts & Role Permissions"),
     settings: tr("الهوية البصرية وقنوات التواصل وإعدادات البريد", "Brand Identity, Contact Channels & SMTP")
   };
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("tab-screens")) bootScreens();
+    if (document.getElementById("prodKindRow")) initAddKind();
+  });
+
   window.switchTab = async tabName => {
     if (!IS_ADMIN && !staffAllowedTabs.has(tabName)) {
       tabName = "quick-scanner";
@@ -239,6 +245,7 @@
     if (tabName === "overview" && IS_ADMIN) loadOverviewReport();
     if (tabName === "pos") loadPosCatalog();
     if (tabName === "inventory" && IS_ADMIN) loadInventoryTable();
+    if (tabName === "screens") bootScreens();
     if (tabName === "maintenance") loadMaintenanceList();
     if (tabName === "staff" && IS_ADMIN) loadUsersList();
     if (tabName === "settings" && IS_ADMIN) loadSettingsData();
@@ -1700,6 +1707,44 @@
       const pCond = document.getElementById("prodCondition");
       if (pCat) fd.set("category", pCat.value || "accessories");
       if (pCond) fd.set("condition_status", pCond.value || "new");
+      if (ADDKIND.kind === "screen") {
+        const sf = new FormData();
+        sf.set("action", "save");
+        sf.set("id", document.getElementById("prodId")?.value || "0");
+        sf.set("barcode", (document.getElementById("prodBarcode")?.value || "").trim());
+        sf.set("code_type", document.getElementById("prodCodeType")?.value || "qr");
+        sf.set("name", (document.getElementById("prodName")?.value || "").trim());
+        sf.set("name_en", (document.getElementById("prodNameEn")?.value || "").trim());
+        sf.set("quality", document.getElementById("prodQuality")?.value || "standard");
+        sf.set("shelf_code", document.getElementById("prodShelf")?.value || "");
+        sf.set("drawer_label", document.getElementById("prodDrawer")?.value || "");
+        sf.set("purchase_price", document.getElementById("prodPurchasePrice")?.value || "0");
+        sf.set("sell_price", document.getElementById("prodSellPrice")?.value || "0");
+        sf.set("min_sell_price", document.getElementById("prodMinSellPrice")?.value || "0");
+        sf.set("quantity", document.getElementById("prodQuantity")?.value || "0");
+        sf.set("low_stock_threshold", document.getElementById("prodLowStock")?.value || "3");
+        sf.set("model_ids", ADDKIND.selected.map(m => m.id).join(","));
+        try {
+          const sres = await apiFetch("api/screens.php", { method: "POST", body: sf });
+          showToast(sres.message);
+          document.getElementById("prodBarcode").value = sres.barcode;
+          updateLiveStickerPreview();
+          const sName = (document.getElementById("prodName")?.value || "").trim();
+          const sQty = document.getElementById("prodQuantity")?.value || "0";
+          if (document.getElementById("prodId").value === "0") {
+            showDone(
+              tr("تم حفظ الاسكرينة", "Screen saved"),
+              tr("الاسكرينة بقت على الرف وجاهزة للبيع.", "The screen is now on the shelf and ready to sell."),
+              `<strong>${esc(sName)}</strong><br><span style="font-size:0.82rem;color:var(--db-muted);">${tr("تركب على", "Fits")}: <strong>${ADDKIND.selected.length}</strong> • ${tr("الكمية", "Qty")}: <strong>${esc(sQty)}</strong> • ${tr("الكود", "Code")}: <strong style="direction:ltr;display:inline-block;">${esc(sres.barcode || "")}</strong></span>`
+            );
+            loadInventoryTable();
+            loadScreens();
+          }
+        } catch (err) {
+          showToast(err.message, true);
+        }
+        return;
+      }
       try {
         const res = await apiFetch("api/products.php", {
           method: "POST",
@@ -1724,6 +1769,1002 @@
       }
     });
   }
+  const ADDKIND = {
+    kind: "product",
+    selected: [],
+    models: [],
+    shelves: []
+  };
+
+  function paintAddModelChips() {
+    const wrap = document.getElementById("prodModelChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (!ADDKIND.selected.length) {
+      wrap.innerHTML = `<span class="scr-chip-empty">${tr("لسه مضفتش أجهزة", "No devices added yet")}</span>`;
+      return;
+    }
+    ADDKIND.selected.forEach(m => {
+      const el = scrChip(m.label, () => {
+        ADDKIND.selected = ADDKIND.selected.filter(x => x.id !== m.id);
+        paintAddModelChips();
+      });
+      wrap.appendChild(el);
+    });
+    const hidden = document.getElementById("prodModelIds");
+    if (hidden) hidden.value = ADDKIND.selected.map(m => m.id).join(",");
+  }
+
+  function paintAddModelResults(list) {
+    const box = document.getElementById("prodModelResults");
+    if (!box) return;
+    const chosen = new Set(ADDKIND.selected.map(x => x.id));
+    const free = list.filter(m => !chosen.has(m.id)).slice(0, 12);
+    box.innerHTML = free.map(m => `<button type="button" class="scr-model-option" data-add-model="${m.id}"><i class="fa-solid fa-plus"></i> ${esc(m.label)}</button>`).join("");
+    box.querySelectorAll("[data-add-model]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const model = ADDKIND.models.find(m => m.id === Number(btn.getAttribute("data-add-model")));
+        if (model && !ADDKIND.selected.some(x => x.id === model.id)) {
+          ADDKIND.selected.push(model);
+          paintAddModelChips();
+          paintAddModelResults(ADDKIND.models);
+        }
+      });
+    });
+  }
+
+  function setAddKind(kind) {
+    ADDKIND.kind = kind;
+    document.querySelectorAll(".prod-kind-btn").forEach(b => {
+      b.classList.toggle("is-active", b.getAttribute("data-kind") === kind);
+    });
+    const isScreen = kind === "screen";
+    const block = document.getElementById("prodScreenBlock");
+    const place = document.getElementById("prodPlaceRow");
+    if (block) block.style.display = isScreen ? "block" : "none";
+    if (place) place.style.display = isScreen ? "grid" : "none";
+    const cat = document.getElementById("prodCategory");
+    if (cat) cat.value = isScreen ? "screens" : "accessories";
+    if (!isScreen) {
+      ADDKIND.selected = [];
+      paintAddModelChips();
+    }
+  }
+
+  async function initAddKind() {
+    document.querySelectorAll(".prod-kind-btn").forEach(btn => {
+      btn.addEventListener("click", () => setAddKind(btn.getAttribute("data-kind")));
+    });
+    try {
+      const [modelsRes, shelvesRes] = await Promise.all([
+        apiFetch("api/screens.php?action=models"),
+        apiFetch("api/screens.php?action=shelves")
+      ]);
+      ADDKIND.models = modelsRes.models || [];
+      ADDKIND.shelves = shelvesRes.shelves || [];
+      const shelfSel = document.getElementById("prodShelfSelect");
+      if (shelfSel) {
+        shelfSel.innerHTML = `<option value="">${tr("بدون رف", "No shelf")}</option>` +
+          ADDKIND.shelves.map(sh => `<option value="${esc(sh.shelf_code)}">${esc(sh.label)}</option>`).join("");
+        shelfSel.addEventListener("change", () => {
+          const hidden = document.getElementById("prodShelf");
+          if (hidden) hidden.value = shelfSel.value;
+        });
+      }
+      const drawerInput = document.getElementById("prodDrawerInput");
+      drawerInput?.addEventListener("input", () => {
+        const hidden = document.getElementById("prodDrawer");
+        if (hidden) hidden.value = drawerInput.value.trim();
+      });
+      const search = document.getElementById("prodModelSearch");
+      search?.addEventListener("input", () => {
+        const q = search.value.trim().toLowerCase();
+        const filtered = !q ? ADDKIND.models : ADDKIND.models.filter(m =>
+          m.label.toLowerCase().includes(q) || String(m.model_name_ar || "").includes(q)
+        );
+        paintAddModelResults(filtered);
+      });
+      paintAddModelChips();
+      paintAddModelResults(ADDKIND.models);
+    } catch (_) {}
+  }
+
+  const SCR_PAGE_SIZE = 24;
+  const SCR = {
+    page: 1,
+    total: 0,
+    brand: "",
+    type: "",
+    lastQuery: "",
+    lastList: [],
+    types: [],
+    brands: [],
+    shelves: [],
+    selected: [],
+    missingOnly: false,
+    currentModel: null,
+    devicesFor: 0,
+    deviceList: [],
+    sizes: [],
+    deviceModels: []
+  };
+
+  function scrTypeLabel(slug) {
+    const t = SCR.types.find(x => x.slug === slug);
+    return t ? t.label : slug;
+  }
+
+  function scrSizeText(screen) {
+    const w = Number(screen.width_mm || 0).toFixed(1).replace(/\.0$/, "");
+    const h = Number(screen.height_mm || 0).toFixed(1).replace(/\.0$/, "");
+    return `${w} × ${h} mm`;
+  }
+
+  function screenShelfText(screen) {
+    const v = String(screen.shelf_label || screen.place_label || "").trim();
+    if (v && v !== "غير محدد" && v !== "Not placed") return v;
+    return tr("مش محدد", "Not set");
+  }
+
+  function compatSummary(screen) {
+    const models = screen.models || [];
+    // the searched device sits first; the rest keeps the supplier sheet order
+    const list = models.map(m => (m.source === "same_as" ? `${m.label} ⤴` : m.label));
+    const total = Number(screen.model_count || list.length);
+    const shown = list.slice(0, 5);
+    return { list: shown, total, extra: Math.max(0, total - shown.length) };
+  }
+
+  /* one card per glass: the device, its drawer, and every type it comes in with its own price */
+  function screenCardHtml(screen) {
+    const types = (screen.types && screen.types.length)
+      ? screen.types
+      : [{ id: screen.id, type_slug: screen.type_slug, type_label: scrTypeLabel(screen.type_slug), sell_price: screen.sell_price, quantity: screen.quantity, is_low: screen.is_low, is_out: screen.is_out, barcode: screen.barcode, place_label: screen.place_label }];
+    const low = types.every(t => Number(t.quantity) <= 0);
+    const title = screen.card_title || screen.device_label || screen.first_model || scrTypeLabel(screen.type_slug);
+    const compat = compatSummary(screen);
+    const extra = compat.extra;
+    const id = screen.id;
+    const multi = types.length > 1;
+    const rows = types.map(t => {
+      const out = Number(t.quantity) <= 0;
+      const place = String(t.place_label || t.shelf_label || "").trim();
+      return `
+        <button type="button" class="scr-price-row${out ? " is-out" : ""}${t.is_low ? " is-low" : ""}"
+                data-scr-sell="${id}" data-type="${esc(t.type_slug)}"
+                title="${esc(t.type_label)} — ${out ? tr("نفدت", "Out") : Number(t.quantity) + " " + tr("قطعة", "pcs")}">
+          <span class="scr-price-type">${esc(t.type_label)}</span>
+          <span class="scr-price-cash">${fmtMoney(t.sell_price)}</span>
+          <span class="scr-price-qty">${out ? `<i class="fa-solid fa-ban"></i>` : Number(t.quantity)}</span>
+        </button>`;
+    }).join("");
+    return `
+      <article class="scr-card${low ? " is-missing" : ""}" data-screen-id="${id}" data-group="${esc(screen.group_key || "")}">
+        <div class="scr-card-top">
+          <span class="scr-card-type${multi ? " is-multi" : ""}">${multi ? `${types.length} ${tr("أنواع", "types")}` : esc(types[0].type_label)}</span>
+          ${low ? `<span class="scr-card-flag">${tr("ناقص", "Missing")}</span>` : `<span class="scr-card-qty">${Number(screen.quantity || 0)} ${tr("قطعة", "pcs")}</span>`}
+        </div>
+        <button type="button" class="scr-card-hit" data-scr-sell="${id}" data-type="${esc(types[0].type_slug)}" title="${esc(title)}">
+          <span class="scr-card-name">${esc(title)}</span>
+          <span class="scr-card-place"><i class="fa-solid fa-location-dot"></i> ${esc(screenShelfText(types[0]))} · ${esc(screen.size_label || scrSizeText(screen))}</span>
+        </button>
+        <div class="scr-price-list">${rows}</div>
+        <div class="scr-card-compat">
+          <span class="scr-compat-line"><i class="fa-solid fa-link"></i> ${compat.list.length ? compat.list.map(n => esc(n)).join(" · ") + (extra > 0 ? ` <em>+${extra}</em>` : "") : esc(tr("مفيش أجهزة مربوطة", "No devices linked"))}</span>
+          ${extra > 0 ? `<button type="button" class="scr-compat-toggle" data-scr-compat="${id}" aria-label="${tr("كل التوافقات", "All compatible devices")}"><i class="fa-solid fa-chevron-down"></i></button>` : ""}
+        </div>
+        ${compat.total > 0 ? `<div class="scr-compat-list" id="scrCompat${id}" style="display:none;"></div>` : ""}
+        <div class="scr-card-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-scr-devices="${id}"><i class="fa-solid fa-mobile-screen"></i> ${tr("الأجهزة", "Devices")} <b>${compat.total}</b></button>
+          ${IS_ADMIN ? `<button type="button" class="btn btn-ghost btn-sm" data-scr-edit="${id}"><i class="fa-solid fa-pen"></i> ${tr("تعديل", "Edit")}</button>` : ""}
+        </div>
+      </article>
+    `;
+  }
+
+  /** a card shows many types: the clicked one becomes the POS line (its own product, price and stock) */
+  function sellScreenVariant(card, variant) {
+    const productId = Number(variant.product_id || variant.id || card.product_id || card.id);
+    const line = {
+      id: productId,
+      product_id: productId,
+      barcode: variant.barcode || card.barcode,
+      display_name: `${card.device_label || card.first_model || ""} · ${variant.type_label || ""}`.trim(),
+      name: card.display_name || card.size_label || "",
+      sell_price: Number(variant.sell_price || card.sell_price),
+      min_sell_price: Number(variant.min_sell_price || card.min_sell_price),
+      quantity: Number(variant.quantity || 0),
+      image_path: card.image_path || ""
+    };
+    window.switchTab("pos");
+    setTimeout(() => addToPosCart(line, { viaScan: true }), 120);
+  }
+
+  function paintScreenPager() {
+    const bar = document.getElementById("scrPager");
+    if (!bar) return;
+    const pages = Math.max(1, Math.ceil(SCR.total / SCR_PAGE_SIZE));
+    if (SCR.total <= SCR_PAGE_SIZE) {
+      bar.innerHTML = SCR.total ? `<span class="scr-pager-info">${tr("عدد النتائج", "Results")}: <strong>${SCR.total}</strong></span>` : "";
+      return;
+    }
+    bar.innerHTML = `
+      <span class="scr-pager-info">${tr("صفحة", "Page")} <strong>${SCR.page}</strong> / ${pages} • ${tr("النتائج", "Results")}: <strong>${SCR.total}</strong></span>
+      <div class="scr-pager-btns">
+        <button type="button" class="btn btn-ghost btn-sm" data-scr-page="prev" ${SCR.page <= 1 ? "disabled" : ""}><i class="fa-solid fa-chevron-right"></i> ${tr("السابق", "Prev")}</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-scr-page="next" ${SCR.page >= pages ? "disabled" : ""}>${tr("التالي", "Next")} <i class="fa-solid fa-chevron-left"></i></button>
+      </div>`;
+    bar.querySelectorAll("[data-scr-page]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const dir = btn.getAttribute("data-scr-page");
+        SCR.page = Math.max(1, SCR.page + (dir === "next" ? 1 : -1));
+        loadScreens(SCR.lastQuery);
+      });
+    });
+  }
+
+  function paintScreens(list, titleText) {
+    const wrap = document.getElementById("screenCards");
+    if (!wrap) return;
+    const titleEl = document.getElementById("screenResultsTitle");
+    if (titleEl && titleText) titleEl.textContent = titleText;
+    if (!list.length) {
+      wrap.innerHTML = `<div class="scr-empty"><i class="fa-solid fa-magnifying-glass"></i><strong>${tr("مفيش اسكرينة للموديل ده", "No protector for this model")}</strong><span>${tr("جرّب اسم موديل تاني أو امسح الباركود", "Try another device name or scan the barcode")}</span></div>`;
+      return;
+    }
+    SCR.lastList = list;
+    wrap.innerHTML = list.map(screenCardHtml).join("");
+
+    wrap.querySelectorAll("[data-scr-sell]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-scr-sell"));
+        const slug = btn.getAttribute("data-type") || "";
+        const item = list.find(x => x.id === id);
+        if (!item) return;
+        const variant = (item.types || []).find(t => t.type_slug === slug) || item;
+        sellScreenVariant(item, variant);
+      });
+    });
+
+    wrap.querySelectorAll("[data-scr-compat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.getAttribute("data-scr-compat"));
+        const box = document.getElementById(`scrCompat${id}`);
+        const item = list.find(x => x.id === id);
+        if (!box || !item) return;
+        const open = box.style.display !== "none";
+        if (open) {
+          box.style.display = "none";
+          btn.classList.remove("is-open");
+          return;
+        }
+        if (!box.dataset.painted) {
+          box.innerHTML = (item.models || []).map(m => `<span class="scr-compat-item">${esc(m.label)}</span>`).join("") +
+            (Number(item.model_count || 0) > (item.models || []).length ? `<span class="scr-compat-more">+${Number(item.model_count) - (item.models || []).length}</span>` : "");
+          box.dataset.painted = "1";
+        }
+        box.style.display = "grid";
+        btn.classList.add("is-open");
+      });
+    });
+
+    wrap.querySelectorAll("[data-scr-devices]").forEach(btn => {
+      btn.addEventListener("click", () => openDevicesShell(Number(btn.getAttribute("data-scr-devices"))));
+    });
+
+    wrap.querySelectorAll("[data-scr-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit"))));
+    });
+    // edit opens the card (size) with all its types, not a single protector
+    wrap.querySelectorAll("[data-scr-edit-group]").forEach(btn => {
+      btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit-group"))));
+    });
+  }
+
+  function paintScreenStats(stats) {
+    const map = { scrStatTotal: "cards", scrStatDevices: "devices", scrStatUnits: "units", scrStatMissing: "missing" };
+    Object.entries(map).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (el && stats) el.textContent = String(Number(stats[key] || 0));
+    });
+    const missing = stats ? Number(stats.missing || 0) : 0;
+    ["scrNavBadge", "scrNavBadgeStaff"].forEach(id => {
+      const badge = document.getElementById(id);
+      if (!badge) return;
+      badge.textContent = String(missing);
+      badge.style.display = missing > 0 ? "inline-block" : "none";
+    });
+  }
+
+  function paintScrFilters() {
+    const typeSel = document.getElementById("scrTypeFilter");
+    if (typeSel && SCR.types.length) {
+      const cur = SCR.type;
+      typeSel.innerHTML = `<option value="">${tr("كل الأنواع", "All types")}</option>` +
+        SCR.types.map(t => `<option value="${esc(t.slug)}">${esc(t.label)}</option>`).join("");
+      typeSel.value = cur;
+    }
+    const brandSel = document.getElementById("scrBrandFilter");
+    if (brandSel && SCR.brands.length) {
+      // keep the current pick alive even when the list is rebuilt
+      brandSel.innerHTML = `<option value="">${tr("كل الماركات", "All brands")}</option>` +
+        SCR.brands.map(b => `<option value="${esc(b.brand)}">${esc(b.brand)} (${b.total})</option>`).join("");
+      brandSel.value = SCR.brand;
+    }
+  }
+
+  async function loadScreens(q, keepPage) {
+    const params = new URLSearchParams();
+    params.set("action", "list");
+    if (SCR.missingOnly) params.set("missing", "1");
+    if (SCR.brand) params.set("brand", SCR.brand);
+    if (SCR.type) params.set("type", SCR.type);
+    params.set("page", String(keepPage ? SCR.page : (SCR.page = 1)));
+    params.set("per_page", String(SCR_PAGE_SIZE));
+    SCR.lastQuery = q || "";
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const list = res.screens || [];
+      SCR.total = Number(res.total || list.length);
+      if (res.types && res.types.length) SCR.types = res.types;
+      paintScrFilters();
+      paintScreens(list, SCR.missingOnly ? tr("الاسكرينات الناقصة", "Missing protectors") : tr("كل الاسكرينات", "All protectors"));
+      paintScreenStats(res.stats || null);
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  /** free-text search: typos, Arabic spellings, "a 1 5", "c53" — all land on the same device */
+  async function searchScreensFree(q) {
+    const params = new URLSearchParams();
+    params.set("action", "search");
+    params.set("q", q);
+    params.set("limit", "10");
+    if (SCR.type) params.set("type", SCR.type);
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const hits = res.hits || [];
+      const list = res.screens || [];
+      SCR.currentModel = res.model || null;
+      const box = document.getElementById("screenSuggestions");
+      if (box) {
+        if (!hits.length) {
+          box.innerHTML = `<span class="scr-model-none">${tr("مفيش جهاز بالاسم ده — جرّب اسم تاني أو امسح الباركود", "No device matches — try another spelling or scan the barcode")}</span>`;
+        } else {
+          box.innerHTML = hits.slice(0, 8).map((m, i) =>
+            `<button type="button" class="scr-suggest${i === 0 ? " is-match" : " is-alt"}" data-model-id="${m.id}">${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}${Number(m.id) === (res.model ? Number(res.model.id) : -1) ? ` <i class="fa-solid fa-check"></i>` : ""}</button>`
+          ).join("");
+          box.querySelectorAll("[data-model-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = Number(btn.getAttribute("data-model-id"));
+              const input = document.getElementById("screenModelSearch");
+              if (input) input.value = btn.textContent.trim().replace(/\s+\d+(\.\d+)?"\s*.*$/, "");
+              searchScreensByModel("", id);
+            });
+          });
+        }
+      }
+      if (!hits.length) {
+        paintScreens([], tr("نتيجة البحث", "Search results"));
+        return [];
+      }
+      // every hit that has glass in stock contributes its card, so nothing the user typed is hidden
+      const found = list.length;
+      const head = found === 0
+        ? tr(`مفيش اسكرينة متسجلة لـ ${hits[0].label}`, `No protector stored for ${hits[0].label}`)
+        : tr(`${hits[0].label} — ${found} زجاجة`, `${hits[0].label} — ${found} glass`);
+      paintScreens(list, head);
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  async function searchScreensByModel(q, modelId) {
+    const params = new URLSearchParams();
+    params.set("action", "search_by_model");
+    if (q) params.set("q", q);
+    if (modelId) params.set("model_id", String(modelId));
+    if (SCR.type) params.set("type", SCR.type);
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const box = document.getElementById("screenSuggestions");
+      const list = res.screens || [];
+      SCR.currentModel = res.model || null;
+      if (box) {
+        if (!q && !modelId) {
+          box.innerHTML = "";
+        } else if (res.model) {
+          const alts = (res.suggestions || []).slice(0, 6);
+          box.innerHTML = `<span class="scr-model-pill"><i class="fa-solid fa-mobile-screen"></i> ${esc(res.model.label)}${res.model.screen_inch ? ` <em>${res.model.screen_inch}"</em>` : ""}</span>` +
+            (alts.length ? `<span class="scr-suggest-sep">${tr("أو", "or")}</span>` + alts.map(m =>
+              `<button type="button" class="scr-suggest is-alt" data-model-id="${m.id}">${esc(m.label)}</button>`
+            ).join("") : "");
+          box.querySelectorAll("[data-model-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const input = document.getElementById("screenModelSearch");
+              if (input) input.value = btn.textContent.trim();
+              searchScreensByModel("", Number(btn.getAttribute("data-model-id")));
+            });
+          });
+        } else if ((res.suggestions || []).length) {
+          box.innerHTML = (res.suggestions || []).slice(0, 8).map(m =>
+            `<button type="button" class="scr-suggest" data-model-id="${m.id}">${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}</button>`
+          ).join("");
+          box.querySelectorAll("[data-model-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = Number(btn.getAttribute("data-model-id"));
+              const label = btn.textContent.trim();
+              const input = document.getElementById("screenModelSearch");
+              if (input) input.value = label;
+              searchScreensByModel("", id);
+            });
+          });
+        } else if (q) {
+          box.innerHTML = `<span class="scr-model-none">${tr("مفيش موديل بالاسم ده — تقدر تضيفه من زر «الأجهزة»", "No device with this name — add it from the Devices button")}</span>`;
+        } else {
+          box.innerHTML = "";
+        }
+      }
+      paintScreens(
+        list,
+        res.model ? tr(`اسكرينات تركب على ${res.model.label}`, `Protectors for ${res.model.label}`) : (q ? tr("نتيجة البحث", "Search results") : tr("كل الاسكرينات", "All protectors"))
+      );
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  async function loadScreenSizes() {
+    try {
+      const res = await apiFetch("api/screens.php?action=list&per_page=60&tablets=1");
+      SCR.sizes = (res.screens || []).map(s => ({
+        id: s.id, width_mm: s.width_mm, height_mm: s.height_mm, type_slug: s.type_slug,
+        size_label: s.size_label, model_count: s.model_count, first_model: s.first_model
+      }));
+      const sel = document.getElementById("scrPickSize");
+      if (sel) {
+        const map = new Map();
+        SCR.sizes.forEach(s => {
+          const key = `${s.width_mm}|${s.height_mm}`;
+          const cur = map.get(key) || { width_mm: s.width_mm, height_mm: s.height_mm, label: s.size_label, types: [], models: s.model_count };
+          cur.types.push(s.type_slug);
+          cur.models = Math.max(cur.models, s.model_count);
+          map.set(key, cur);
+        });
+        sel.innerHTML = [...map.values()].map(v =>
+          `<option value="${v.width_mm}|${v.height_mm}" data-models="${v.models}">${esc(v.label)} — ${v.models} ${tr("جهاز", "devices")}</option>`
+        ).join("");
+        paintPickTypes();
+      }
+    } catch (_) {}
+  }
+
+  function paintPickTypes() {
+    const box = document.getElementById("scrPickTypes");
+    if (!box) return;
+    box.innerHTML = SCR.types.map(t => `
+      <label class="scr-type-check">
+        <input type="checkbox" value="${esc(t.slug)}">
+        <span>${esc(t.label)}</span>
+      </label>`).join("");
+    const info = document.getElementById("scrPickInfo");
+    if (info) {
+      const opt = document.getElementById("scrPickSize")?.selectedOptions?.[0];
+      const models = opt ? Number(opt.getAttribute("data-models") || 0) : 0;
+      info.value = models ? `${models} ${tr("جهاز على نفس المقاس", "devices on this size")}` : "—";
+    }
+  }
+
+  async function loadScreensMeta() {
+    try {
+      const [typesRes, shelvesRes, brandsRes] = await Promise.all([
+        apiFetch("api/screens.php?action=types"),
+        apiFetch("api/screens.php?action=shelves"),
+        apiFetch("api/screens.php?action=brands")
+      ]);
+      SCR.types = typesRes.types || [];
+      SCR.shelves = shelvesRes.shelves || [];
+      SCR.brands = brandsRes.brands || [];
+      const shelfSelect = document.getElementById("scrShelf");
+      if (shelfSelect) {
+        shelfSelect.innerHTML = `<option value="">${tr("بدون رف", "No shelf")}</option>` +
+          SCR.shelves.map(sh => `<option value="${esc(sh.shelf_code)}">${esc(sh.label)}</option>`).join("");
+      }
+      paintScrFilters();
+      paintTypeList();
+    } catch (_) {}
+  }
+
+  /* ------------------------------------------------ types & prices panel */
+  function paintTypeList() {
+    const box = document.getElementById("scrTypeList");
+    if (!box) return;
+    box.innerHTML = SCR.types.map(t => {
+      const prices = Number(t.sell_price) > 0
+        ? `<span class="scr-type-price"><b>${tr("سعر واحد", "One price")}</b> ${fmtMoney(t.sell_price)}</span>`
+        : `<span class="scr-type-price is-empty">${tr("مفيش سعر", "No price")}</span>`;
+      return `
+        <div class="scr-type-row" data-type-row="${esc(t.slug)}">
+          <div class="scr-type-info">
+            <strong>${esc(t.label)}</strong>
+            <span class="scr-type-meta">${t.screens} ${tr("اسكرينة", "screens")} • ${t.units} ${tr("قطعة", "pcs")}</span>
+            <div class="scr-type-prices">${prices || `<span class="scr-type-price is-empty">${tr("مفيش أسعار", "No prices")}</span>`}</div>
+          </div>
+          <div class="scr-type-actions">
+            <button type="button" class="btn btn-ghost btn-sm" data-type-edit="${esc(t.slug)}"><i class="fa-solid fa-pen"></i> ${tr("تعديل السعر", "Edit price")}</button>
+          </div>
+        </div>`;
+    }).join("");
+    box.querySelectorAll("[data-type-edit]").forEach(btn => {
+      btn.addEventListener("click", () => fillTypeForm(btn.getAttribute("data-type-edit")));
+    });
+  }
+
+  function fillTypeForm(slug) {
+    const t = SCR.types.find(x => x.slug === slug);
+    document.getElementById("scrTypeSlug").value = slug || "";
+    document.getElementById("scrTypeAr").value = t ? t.name_ar : "";
+    document.getElementById("scrTypeEn").value = t ? t.name_en : "";
+    const sell = document.getElementById("scrTypeSell");
+    const cost = document.getElementById("scrTypeCost");
+    const min = document.getElementById("scrTypeMin");
+    if (sell) sell.value = t && Number(t.sell_price) > 0 ? t.sell_price : "";
+    if (cost) cost.value = t && Number(t.cost_price) > 0 ? t.cost_price : "";
+    if (min) min.value = t && Number(t.min_sell_price) > 0 ? t.min_sell_price : "";
+    const shell = document.getElementById("screenTypesShell");
+    if (shell) {
+      shell.style.display = "block";
+      shell.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function paintTypeChecks(preselect) {
+    const box = document.getElementById("scrTypeChecks");
+    if (!box) return;
+    box.innerHTML = SCR.types.map(t => `
+      <label class="scr-type-check">
+        <input type="checkbox" value="${esc(t.slug)}" ${preselect && preselect.includes(t.slug) ? "checked" : ""}>
+        <span>${esc(t.label)}</span>
+      </label>`).join("");
+  }
+
+  function paintPriceHint() {
+    const hint = document.getElementById("scrPriceHint");
+    if (!hint) return;
+    const w = Number(document.getElementById("scrWidth")?.value || 0);
+    const h = Number(document.getElementById("scrHeight")?.value || 0);
+    if (!w || !h) {
+      hint.textContent = tr("اكتب المقاس وهتلاقي سعر كل نوع.", "Enter the size to preview each type price.");
+      return;
+    }
+    const diag = Math.sqrt(w * w + h * h) / 25.4;
+    const vals = SCR.types.map(t => `${t.label}: ${Number(t.sell_price) > 0 ? fmtMoney(t.sell_price) : "—"}`).join(" • ");
+    hint.textContent = `${tr("المقاس", "Size")} ${diag.toFixed(2)}" — ${vals}`;
+  }
+
+  /* --------------------------------------------------- add / edit a size */
+  function openScreenForm(id) {
+    const shell = document.getElementById("screenFormShell");
+    if (!shell) return;
+    const form = document.getElementById("screenSaveForm");
+    if (form) form.reset();
+    document.getElementById("scrId").value = "0";
+    document.getElementById("scrBarcode").value = "";
+    document.getElementById("scrQty").value = "0";
+    document.getElementById("scrLow").value = "3";
+    document.getElementById("scrWidth").value = "";
+    document.getElementById("scrHeight").value = "";
+    const title = document.getElementById("screenFormTitle");
+    if (title) title.textContent = tr("مقاس جديد", "New size");
+    paintTypeChecks(SCR.type ? [SCR.type] : null);
+    const pick = document.getElementById("scrPickShell");
+    if (pick) {
+      pick.style.display = id ? "none" : "block";
+      if (!id) loadScreenSizes();
+    }
+
+    if (id) {
+      const sc = SCR.lastList.find(x => x.id === id);
+      if (!sc) return;
+      // a card can hold several types: edit the first one, the size belongs to the whole card
+      const firstType = (sc.types && sc.types.length) ? sc.types[0] : null;
+      document.getElementById("scrId").value = String(sc.id);
+      document.getElementById("scrBarcode").value = sc.barcode || (firstType ? firstType.barcode : "") || "";
+      document.getElementById("scrWidth").value = sc.width_mm || (firstType ? firstType.width_mm : "") || "";
+      document.getElementById("scrHeight").value = sc.height_mm || (firstType ? firstType.height_mm : "") || "";
+      document.getElementById("scrShelf").value = sc.shelf_code || "";
+      document.getElementById("scrDrawer").value = sc.drawer_label || "";
+      document.getElementById("scrQty").value = String(sc.quantity ?? 0);
+      document.getElementById("scrLow").value = String(sc.low_stock_threshold ?? 3);
+      paintTypeChecks([sc.type_slug]);
+      const checks = document.querySelectorAll("#scrTypeChecks input");
+      checks.forEach(c => { c.disabled = true; });
+      if (title) title.textContent = tr(`تعديل: ${scrTypeLabel(sc.type_slug)} ${scrSizeText(sc)}`, `Edit: ${scrTypeLabel(sc.type_slug)} ${scrSizeText(sc)}`);
+    }
+    paintPriceHint();
+    renderScrChips();
+    shell.style.display = "block";
+    shell.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderScrChips() {
+    const wrap = document.getElementById("scrModelChips");
+    if (!wrap) return;
+    const id = Number(document.getElementById("scrId")?.value || 0);
+    if (!id) {
+      wrap.innerHTML = "";
+      return;
+    }
+    const sc = SCR.lastList.find(x => x.id === id);
+    if (!sc) { wrap.innerHTML = ""; return; }
+    const models = (sc.models || []).slice(0, 14);
+    wrap.innerHTML = models.map(m => `<span class="scr-chip"><span>${esc(m.label)}</span></span>`).join("") +
+      (Number(sc.model_count || 0) > models.length ? `<span class="scr-chip is-more">+${Number(sc.model_count) - models.length}</span>` : "");
+  }
+
+  /* ------------------------------------------- devices linked to a screen */
+  async function openDevicesShell(screenId) {
+    const shell = document.getElementById("screenDevicesShell");
+    if (!shell) return;
+    SCR.devicesFor = screenId;
+    SCR.devicesGroup = screenId;
+    const sc = SCR.lastList.find(x => x.id === screenId);
+    const scTypes = (sc && sc.types) ? sc.types : [];
+    const title = document.getElementById("screenDevicesTitle");
+    if (title) {
+      const typeNames = scTypes.length ? scTypes.map(t => t.type_label).join(" · ") : scrTypeLabel(sc ? sc.type_slug : "");
+      title.innerHTML = `<i class="fa-solid fa-mobile-screen"></i> ${esc(typeNames)} · ${esc((sc && sc.size_label) || scrSizeText(sc || {}))} — ${tr("الأجهزة", "Devices")} <b>${sc ? sc.model_count : 0}</b>`;
+    }
+    // every type of the glass shares the same device list: link/unlink on all of them
+    SCR.deviceForIds = scTypes.length ? scTypes.map(t => Number(t.id)) : [screenId];
+    document.getElementById("scrDevSearch").value = "";
+    document.getElementById("scrDevResults").innerHTML = "";
+    paintDevChips(sc || null);
+    shell.style.display = "block";
+    shell.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function paintDevChips(screen) {
+    const wrap = document.getElementById("scrDevChips");
+    if (!wrap) return;
+    const models = screen ? (screen.models || []) : [];
+    const total = screen ? Number(screen.model_count || models.length) : 0;
+    if (!models.length) {
+      wrap.innerHTML = `<p class="scr-hint">${tr("مفيش أجهزة مربوطة بالاسكرينة دي", "No devices linked yet")}</p>`;
+      return;
+    }
+    wrap.innerHTML = `
+      <div class="scr-pick-head">${tr("مربوط", "Linked")}: <b>${total}</b> ${tr("جهاز", "devices")}</div>
+      ${models.map(m => `
+        <span class="scr-pick-item">
+          <span>${esc(m.label)}</span>
+          <button type="button" data-unlink="${m.id}" title="${tr("فصل", "Unlink")}"><i class="fa-solid fa-xmark"></i></button>
+        </span>`).join("")}
+      ${total > models.length ? `<span class="scr-pick-more">+${total - models.length} ${tr("جهاز كمان على نفس الاسكرينة", "more devices on this protector")}</span>` : ""}`;
+    wrap.querySelectorAll("[data-unlink]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          const fd = new FormData();
+          fd.set("action", "unlink_device");
+          fd.set("id", String(SCR.devicesFor));
+          fd.set("model_id", btn.getAttribute("data-unlink"));
+          const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+          showToast(res.message || tr("تم الفصل", "Unlinked"));
+          await refreshLinkedScreen();
+        } catch (err) {
+          showToast(err.message, true);
+        }
+      });
+    });
+  }
+
+  async function refreshLinkedScreen() {
+    if (!SCR.devicesFor) return;
+    try {
+      const got = await apiFetch(`api/screens.php?action=get&id=${SCR.devicesFor}`);
+      if (got.screen) {
+        const sc = SCR.lastList.find(x => x.id === SCR.devicesFor);
+        if (sc) Object.assign(sc, got.screen);
+        paintDevChips(got.screen);
+        loadScreens(SCR.lastQuery, true);
+      }
+    } catch (_) {}
+  }
+
+  async function searchDevicesToLink(q) {
+    const box = document.getElementById("scrDevResults");
+    if (!box) return;
+    if (q.trim().length < 2) { box.innerHTML = ""; return; }
+    try {
+      const res = await apiFetch(`api/screens.php?action=models&q=${encodeURIComponent(q)}&limit=12`);
+      const list = res.models || [];
+      SCR.deviceModels = list;
+      box.innerHTML = list.map(m => `
+        <button type="button" class="scr-model-option" data-link-model="${m.id}">
+          <i class="fa-solid fa-plus"></i> ${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}
+        </button>`).join("");
+      box.querySelectorAll("[data-link-model]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const mid = btn.getAttribute("data-link-model");
+          try {
+            const fd = new FormData();
+            fd.set("action", "link_devices");
+            fd.set("id", String(SCR.devicesFor));
+            fd.set("model_ids", mid);
+            const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+            showToast(res.message || tr("تم الربط", "Linked"));
+            await refreshLinkedScreen();
+          } catch (err) {
+            showToast(err.message, true);
+          }
+        });
+      });
+    } catch (_) {}
+  }
+
+  let screensInited = false;
+  function bootScreens() {
+    if (screensInited) return;
+    screensInited = true;
+    initScreensTab();
+  }
+
+  function initScreensTab() {
+    const search = document.getElementById("screenModelSearch");
+    let timer = 0;
+    if (search) {
+      search.addEventListener("input", () => {
+        SCR.currentModel = null;
+        window.clearTimeout(timer);
+        const q = search.value.trim();
+        timer = window.setTimeout(() => {
+          if (q.length >= 1) searchScreensFree(q);
+          else {
+            const box = document.getElementById("screenSuggestions");
+            if (box) box.innerHTML = "";
+            loadScreens("");
+          }
+        }, 200);
+      });
+      search.addEventListener("keydown", e => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        const q = search.value.trim();
+        if (/^[A-Za-z]{2,5}-?[A-Za-z0-9]{1,6}$/.test(q)) {
+          apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(q.toUpperCase())}`)
+            .then(res => {
+              if (res.found) {
+                playScanBeep();
+                paintScreens([res.screen], tr("نتيجة المسح", "Scanned protector"));
+                const box = document.getElementById("screenSuggestions");
+                if (box) box.innerHTML = `<span class="scr-model-pill is-code"><i class="fa-solid fa-barcode"></i> ${esc(q)}</span>`;
+                return;
+              }
+              searchScreensFree(q);
+            })
+            .catch(() => searchScreensFree(q));
+          return;
+        }
+        searchScreensFree(q);
+      });
+    }
+    document.getElementById("btnScreenSearchClear")?.addEventListener("click", () => {
+      if (search) search.value = "";
+      SCR.currentModel = null;
+      const box = document.getElementById("screenSuggestions");
+      if (box) box.innerHTML = "";
+      loadScreens("");
+    });
+    document.getElementById("btnToggleMissing")?.addEventListener("click", e => {
+      SCR.missingOnly = !SCR.missingOnly;
+      SCR.page = 1;
+      e.currentTarget.classList.toggle("is-on", SCR.missingOnly);
+      loadScreens(search ? search.value.trim() : "");
+    });
+    document.getElementById("scrBrandFilter")?.addEventListener("change", e => {
+      SCR.brand = e.currentTarget.value;
+      SCR.page = 1;
+      loadScreens(search ? search.value.trim() : "");
+    });
+    document.getElementById("scrTypeFilter")?.addEventListener("change", e => {
+      SCR.type = e.currentTarget.value;
+      SCR.page = 1;
+      const q = search ? search.value.trim() : "";
+      if (q) searchScreensByModel(q);
+      else loadScreens("");
+    });
+    document.getElementById("btnNewScreen")?.addEventListener("click", () => openScreenForm(0));
+    document.getElementById("btnManageTypes")?.addEventListener("click", () => {
+      const shell = document.getElementById("screenTypesShell");
+      if (shell) {
+        shell.style.display = shell.style.display === "none" ? "block" : "none";
+        if (shell.style.display === "block") shell.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+    document.querySelectorAll("[data-close-shell]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById(btn.getAttribute("data-close-shell"));
+        if (el) el.style.display = "none";
+      });
+    });
+    document.getElementById("scrWidth")?.addEventListener("input", paintPriceHint);
+    document.getElementById("scrHeight")?.addEventListener("input", paintPriceHint);
+    document.getElementById("scrDevSearch")?.addEventListener("input", e => searchDevicesToLink(e.currentTarget.value));
+
+    document.getElementById("scrPickSize")?.addEventListener("change", paintPickTypes);
+    document.getElementById("btnPickTypes")?.addEventListener("click", async () => {
+      const val = document.getElementById("scrPickSize")?.value || "";
+      if (!val) return;
+      const [w, h] = val.split("|");
+      const picked = [...document.querySelectorAll("#scrPickTypes input:checked")].map(c => c.value);
+      if (!picked.length) {
+        showToast(tr("اختار نوع واحد على الأقل", "Pick at least one type"), true);
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.set("action", "add_existing_size");
+        fd.set("width_mm", w);
+        fd.set("height_mm", h);
+        fd.set("types", picked.join(","));
+        const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+        showToast(res.message || tr("تمت الإضافة", "Added"));
+        const shell = document.getElementById("screenFormShell");
+        if (shell) shell.style.display = "none";
+        await loadScreensMeta();
+        loadScreens(SCR.lastQuery, true);
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    document.getElementById("screenTypeForm")?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const fd = new FormData();
+      fd.set("action", "save_type");
+      fd.set("slug", document.getElementById("scrTypeSlug").value || "");
+      fd.set("name_ar", document.getElementById("scrTypeAr").value);
+      fd.set("name_en", document.getElementById("scrTypeEn").value);
+      fd.set("sell_price", document.getElementById("scrTypeSell").value || "0");
+      fd.set("cost_price", document.getElementById("scrTypeCost").value || "0");
+      fd.set("min_sell_price", document.getElementById("scrTypeMin").value || "0");
+      try {
+        const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+        showToast(res.message || tr("تم الحفظ", "Saved"));
+        await loadScreensMeta();
+        loadScreens(SCR.lastQuery, true);
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    document.getElementById("screenSaveForm")?.addEventListener("submit", async e => {
+      e.preventDefault();
+      const id = Number(document.getElementById("scrId").value || 0);
+      const width = document.getElementById("scrWidth").value;
+      const height = document.getElementById("scrHeight").value;
+      const picked = [...document.querySelectorAll("#scrTypeChecks input:checked")].map(c => c.value);
+      try {
+        if (id > 0) {
+          const fd = new FormData();
+          fd.set("action", "save");
+          fd.set("id", String(id));
+          fd.set("barcode", document.getElementById("scrBarcode").value);
+          fd.set("type_slug", picked[0] || "");
+          fd.set("width_mm", width);
+          fd.set("height_mm", height);
+          fd.set("shelf_code", document.getElementById("scrShelf").value);
+          fd.set("drawer_label", document.getElementById("scrDrawer").value);
+          fd.set("quantity", document.getElementById("scrQty").value || "0");
+          fd.set("low_stock_threshold", document.getElementById("scrLow").value || "3");
+          const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+          showToast(res.message || tr("تم الحفظ", "Saved"));
+        } else {
+          if (!picked.length) {
+            showToast(tr("اختار نوع واحد على الأقل", "Pick at least one type"), true);
+            return;
+          }
+          const fd = new FormData();
+          fd.set("action", "save_size");
+          fd.set("width_mm", width);
+          fd.set("height_mm", height);
+          fd.set("types", picked.join(","));
+          const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+          showToast(res.message || tr("تم الإنشاء", "Created"));
+        }
+        const shell = document.getElementById("screenFormShell");
+        if (shell) shell.style.display = "none";
+        loadScreens(SCR.lastQuery, true);
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    /* pick the existing device the new phone shares its glass with */
+    let sameTimer = 0;
+    document.getElementById("scrNewSameSearch")?.addEventListener("input", e => {
+      const q = e.currentTarget.value.trim();
+      const box = document.getElementById("scrNewSameResults");
+      document.getElementById("scrNewSameId").value = "";
+      if (e.currentTarget.dataset.picked) {
+        delete e.currentTarget.dataset.picked;
+        const picked = document.getElementById("scrNewSamePicked");
+        if (picked) picked.textContent = tr("اختار جهاز والجهاز الجديد هياخد نفس قايمة الاسكرينات بتاعته — من غير أي قياس.", "Pick a device and the new phone inherits its protector list — no measuring needed.");
+      }
+      window.clearTimeout(sameTimer);
+      if (q.length < 2) { if (box) box.innerHTML = ""; return; }
+      sameTimer = window.setTimeout(async () => {
+        try {
+          const res = await apiFetch(`api/screens.php?action=models&q=${encodeURIComponent(q)}&limit=10`);
+          const list = res.models || [];
+          if (!box) return;
+          box.innerHTML = list.length
+            ? list.map(m => `<button type="button" class="scr-model-option" data-same-model="${m.id}"><i class="fa-solid fa-link"></i> ${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}</button>`).join("")
+            : `<p class="scr-hint">${tr("مفيش جهاز بالاسم ده — علّم على «مفيش جهاز شبهه».", "No device found — tick “nothing matches”.")}</p>`;
+          box.querySelectorAll("[data-same-model]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-same-model");
+              document.getElementById("scrNewSameId").value = id;
+              const input = document.getElementById("scrNewSameSearch");
+              input.value = btn.textContent.trim();
+              input.dataset.picked = "1";
+              box.innerHTML = "";
+              const picked = document.getElementById("scrNewSamePicked");
+              if (picked) picked.textContent = tr(`هياخد نفس اسكرينات: ${input.value}`, `Will inherit the protectors of: ${input.value}`);
+              const standalone = document.getElementById("scrNewStandalone");
+              if (standalone) standalone.checked = false;
+            });
+          });
+        } catch (_) {}
+      }, 240);
+    });
+
+    document.getElementById("btnCreateModel")?.addEventListener("click", async () => {
+      const brand = document.getElementById("scrNewBrand").value.trim();
+      const model = document.getElementById("scrNewModel").value.trim();
+      const sameId = document.getElementById("scrNewSameId")?.value || "";
+      const standalone = !!document.getElementById("scrNewStandalone")?.checked;
+      if (!brand || !model) {
+        showToast(tr("اكتب الماركة والموديل", "Enter brand and model"), true);
+        return;
+      }
+      if (!sameId && !standalone) {
+        showToast(tr("اختار الجهاز اللي شبهه، أو علّم على «مفيش جهاز شبهه».", "Pick a similar device, or tick “nothing matches”."), true);
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.set("action", "save_model");
+        fd.set("brand", brand);
+        fd.set("model_name", model);
+        if (sameId) fd.set("link_to", sameId);
+        else if (SCR.devicesFor) fd.set("link_screen", String(SCR.devicesFor));
+        const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
+        showToast(res.message || tr("تمت إضافة الجهاز", "Device added"));
+        document.getElementById("scrNewModel").value = "";
+        document.getElementById("scrNewBrand").value = "";
+        document.getElementById("scrNewSameSearch").value = "";
+        document.getElementById("scrNewSameId").value = "";
+        document.getElementById("scrNewSameResults").innerHTML = "";
+        const alone = document.getElementById("scrNewStandalone");
+        if (alone) alone.checked = false;
+        if (SCR.devicesFor) await refreshLinkedScreen();
+        loadScreens(SCR.lastQuery, true);
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    });
+
+    loadScreensMeta().then(() => loadScreens(""));
+  }
+
   let inventoryCache = [];
   async function loadInventoryTable() {
     if (!IS_ADMIN) return;
@@ -1742,7 +2783,8 @@
         const img = p.image_path ? apiUrl(p.image_path) : fallbackImg();
         const low = p.quantity <= p.low_stock_threshold;
         const pTitle = p.display_name || p.name;
-        return `\n          <tr>\n            <td><img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
+        return `\n          <tr>\n            <td><img src="${esc(img)}" onerror="aslyImgErr(this)" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:12px;border:1px solid var(--db-border);background:#fff;"></td>\n            <td>\n              <strong>${esc(pTitle)}</strong>\n              <div style="font-size:0.76rem;color:var(--db-muted);">${esc(p.category_label)} • ${esc(p.condition_label)}</div>
+              ${p.screen_shelf || p.screen_drawer ? `<div class="inv-place"><i class="fa-solid fa-location-dot"></i> ${esc([p.screen_shelf, p.screen_drawer].filter(Boolean).join(" - "))}</div>` : ""}\n            </td>\n            <td style="direction:ltr;font-family:monospace;font-weight:800;">${esc(p.barcode)}</td>\n            <td>\n              <span style="padding:3px 10px;border-radius:999px;font-weight:800;font-size:0.8rem;background:${low ? "#fef2f2" : "#ecfdf5"};color:${low ? "#dc2626" : "#059669"};">\n                ${p.quantity} ${low ? '<i class="fa-solid fa-triangle-exclamation"></i>' : ""}\n              </span>\n            </td>\n            ${IS_ADMIN ? `<td style="color:var(--db-muted);font-weight:700;">${fmtMoney(p.purchase_price)}</td>` : ""}\n            <td style="font-weight:900;color:var(--db-teal-800);">${fmtMoney(p.sell_price)}</td>\n            <td style="font-weight:700;color:#059669;">${fmtMoney(p.min_sell_price)}</td>\n            <td>\n              <div style="display:flex;gap:6px;flex-wrap:wrap;">\n                <button type="button" class="btn btn-ghost btn-sm" onclick="openStickerModal(${p.id})"><i class="fa-solid fa-tag"></i> ${tr("الكود", "Sticker")}</button>\n                ${p.quantity > 0 ? `<button type="button" class="btn btn-gold btn-sm" onclick="sellFromInv(${p.id})"><i class="fa-solid fa-cart-plus"></i> ${tr("بيع", "Sell")}</button>` : ""}\n                ${IS_ADMIN ? `\n                  <button type="button" class="btn btn-teal btn-sm" onclick="editFromInv(${p.id})">${tr("تعديل", "Edit")}</button>\n                  <button type="button" class="btn btn-danger btn-sm" onclick="deleteProd(${p.id})">${tr("حذف", "Delete")}</button>\n                ` : ""}\n              </div>\n            </td>\n          </tr>\n        `;
       }).join("");
     } catch (err) {
       showToast(err.message, true);
@@ -2176,6 +3218,26 @@
     }
     if (tab === "add-product" && IS_ADMIN) {
       await checkBarcodeForAddProduct(code);
+      return;
+    }
+    if (tab === "screens") {
+      playScanBeep();
+      const scrInp = document.getElementById("screenModelSearch");
+      if (scrInp) scrInp.value = code;
+      try {
+        const scrRes = await apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(code)}`);
+        if (scrRes.found && scrRes.screen) {
+          paintScreens([ scrRes.screen ], tr("نتيجة المسح", "Scanned protector"));
+          showGlobalScanHud(`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-mobile-screen" style="color:#059669;font-size:1.3rem;"></i><strong>${esc(scrRes.screen.display_name)}</strong> <span style="font-size:0.82rem;color:var(--db-muted);">${esc(scrRes.screen.place_label || "")} • ${tr("المتاح", "Stock")}: ${scrRes.screen.quantity}</span></div>
+            <button type="button" class="btn btn-ghost btn-sm" data-close-hud="1"><i class="fa-solid fa-xmark"></i></button>
+          </div>`, "hud-success", 4200);
+        } else {
+          await searchScreensByModel(code);
+        }
+      } catch (err) {
+        showToast(err.message, true);
+      }
       return;
     }
     if (tab === "quick-scanner") {

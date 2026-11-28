@@ -3,3 +3,4 @@ Thumbs.db
 *.sqlite
 *.sqlite-journal
 *.log
+image-search/
