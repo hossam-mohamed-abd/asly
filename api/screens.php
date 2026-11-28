@@ -19,37 +19,163 @@ if (in_array($action, $writeActions, true)) {
 
 /* ------------------------------------------------------------------ helpers */
 
-function norm(string $value): string
-{
-    $digits = ['٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9', '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9'];
-    $value = strtr($value, $digits);
-    $value = mb_strtolower(trim($value), 'UTF-8');
-    $value = str_replace(['أ', 'إ', 'آ', 'ى', 'ة'], ['ا', 'ا', 'ا', 'ي', 'ه'], $value);
-    $value = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $value) ?: '';
-    return trim(preg_replace('/\s+/u', ' ', $value) ?: '');
-}
-
+/** words people type that carry no model information */
 function modelNoiseWords(): array
 {
-    return ['شاشه', 'شاشات', 'زجاج', 'حمايه', 'سكرين', 'سكرينة', 'اسكرينة', 'اسكرينه', 'سكرينه', 'screen', 'screens', 'protector', 'protection', 'glass', 'tempered', 'guard', 'for', 'the', '9h', 'فيلم', 'فيلمه', 'سعر', 'price'];
+    return [
+        // Arabic
+        'شاشه', 'شاشة', 'شاشات', 'زجاج', 'زجاجه', 'زجاجة', 'حمايه', 'حماية', 'سكرين', 'سكرينة', 'سكرينه',
+        'اسكرينة', 'اسكرينه', 'اسكرينات', 'فيلم', 'فيلمه', 'فيلمه', 'واقي', 'واقى', 'غطاء', 'كفر', 'سعر', 'اسعار',
+        'منتج', 'مقاس', 'موديل', 'جهاز', 'موبايل', 'تليفون', 'محمول', 'بتاع', 'على', 'علي', 'عشان', 'عايز', 'عاوز',
+        // English
+        'screen', 'screens', 'protector', 'protectors', 'protection', 'glass', 'tempered', 'guard', 'for', 'the',
+        'of', 'an', 'price', 'cover', 'film', 'mobile', 'phone', 'model', 'size', 'new', 'original', 'copy',
+        '9h', '11d', '2.5d', 'nano',
+    ];
 }
 
+/** Arabic / spoken-Egyptian brand and family spellings → the canonical latin token */
 function modelAliases(): array
 {
     return [
+        // brands
         'جلاكسي' => 'galaxy', 'جالاكسي' => 'galaxy', 'جلاكسى' => 'galaxy', 'جالكسي' => 'galaxy',
-        'سامسونج' => 'samsung', 'سامسونغ' => 'samsung', 'سامسونق' => 'samsung',
-        'ايفون' => 'iphone', 'ايفوون' => 'iphone', 'ابل' => 'apple',
-        'شاومي' => 'xiaomi', 'شياومي' => 'xiaomi', 'ريدمي' => 'redmi', 'ريدمى' => 'redmi',
-        'هواوي' => 'huawei', 'هوواوي' => 'huawei', 'اوبو' => 'oppo', 'انفينكس' => 'infinix',
-        'انفنكس' => 'infinix', 'فيفو' => 'vivo', 'ريلمي' => 'realme', 'ريلمى' => 'realme',
-        'نوكيا' => 'nokia', 'هونر' => 'honor', 'تكنو' => 'tecno', 'موتورولا' => 'motorola',
-        'بيكسل' => 'pixel', 'نوثينج' => 'nothing', 'ايتل' => 'itel', 'لينوفو' => 'lenovo',
-        'ون' => 'one', 'بوكو' => 'poco', 'نوت' => 'note', 'برو' => 'pro', 'ماكس' => 'max',
-        'بلس' => 'plus', 'بلص' => 'plus', 'لايت' => 'lite', 'ايه' => 'a', 'ايج' => 'a',
-        'بي' => 'b', 'سي' => 'c', 'دي' => 'd', 'اكس' => 'x', 'اس' => 's', 'جي' => 'g',
-        'ام' => 'm', 'تي' => 't', 'زد' => 'z', 'كيه' => 'k', 'في' => 'v', 'واي' => 'y',
+        'جلاكسى' => 'galaxy', 'قلاشي' => 'galaxy', 'جالكسي' => 'galaxy',
+        'سامسونج' => 'samsung', 'سامسونغ' => 'samsung', 'سامسونق' => 'samsung', 'سامسونك' => 'samsung',
+        'سامسنغ' => 'samsung', 'سامسون' => 'samsung',
+        'ايفون' => 'iphone', 'ايفوون' => 'iphone', 'افون' => 'iphone', 'ايفن' => 'iphone',
+        'ابل' => 'apple', 'أبل' => 'apple', 'اببل' => 'apple', 'أبل' => 'apple', 'ابل' => 'apple',
+        'شاومي' => 'xiaomi', 'شياومي' => 'xiaomi', 'شومي' => 'xiaomi', 'كسياومي' => 'xiaomi',
+        'ريدمي' => 'redmi', 'ريدمى' => 'redmi', 'ريدماي' => 'redmi', 'ريديمى' => 'redmi',
+        'بوكو' => 'poco', 'بوكوو' => 'poco', 'بوكو' => 'poco',
+        'هواوي' => 'huawei', 'هوواوي' => 'huawei', 'هواوى' => 'huawei',
+        'اوبو' => 'oppo', 'أوبو' => 'oppo', 'اوبو' => 'oppo', 'اوبوه' => 'oppo',
+        'انفينكس' => 'infinix', 'انفنكس' => 'infinix', 'انفينيكس' => 'infinix', 'انفنيكس' => 'infinix',
+        'فيفو' => 'vivo', 'فيڤو' => 'vivo', 'فيفوو' => 'vivo',
+        'ريلمي' => 'realme', 'ريلمى' => 'realme', 'ريل مي' => 'realme', 'ريالمي' => 'realme',
+        'نوكيا' => 'nokia', 'نوكياا' => 'nokia',
+        'هونر' => 'honor', 'هونور' => 'honor', 'هنر' => 'honor',
+        'تكنو' => 'tecno', 'تكنوو' => 'tecno', 'تيكno' => 'tecno',
+        'موتورولا' => 'motorola', 'موتورلا' => 'motorola', 'موتو' => 'moto',
+        'بيكسل' => 'pixel', 'بيكسيل' => 'pixel',
+        'نوثينج' => 'nothing', 'نو ثينج' => 'nothing',
+        'ايتل' => 'itel', 'أيتل' => 'itel',
+        'لينوفو' => 'lenovo', 'لينوفوو' => 'lenovo',
+        'ون بلس' => 'oneplus', 'ونبلس' => 'oneplus', 'ون بلس' => 'oneplus',
+        'جوجل' => 'google',
+        'جرينفون' => 'green', 'جرين' => 'green',
+        // families / edition words
+        'نوت' => 'note', 'برو' => 'pro', 'ماكس' => 'max', 'بلس' => 'plus', 'بلص' => 'plus',
+        'لايت' => 'lite', 'الترا' => 'ultra', 'التيمت' => 'ultimate', 'ميني' => 'mini', 'مينى' => 'mini',
+        'ايدج' => 'edge', 'فولد' => 'fold', 'فليب' => 'flip', 'نارزو' => 'narzo', 'ريدمي' => 'redmi',
+        'بوكو' => 'poco', 'بافا' => 'pova', 'سبارك' => 'spark', 'كامون' => 'camon', 'هوت' => 'hot',
+        'ايه' => 'a', 'ايج' => 'a', 'بي' => 'b', 'سي' => 'c', 'دي' => 'd', 'اكس' => 'x', 'اس' => 's',
+        'جي' => 'g', 'ام' => 'm', 'تي' => 't', 'زد' => 'z', 'كيه' => 'k', 'في' => 'v', 'واي' => 'y',
+        'كي' => 'q', 'اتش' => 'h', 'ان' => 'n', 'ار' => 'r', 'دبليو' => 'w',
+        // Arabic letter names spoken in sequence: جالاكسي ايه 21 اس → galaxy a 21 s
+        'ايه اس' => 'as', 'ايه اس ايه' => 'asa', 'اس ايه' => 'sa', 'بي اس' => 'bs',
+        'اس' => 's', 'اكس اس' => 'xs', 'برو ماكس' => 'pro max',
     ];
+}
+
+function norm(string $value): string
+{
+    $value = \trim($value);
+    $digits = ['٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4', '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+                '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9'];
+    $value = \strtr($value, $digits);
+    $value = \mb_strtolower($value, 'UTF-8');
+    // unify Arabic letters that people type interchangeably
+    $value = \str_replace(
+        ['أ', 'إ', 'آ', 'ٱ', 'ى', 'ئ', 'ؤ', 'ة', 'ﻻ', 'ﻷ', 'ﻹ', 'ﻵ'],
+        ['ا', 'ا', 'ا', 'ا', 'ي', 'ي', 'و', 'ه', 'لا', 'لا', 'لا', 'لا'],
+        $value
+    );
+    // "5.5" / "6,5" → "5 5" so numbers survive tokenisation
+    $value = \preg_replace('/(?<=\d)[.,](?=\d)/u', ' ', $value) ?: $value;
+    $value = \preg_replace('/[^\p{L}\p{N}]+/u', ' ', $value) ?: '';
+    return \trim(\preg_replace('/\s+/u', ' ', $value) ?: '');
+}
+
+/** compact key used for typo tolerance: no spaces, no latin vowels, doubled letters collapsed */
+function searchSkeleton(string $value): string
+{
+    $v = \preg_replace('/[^\p{L}\p{N}]+/u', '', norm($value)) ?: '';
+    $v = \preg_replace('/(.)\1+/u', '$1', $v) ?: $v;
+    return \str_replace(['a', 'e', 'i', 'o', 'u'], '', $v);
+}
+
+function levenshteinUtf8(string $a, string $b): int
+{
+    $la = \mb_strlen($a, 'UTF-8');
+    $lb = \mb_strlen($b, 'UTF-8');
+    if ($la === 0) {
+        return $lb;
+    }
+    if ($lb === 0) {
+        return $la;
+    }
+    $prev = \range(0, $lb);
+    for ($i = 1; $i <= $la; $i++) {
+        $cur = [$i];
+        $ca = \mb_substr($a, $i - 1, 1, 'UTF-8');
+        for ($j = 1; $j <= $lb; $j++) {
+            $cost = $ca === \mb_substr($b, $j - 1, 1, 'UTF-8') ? 0 : 1;
+            $cur[$j] = \min($prev[$j] + 1, $cur[$j - 1] + 1, $prev[$j - 1] + $cost);
+        }
+        $prev = $cur;
+    }
+    return (int)$prev[$lb];
+}
+
+/**
+ * tolerant word comparison: exact / prefix / substring / one-or-two typos / missing vowels.
+ * Returns a weight in 0..1 (0 = no match).
+ */
+function tokenWeight(string $word, string $token): float
+{
+    if ($word === $token) {
+        return 1.0;
+    }
+    if ($token === '') {
+        return 0.0;
+    }
+    $wl = \mb_strlen($word, 'UTF-8');
+    $tl = \mb_strlen($token, 'UTF-8');
+    if (\mb_strpos($word, $token, 0, 'UTF-8') === 0) {
+        return 0.92;
+    }
+    if (\mb_strpos($word, $token, 0, 'UTF-8') !== false) {
+        return 0.8;
+    }
+    // "a 5 4" vs "a54", "s 2 1" vs "s21": letters+digits typed apart
+    $wp = \str_replace(' ', '', $word);
+    if ($wp === $token) {
+        return 0.95;
+    }
+    // pure numbers are never typos: 10 ≠ 11
+    if (\ctype_digit($token) && \ctype_digit($word)) {
+        return 0.0;
+    }
+    // short letter+digit codes ("a1s" for "a15", "c5x" for "c53"): one wrong character is still a hit
+    if ($tl >= 3 && $tl <= 4 && \preg_match('/^[a-z]?\d+[a-z]?$/', $token) && \preg_match('/^[a-z]?\d+[a-z]?$/', $wp)) {
+        if (levenshteinUtf8($wp, $token) <= 1) {
+            return 0.3;
+        }
+    }
+    // model codes ("a15", "c53") tolerate one wrong character but never outrank an exact hit
+    $alnum = \preg_match("/\d/", $token) && \preg_match("/[a-z]/", $token);
+    $allowed = $tl <= 2 ? 0 : ($tl <= 5 ? 1 : 2);
+    if ($allowed > 0 && \abs($wl - $tl) <= $allowed && levenshteinUtf8($word, $token) <= $allowed) {
+        return $alnum ? 0.45 : 0.7;
+    }
+    $ws = searchSkeleton($word);
+    $ts = searchSkeleton($token);
+    if ($ts !== '' && $ws !== '' && \mb_strlen($ts, 'UTF-8') >= 3
+        && ($ws === $ts || ($tl >= 5 && \mb_strpos($ws, $ts, 0, 'UTF-8') !== false))) {
+        return 0.6;
+    }
+    return 0.0;
 }
 
 function modelTokens(string $value): array
@@ -58,55 +184,214 @@ function modelTokens(string $value): array
     $noise = modelNoiseWords();
     $aliases = modelAliases();
     $tokens = [];
-    foreach (explode(' ', $clean) as $word) {
-        if ($word === '' || in_array($word, $noise, true)) {
+    foreach (\explode(' ', $clean) as $word) {
+        if ($word === '' || \in_array($word, $noise, true)) {
             continue;
         }
-        $tokens[] = $aliases[$word] ?? $word;
+        $word = $aliases[$word] ?? $word;
+        if ($word === '' || \in_array($word, $noise, true)) {
+            continue;
+        }
+        $tokens[] = $word;
     }
-    return $tokens;
+    // people type codes with spaces: "a 1 5", "s 2 1 u l t r a" → glue single characters back
+    $merged = [];
+    $run = '';
+    foreach ($tokens as $token) {
+        if (\mb_strlen($token, 'UTF-8') === 1) {
+            $run .= $token;
+            continue;
+        }
+        if ($run !== '') {
+            $merged[] = $run;
+            $run = '';
+        }
+        $merged[] = $token;
+    }
+    if ($run !== '') {
+        $merged[] = $run;
+    }
+    // and the other direction: "ايه 21 اس" arrives as a · 21 · s → a21s, the way the code is written
+    $glued = [];
+    foreach ($merged as $token) {
+        $last = $glued ? $glued[count($glued) - 1] : null;
+        if ($last !== null && \preg_match('/^\d+$/', $token) && \preg_match('/^[a-z]$/', $last)) {
+            $glued[count($glued) - 1] = $last . $token;
+            continue;
+        }
+        if ($last !== null && \preg_match('/^[a-z]$/', $token)
+            && \preg_match('/^[a-z]+\d+$/', $last) && \mb_strlen($last, 'UTF-8') <= 5) {
+            $glued[count($glued) - 1] = $last . $token;
+            continue;
+        }
+        $glued[] = $token;
+    }
+    $tokens = $glued;
+    if (!$tokens && $clean !== '') {
+        $tokens[] = $clean;
+    }
+    return \array_values(\array_unique($tokens));
 }
 
-function modelMatchesQuery(string $haystack, array $tokens): bool
+/**
+ * how well one model answers a query: every token must hit something,
+ * the score rewards order, brand hits and whole-phrase equality.
+ */
+function modelMatchScore(string $haystack, array $tokens, string $rawQuery = ''): float
 {
     if (!$tokens) {
-        return false;
+        return 0.0;
     }
-    $words = preg_split('/\s+/u', trim($haystack)) ?: [];
+    $words = \explode(' ', $haystack);
+    $words = \array_values(\array_filter($words, fn($w) => $w !== ''));
+    $compact = \str_replace(' ', '', $haystack);
+    $total = 0.0;
+    $hits = 0;
     foreach ($tokens as $token) {
-        $found = false;
-        if (mb_strpos($haystack, $token, 0, 'UTF-8') !== false) {
-            foreach ($words as $word) {
-                if ($word === '') {
-                    continue;
-                }
-                if ($word === $token || mb_strpos($word, $token, 0, 'UTF-8') === 0) {
-                    $found = true;
+        $best = 0.0;
+        foreach ($words as $word) {
+            $w = tokenWeight($word, $token);
+            if ($w > $best) {
+                $best = $w;
+                if ($best >= 1.0) {
                     break;
                 }
             }
-            if (!$found && mb_strlen($token, 'UTF-8') >= 5) {
-                $found = true;
+        }
+        if ($best === 0.0 && \mb_strlen($token, 'UTF-8') >= 3 && \mb_strpos($compact, \str_replace(' ', '', $token), 0, 'UTF-8') !== false) {
+            $best = 0.55;
+        }
+        if ($best === 0.0) {
+            continue;
+        }
+        $total += $best;
+        $hits++;
+    }
+    // something has to land, and the longer the word the more it must actually match
+    if ($hits === 0) {
+        return 0.0;
+    }
+    $score = $total / \count($tokens);
+    if ($hits < \count($tokens)) {
+        $score *= 0.55 + 0.45 * ($hits / \count($tokens));
+    }
+    // phrase bonus: "galaxy a54" typed in that order inside the name
+    $query = \implode(' ', $tokens);
+    if ($query !== '') {
+        if ($haystack === $query) {
+            $score += 0.6;
+        } elseif (\mb_strpos($haystack, $query, 0, 'UTF-8') !== false) {
+            $score += 0.25;
+        } elseif (\mb_strpos($compact, \str_replace(' ', '', $query), 0, 'UTF-8') !== false) {
+            $score += 0.15;
+        }
+    }
+    // precision: leftover words in the model name ("pro", "5G") mean it is a different phone
+    $extra = 0;
+    foreach ($words as $word) {
+        $covered = false;
+        foreach ($tokens as $token) {
+            if (tokenWeight($word, $token) >= 0.8) {
+                $covered = true;
+                break;
             }
         }
-        if (!$found) {
-            return false;
+        if (!$covered) {
+            $extra++;
         }
     }
-    return true;
+    $score -= \min(0.18, 0.035 * $extra);
+    // whole-token equality anywhere (the "A15" case)
+    foreach ($tokens as $token) {
+        if (\in_array($token, $words, true)) {
+            $score += 0.12;
+            break;
+        }
+    }
+    return $score + \min(0.3, $hits * 0.02);
 }
 
-function modelScoreQuery(string $haystack, array $tokens): int
+/** all models ordered by how well they answer the query (typos and word order included) */
+function searchModels(PDO $pdo, string $q, int $limit = 20): array
 {
-    $score = 0;
-    foreach ($tokens as $token) {
-        if (preg_match('/(^|\s)' . preg_quote($token, '/') . '(\s|$)/u', $haystack)) {
-            $score += 3;
-        } elseif (mb_strpos($haystack, $token, 0, 'UTF-8') !== false) {
-            $score += 1;
-        }
+    $bare = trim($q);
+    if (\mb_strlen($bare, 'UTF-8') < 2 && !\preg_match('/\d/', $bare)) {
+        return [];
     }
-    return $score;
+    $tokens = modelTokens($q);
+    if (!$tokens) {
+        return [];
+    }
+    $all = $pdo->query('SELECT * FROM device_models WHERE is_active = 1 ORDER BY brand ASC, model_name ASC')->fetchAll();
+    $hits = [];
+    foreach ($all as $m) {
+        $hay = norm($m['brand'] . ' ' . $m['model_name'] . ' ' . (string)($m['model_name_ar'] ?? ''));
+        if ($hay === '') {
+            continue;
+        }
+        $score = modelMatchScore($hay, $tokens, $q);
+        if ($score <= 0) {
+            continue;
+        }
+        $hits[] = [
+            'score' => $score,
+            'len' => \mb_strlen((string)$m['model_name'], 'UTF-8'),
+            'model' => $m,
+        ];
+    }
+    if (!$hits) {
+        return [];
+    }
+    // a model the shop already stocks glass for is the more useful answer
+    $stocked = [];
+    try {
+        foreach ($pdo->query('SELECT DISTINCT model_id FROM screen_compatibility') as $r) {
+            $stocked[(int)$r['model_id']] = true;
+        }
+    } catch (Throwable $e) {
+        $stocked = [];
+    }
+    \usort($hits, function ($a, $b) use ($stocked) {
+        if (\abs($a['score'] - $b['score']) >= 0.0001) {
+            return $b['score'] <=> $a['score'];
+        }
+        $sa = isset($stocked[(int)$a['model']['id']]) ? 0 : 1;
+        $sb = isset($stocked[(int)$b['model']['id']]) ? 0 : 1;
+        if ($sa !== $sb) {
+            return $sa <=> $sb;
+        }
+        return $a['len'] <=> $b['len'];
+    });
+    $out = [];
+    foreach (\array_slice($hits, 0, $limit) as $row) {
+        $m = $row['model'];
+        $out[] = [
+            'id' => (int)$m['id'],
+            'brand' => $m['brand'],
+            'model_name' => $m['model_name'],
+            'model_name_ar' => $m['model_name_ar'],
+            'label' => \trim($m['brand'] . ' ' . $m['model_name']),
+            'screen_inch' => $m['screen_inch'] !== null ? (float)$m['screen_inch'] : null,
+            'score' => \round((float)$row['score'], 3),
+        ];
+    }
+    return $out;
+}
+
+function findModel(PDO $pdo, string $q): ?array
+{
+    $list = searchModels($pdo, $q, 1);
+    if (!$list) {
+        return null;
+    }
+    $stmt = $pdo->prepare('SELECT * FROM device_models WHERE id = ?');
+    $stmt->execute([(int)$list[0]['id']]);
+    return $stmt->fetch() ?: null;
+}
+
+function suggestModels(PDO $pdo, string $q, int $limit = 8): array
+{
+    return searchModels($pdo, $q, $limit);
 }
 
 /** live stock expression: the linked product is the source of truth */
@@ -211,6 +496,7 @@ function screenRow(array $row, bool $en): array
     $row['type_ar'] = $type ? (string)$type['name_ar'] : $row['type_slug'];
     $row['type_en'] = $type ? (string)$type['name_en'] : $row['type_slug'];
     $row['type_label'] = $type ? typeLabel($type, $en) : $row['type_slug'];
+    $row['sort_order'] = $type ? (int)$type['sort_order'] : 99;
     $row['size_label'] = sizeLabel($row);
     $row['width_mm'] = round((float)($row['width_mm'] ?? 0), 2);
     $row['height_mm'] = round((float)($row['height_mm'] ?? 0), 2);
@@ -298,94 +584,196 @@ function decorateScreens(PDO $pdo, array $rows): array
     return $rows;
 }
 
-function findModel(PDO $pdo, string $q): ?array
-{
-    $tokens = modelTokens($q);
-    if (!$tokens) {
-        return null;
-    }
-    $all = $pdo->query('SELECT * FROM device_models WHERE is_active = 1 ORDER BY brand ASC, model_name ASC')->fetchAll();
-    $scored = [];
-    foreach ($all as $m) {
-        $hay = norm($m['brand'] . ' ' . $m['model_name'] . ' ' . (string)($m['model_name_ar'] ?? ''));
-        if (modelMatchesQuery($hay, $tokens)) {
-            $scored[] = [modelScoreQuery($hay, $tokens), mb_strlen((string)$m['model_name'], 'UTF-8'), $m];
-        }
-    }
-    if (!$scored) {
-        return null;
-    }
-    usort($scored, function ($a, $b) {
-        if ($a[0] === $b[0]) {
-            return $a[1] <=> $b[1];
-        }
-        return $b[0] <=> $a[0];
-    });
-    // exact name wins over prefix matches
-    $qNorm = implode(' ', $tokens);
-    foreach ($scored as $row) {
-        $m = $row[2];
-        $short = norm((string)$m['model_name']);
-        $full = norm($m['brand'] . ' ' . $m['model_name']);
-        if ($qNorm === $short || $qNorm === $full) {
-            return $m;
-        }
-    }
-    return $scored[0][2];
-}
-
-function suggestModels(PDO $pdo, string $q, int $limit = 8): array
-{
-    $tokens = modelTokens($q);
-    if (!$tokens) {
-        return [];
-    }
-    $all = $pdo->query('SELECT * FROM device_models WHERE is_active = 1 ORDER BY brand ASC, model_name ASC')->fetchAll();
-    $out = [];
-    foreach ($all as $m) {
-        $hay = norm($m['brand'] . ' ' . $m['model_name'] . ' ' . (string)($m['model_name_ar'] ?? ''));
-        if (!modelMatchesQuery($hay, $tokens)) {
-            continue;
-        }
-        $out[] = [
-            'score' => modelScoreQuery($hay, $tokens),
-            'len' => mb_strlen((string)$m['model_name'], 'UTF-8'),
-            'model' => $m,
-        ];
-    }
-    $qNorm = implode(' ', $tokens);
-    foreach ($out as &$row) {
-        $short = norm((string)$row['model']['model_name']);
-        $full = norm($row['model']['brand'] . ' ' . $row['model']['model_name']);
-        if ($qNorm !== '' && ($qNorm === $short || $qNorm === $full)) {
-            $row['score'] += 10;
-        }
-    }
-    unset($row);
-    usort($out, function ($a, $b) {
-        if ($a['score'] === $b['score']) {
-            return $a['len'] <=> $b['len'];
-        }
-        return $b['score'] <=> $a['score'];
-    });
-    $list = [];
-    foreach (array_slice($out, 0, $limit) as $row) {
-        $m = $row['model'];
-        $list[] = [
-            'id' => (int)$m['id'],
-            'brand' => $m['brand'],
-            'model_name' => $m['model_name'],
-            'model_name_ar' => $m['model_name_ar'],
-            'label' => trim($m['brand'] . ' ' . $m['model_name']),
-            'screen_inch' => $m['screen_inch'] !== null ? (float)$m['screen_inch'] : null,
-        ];
-    }
-    return $list;
-}
-
 function labelForModel(array $model): string
 {
     return trim($model['brand'] . ' ' . $model['model_name']);
+}
+
+/** two protectors belong on one card when they are the same sheet / same glass */
+function screenGroupKey(array $row): string
+{
+    $barcode = (string)($row['barcode'] ?? '');
+    // the ZEUS sheets carry their code in the barcode: ZS-A15-HD → the A15 sheet
+    if (preg_match('/^(ZS-[A-Z0-9]+)-/', $barcode, $m)) {
+        return $m[1];
+    }
+    // otherwise: the same device list means the same piece of glass
+    $models = $row['models'] ?? [];
+    if ($models) {
+        $ids = array_map(fn($m) => (int)$m['id'], $models);
+        sort($ids);
+        return 'set:' . md5(implode(',', $ids));
+    }
+    return 'size:' . number_format(round((float)($row['width_mm'] ?? 0), 1), 1, '.', '') . 'x'
+        . number_format(round((float)($row['height_mm'] ?? 0), 1), 1, '.', '');
+}
+
+/**
+ * Screens grouped the way a shop shows them: one card per glass (same mm size),
+ * with every type it comes in — HD / Banda / Privacy — inside that single card.
+ */
+function groupScreenRows(PDO $pdo, array $rows, bool $en, ?array $matchedModel = null): array
+{
+    $bySize = [];
+    foreach ($rows as $row) {
+        $key = screenGroupKey($row);
+        if (!isset($bySize[$key])) {
+            $bySize[$key] = [
+                'key' => $key,
+                'size_key' => number_format(round((float)($row['width_mm'] ?? 0), 1), 1, '.', '') . 'x'
+                    . number_format(round((float)($row['height_mm'] ?? 0), 1), 1, '.', ''),
+                'width_mm' => round((float)($row['width_mm'] ?? 0), 1),
+                'height_mm' => round((float)($row['height_mm'] ?? 0), 1),
+                'diag_inch' => round((float)($row['diag_inch'] ?? 0), 2),
+                'size_label' => sizeLabel($row),
+                'variants' => [],
+            ];
+        }
+        $bySize[$key]['variants'][] = $row;
+        $bySize[$key]['diag_inch'] = max($bySize[$key]['diag_inch'], round((float)($row['diag_inch'] ?? 0), 2));
+    }
+    $out = [];
+    $matchedId = $matchedModel ? (int)$matchedModel['id'] : 0;
+    foreach ($bySize as $group) {
+        usort($group['variants'], fn($a, $b) => [$a['sort_order'] ?? 99, $a['type_slug']] <=> [$b['sort_order'] ?? 99, $b['type_slug']]);
+        $first = $group['variants'][0];
+        $allModels = [];
+        $types = [];
+        foreach ($group['variants'] as $v) {
+            foreach (($v['models'] ?? []) as $m) {
+                $allModels[(int)$m['id']] = $m;
+            }
+            $types[] = [
+                'id' => (int)$v['id'],
+                'type_slug' => (string)$v['type_slug'],
+                'type_label' => (string)$v['type_label'],
+                'sell_price' => (float)$v['sell_price'],
+                'min_sell_price' => (float)$v['min_sell_price'],
+                'quantity' => (int)$v['quantity'],
+                'is_low' => !empty($v['is_low']),
+                'is_out' => !empty($v['is_out']),
+                'barcode' => (string)$v['barcode'],
+                'shelf_label' => (string)($v['shelf_label'] ?? ''),
+                'place_label' => (string)($v['place_label'] ?? ''),
+                'product_id' => (int)($v['product_id'] ?? 0),
+                'barcode_code' => (string)($v['barcode'] ?? ''),
+            ];
+        }
+        $models = array_values($allModels);
+        usort($models, function ($a, $b) use ($matchedId) {
+            if ($matchedId > 0) {
+                if ((int)$a['id'] === $matchedId) {
+                    return -1;
+                }
+                if ((int)$b['id'] === $matchedId) {
+                    return 1;
+                }
+            }
+            return strcmp((string)$a['label'], (string)$b['label']);
+        });
+        $prices = array_map(fn($t) => (float)$t['sell_price'], $types);
+        $anyLow = false;
+        $anyStock = false;
+        foreach ($types as $t) {
+            $anyLow = $anyLow || $t['is_low'];
+            $anyStock = $anyStock || $t['quantity'] > 0;
+        }
+        $source = 'manual';
+        foreach (($first['models'] ?? []) as $m) {
+            if (($m['source'] ?? '') === 'zeus') {
+                $source = 'zeus';
+                break;
+            }
+        }
+        $card = $first;
+        $card['group_key'] = $group['key'];
+        foreach ($types as $i => $t) {
+            $orig = $group['variants'][$i] ?? null;
+            if ($orig) {
+                $types[$i]['width_mm'] = round((float)($orig['width_mm'] ?? 0), 2);
+                $types[$i]['height_mm'] = round((float)($orig['height_mm'] ?? 0), 2);
+                $types[$i]['low_stock_threshold'] = (int)($orig['low_stock_threshold'] ?? 3);
+                $types[$i]['product_id'] = (int)($orig['product_id'] ?? 0);
+            }
+        }
+        $card['types'] = $types;
+        $card['size_label'] = $group['size_label'];
+        $card['diag_inch'] = $group['diag_inch'];
+        $card['types'] = $types;
+        $card['type_slugs'] = array_column($types, 'type_slug');
+        $card['prices'] = $prices;
+        $card['sell_price'] = $prices ? min($prices) : 0.0;
+        $card['price_max'] = $prices ? max($prices) : 0.0;
+        $card['has_multi_price'] = count(array_unique($prices)) > 1;
+        $card['price_label'] = $card['has_multi_price']
+            ? implode(' · ', array_map(fn($t) => $t['type_label'] . ' ' . number_format((float)$t['sell_price'], 0, '.', ''), $types))
+            : ($prices ? (string)round((float)$prices[0], 2) : '0');
+        $card['sources'] = $source;
+        $card['models'] = $models;
+        $card['model_count'] = count($models);
+        $card['first_model'] = $models[0]['label'] ?? '';
+        // the card answers "which glass is this?": the sheet/group name, then the widest device family
+        $sheet = '';
+        if (preg_match('/^(ZS-[A-Z0-9]+)-/', (string)($first['barcode'] ?? ''), $mm)) {
+            $sheet = $mm[1];
+        }
+        if ($matchedModel) {
+            $card['card_title'] = labelForModel($matchedModel);
+        } elseif ($sheet !== '') {
+            // the ZEUS sheets are named after the phone they are cut for: A15, C53, A21s…
+            $card['card_title'] = ($en ? 'ZEUS ' : 'زجاج ') . preg_replace('/^ZS-/', '', $sheet);
+        } else {
+            $brands = [];
+            foreach ($models as $m) {
+                $brands[(string)$m['brand']] = true;
+            }
+            $card['card_title'] = count($brands) === 1
+                ? (string)array_key_first($brands)
+                : ($models[0]['label'] ?? $group['size_label']);
+        }
+        $card['quantity'] = array_sum(array_map(fn($t) => (int)$t['quantity'], $types));
+        $card['is_low'] = $anyLow;
+        $card['is_out'] = !$anyStock;
+        $card['display_name'] = trim($group['size_label']);
+        $out[] = $card;
+    }
+    usort($out, function ($a, $b) {
+        if ($a['model_count'] === $b['model_count']) {
+            return $b['height_mm'] <=> $a['height_mm'];
+        }
+        return $b['model_count'] <=> $a['model_count'];
+    });
+    return $out;
+}
+
+/** ranks each card by the best position of its devices in the search results */
+function rankCardsByHits(array $cards, array $hits): array
+{
+    $rank = [];
+    foreach ($hits as $i => $h) {
+        $rank[(int)$h['id']] = $i;
+    }
+    foreach ($cards as &$card) {
+        $best = PHP_INT_MAX;
+        foreach (($card['models'] ?? []) as $m) {
+            $r = $rank[(int)$m['id']] ?? PHP_INT_MAX;
+            if ($r < $best) {
+                $best = $r;
+            }
+        }
+        $card['rank'] = $best;
+    }
+    unset($card);
+    // re-sort: the card of the best-ranked device comes first
+    usort($cards, function ($a, $b) {
+        $ra = $a['rank'] ?? PHP_INT_MAX;
+        $rb = $b['rank'] ?? PHP_INT_MAX;
+        if ($ra !== $rb) {
+            return $ra <=> $rb;
+        }
+        return $b['model_count'] <=> $a['model_count'];
+    });
+    return $cards;
 }
 
 /* -------------------------------------------------------------- GET actions */
@@ -416,25 +804,25 @@ if ($method === 'GET') {
         if ($perPage < 6) {
             $perPage = 24;
         }
-        if ($perPage > 60) {
-            $perPage = 60;
+        if ($perPage > 120) {
+            $perPage = 120;
         }
-        $page = max(1, (int)($_GET['page'] ?? 1));
-        $offset = ($page - 1) * $perPage;
         $whereSql = ' WHERE ' . implode(' AND ', $where);
-        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM screen_protectors' . $whereSql);
-        $countStmt->execute($params);
-        $totalCount = (int)$countStmt->fetchColumn();
-
+        // one card per piece of glass: build every card, then paginate the cards
         $sql = 'SELECT * FROM screen_protectors' . $whereSql
             . ' ORDER BY (SELECT COUNT(*) FROM screen_compatibility c WHERE c.screen_id = screen_protectors.id) DESC, height_mm DESC, width_mm DESC, ' . typeOrderExpr();
-        $sql .= DB_DRIVER === 'sqlite' ? ' LIMIT ' . $perPage . ' OFFSET ' . $offset : ' LIMIT ' . $offset . ', ' . $perPage;
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $rows = array_map(fn($r) => screenRow($r, $en), $stmt->fetchAll());
         $rows = decorateScreens($pdo, $rows);
+        $rows = groupScreenRows($pdo, $rows, $en);
+        $totalCount = count($rows);
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $offset = ($page - 1) * $perPage;
+        $rows = array_slice($rows, $offset, $perPage);
 
         $stats = [
+            'cards' => $totalCount,
             'sizes' => (int)$pdo->query('SELECT COUNT(*) FROM (SELECT width_mm, height_mm FROM screen_protectors WHERE is_active = 1 AND width_mm >= 50 AND (diag_inch IS NULL OR diag_inch < 7.2) GROUP BY width_mm, height_mm) t')->fetchColumn(),
             'types' => count(screenTypes($pdo)),
             'total' => (int)$pdo->query('SELECT COUNT(*) FROM screen_protectors WHERE is_active = 1')->fetchColumn(),
@@ -460,6 +848,77 @@ if ($method === 'GET') {
             'per_page' => $perPage,
             'stats' => $stats,
             'types' => $typeOut,
+            'is_admin' => $isAdmin,
+        ]);
+    }
+
+    /** free-text search: any spelling, order, typo or Arabic transliteration finds the device */
+    if ($action === 'search') {
+        $q = trim((string)($_GET['q'] ?? ''));
+        $typeFilter = trim((string)($_GET['type'] ?? ''));
+        $limit = min(30, max(4, (int)($_GET['limit'] ?? 12)));
+        if ($q === '') {
+            jsonResponse(['ok' => true, 'query' => '', 'hits' => [], 'screens' => [], 'is_admin' => $isAdmin]);
+        }
+        $hits = searchModels($pdo, $q, $limit);
+        $screens = [];
+        $withProtector = 0;
+        if ($hits) {
+            $ids = array_map(fn($h) => (int)$h['id'], $hits);
+            $safe = implode(',', $ids);
+            $where = ['s.is_active = 1', "c.model_id IN ({$safe})"];
+            $params = [];
+            if ($typeFilter !== '') {
+                $where[] = 's.type_slug = ?';
+                $params[] = $typeFilter;
+            }
+            $stmt = $pdo->prepare('
+                SELECT DISTINCT s.* FROM screen_protectors s
+                INNER JOIN screen_compatibility c ON c.screen_id = s.id
+                WHERE ' . implode(' AND ', $where) . '
+                ORDER BY (s.diag_inch >= 7) ASC, s.height_mm DESC, s.width_mm DESC, ' . typeOrderExpr('s') . '
+            ');
+            $stmt->execute($params);
+            $rows = array_map(fn($r) => screenRow($r, $en), $stmt->fetchAll());
+            if ($rows) {
+                $rows = decorateScreens($pdo, $rows);
+                $screens = groupScreenRows($pdo, $rows, $en, null);
+                $screens = rankCardsByHits($screens, $hits);
+                $hitRank = [];
+                foreach ($hits as $i => $h) {
+                    $hitRank[(int)$h['id']] = $i;
+                }
+                // each card is titled by its own best-ranked device; ties break alphabetically
+                foreach ($screens as &$sc) {
+                    $opts = $sc['models'] ?? [];
+                    usort($opts, function ($a, $b) use ($hitRank) {
+                        $ra = $hitRank[(int)$a['id']] ?? PHP_INT_MAX;
+                        $rb = $hitRank[(int)$b['id']] ?? PHP_INT_MAX;
+                        if ($ra !== $rb) {
+                            return $ra <=> $rb;
+                        }
+                        return strcmp((string)$a['label'], (string)$b['label']);
+                    });
+                    $sc['models'] = $opts;
+                    $top = $opts[0] ?? null;
+                    if ($top) {
+                        $sc['first_model'] = $top['label'];
+                        $sc['card_title'] = $top['label'];
+                        $sc['device_label'] = $top['label'];
+                        $sc['matched_model'] = $top;
+                    }
+                }
+                unset($sc);
+                $withProtector = count($screens);
+            }
+        }
+        jsonResponse([
+            'ok' => true,
+            'query' => $q,
+            'hits' => $hits,
+            'screens' => $screens,
+            'with_protector' => $withProtector,
+            'model' => $hits[0] ?? null,
             'is_admin' => $isAdmin,
         ]);
     }
@@ -500,22 +959,11 @@ if ($method === 'GET') {
         $stmt->execute($params);
         $rows = array_map(fn($r) => screenRow($r, $en), $stmt->fetchAll());
         $rows = decorateScreens($pdo, $rows);
-        // the searched device always heads the card and the compatibility list
+        // one card per glass: the three types of the same size are variants of a single card
         $deviceLabel = labelForModel($model);
+        $rows = groupScreenRows($pdo, $rows, $en, $model);
         $modelId = (int)$model['id'];
         foreach ($rows as &$r) {
-            $opts = $r['models'] ?? [];
-            usort($opts, function ($a, $b) use ($modelId) {
-                if ((int)$a['id'] === $modelId) {
-                    return -1;
-                }
-                if ((int)$b['id'] === $modelId) {
-                    return 1;
-                }
-                return strcmp((string)$a['label'], (string)$b['label']);
-            });
-            $r['models'] = $opts;
-            $r['first_model'] = $opts[0]['label'] ?? $deviceLabel;
             $r['device_label'] = $deviceLabel;
             $r['matched_model'] = [
                 'id' => (int)$model['id'],
@@ -863,14 +1311,17 @@ if ($action === 'link_devices') {
         $modelIds = array_filter(array_map('intval', explode(',', $modelIds)));
     }
     $linkSql = DB_DRIVER === 'sqlite'
-        ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)'
-        : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)';
+        ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)'
+        : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)';
     $link = $pdo->prepare($linkSql);
     $added = 0;
-    foreach (array_unique(array_map('intval', (array)$modelIds)) as $mid) {
-        if ($mid > 0) {
-            $link->execute([$id, $mid]);
-            $added++;
+    // the three types of one glass share one device list: link them all at once
+    foreach (siblingScreenIds($pdo, $screen) as $sid) {
+        foreach (array_unique(array_map('intval', (array)$modelIds)) as $mid) {
+            if ($mid > 0) {
+                $link->execute([$sid, $mid, 'manual']);
+                $added++;
+            }
         }
     }
     $count = $pdo->prepare('SELECT COUNT(*) FROM screen_compatibility WHERE screen_id = ?');
@@ -885,7 +1336,13 @@ if ($action === 'link_devices') {
 if ($action === 'unlink_device') {
     $id = (int)($input['id'] ?? 0);
     $modelId = (int)($input['model_id'] ?? 0);
-    $pdo->prepare('DELETE FROM screen_compatibility WHERE screen_id = ? AND model_id = ?')->execute([$id, $modelId]);
+    $stmt = $pdo->prepare('SELECT * FROM screen_protectors WHERE id = ?');
+    $stmt->execute([$id]);
+    $screen = $stmt->fetch();
+    // one card = one glass: removing a device removes it from all its types, otherwise the card would still show it
+    foreach ($screen ? siblingScreenIds($pdo, $screen) : [$id] as $sid) {
+        $pdo->prepare('DELETE FROM screen_compatibility WHERE screen_id = ? AND model_id = ?')->execute([$sid, $modelId]);
+    }
     jsonResponse(['ok' => true, 'message' => $en ? 'Device removed from this protector.' : 'تم فصل الجهاز عن الاسكرينة.']);
 }
 
@@ -1145,6 +1602,21 @@ if ($action === 'move') {
 jsonResponse(['ok' => false, 'error' => 'Invalid request.'], 400);
 
 /* ------------------------------------------------------------ shared helpers */
+
+/** every protector of the same glass (one card = all its types) */
+function siblingScreenIds(PDO $pdo, array $screen): array
+{
+    $stmt = $pdo->prepare('
+        SELECT id FROM screen_protectors
+        WHERE is_active = 1 AND ROUND(width_mm, 1) = ROUND(?, 1) AND ROUND(height_mm, 1) = ROUND(?, 1)
+    ');
+    $stmt->execute([(float)($screen['width_mm'] ?? 0), (float)($screen['height_mm'] ?? 0)]);
+    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    if (!in_array((int)$screen['id'], $ids, true)) {
+        $ids[] = (int)$screen['id'];
+    }
+    return $ids;
+}
 
 /** a new protector takes the device list of the protectors of the very same size (one ZEUS sheet = one size) */
 function copySiblingLinks(PDO $pdo, int $screenId): int

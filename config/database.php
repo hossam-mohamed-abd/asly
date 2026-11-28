@@ -657,6 +657,7 @@ class Database
         if (!is_file($sqlFile)) {
             return;
         }
+        $isSqlite = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
         $sql = (string)file_get_contents($sqlFile);
         $lines = preg_split('/\r\n|\r|\n/', $sql) ?: [];
         $cleanLines = [];
@@ -668,14 +669,73 @@ class Database
             $cleanLines[] = $line;
         }
         $cleanSql = implode("\n", $cleanLines);
-        $statements = preg_split('/;\s*/', $cleanSql) ?: [];
+        // split on the ';' that ends a statement, not on one inside a quoted value
+        $statements = preg_split('/;\s*(?=\n|$)/', $cleanSql) ?: [];
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
             if ($stmt === '' || stripos($stmt, 'CREATE DATABASE') === 0 || stripos($stmt, 'USE ') === 0) {
                 continue;
             }
+            if ($isSqlite) {
+                // the dump is MySQL dialect: skip session settings and speak sqlite for the rest
+                if (preg_match('/^(SET|LOCK|UNLOCK|START TRANSACTION|COMMIT|ALTER TABLE .* (DISABLE|ENABLE) KEYS)/i', $stmt)) {
+                    continue;
+                }
+                $stmt = self::mysqlToSqlite($stmt);
+                if ($stmt === '') {
+                    continue;
+                }
+            }
             $pdo->exec($stmt);
         }
+    }
+
+    /** rewrites one MySQL statement so sqlite (used by the local preview) can run the shipped dump */
+    private static function mysqlToSqlite(string $stmt): string
+    {
+        $stmt = preg_replace('/^INSERT\s+IGNORE\s+INTO/i', 'INSERT OR IGNORE INTO', $stmt);
+        $stmt = preg_replace('/\s+ON\s+DUPLICATE\s+KEY\s+UPDATE\s+.*$/is', '', $stmt);
+        $stmt = str_replace('`', '', $stmt);
+        if (stripos(ltrim($stmt), 'CREATE TABLE') === 0) {
+            $stmt = self::mysqlCreateToSqlite($stmt);
+            if ($stmt === '') {
+                return '';
+            }
+        }
+        return rtrim(trim($stmt), ';');
+    }
+
+    /** converts a MySQL CREATE TABLE into its sqlite equivalent */
+    private static function mysqlCreateToSqlite(string $stmt): string
+    {
+        $stmt = preg_replace('/\)\s*ENGINE\s*=?\s*\w+.*$/is', ')', $stmt);
+        $stmt = preg_replace('/\bUNSIGNED\b/i', '', $stmt);
+        $stmt = preg_replace('/\bTINYINT\(\d+\)/i', 'INTEGER', $stmt);
+        $stmt = preg_replace('/\b(?:BIG|MEDIUM|SMALL)?INT(?:\(\d+\))?/i', 'INTEGER', $stmt);
+        $stmt = preg_replace('/\b(?:VAR)?CHAR\(\d+\)/i', 'TEXT', $stmt);
+        $stmt = preg_replace('/\b(?:LONGTEXT|MEDIUMTEXT|TINYTEXT|TEXT)\b/i', 'TEXT', $stmt);
+        $stmt = preg_replace('/\b(?:DECIMAL|DOUBLE|FLOAT)\([\d,\s]+\)/i', 'REAL', $stmt);
+        $stmt = preg_replace('/\b(?:ENUM|SET)\s*\([^)]*\)/i', 'TEXT', $stmt);
+        $stmt = preg_replace('/\bDEFAULT\s+CURRENT_TIMESTAMP(?:\(\))?/i', "DEFAULT CURRENT_TIMESTAMP", $stmt);
+        $stmt = preg_replace('/\bON\s+UPDATE\s+CURRENT_TIMESTAMP(?:\(\))?/i', '', $stmt);
+        $stmt = preg_replace('/\bAUTO_INCREMENT\b/i', 'AUTOINCREMENT', $stmt);
+        $stmt = preg_replace('/\bCHARACTER\s+SET\s+\w+/i', '', $stmt);
+        $stmt = preg_replace('/\bCOLLATE\s+\w+/i', '', $stmt);
+        $stmt = preg_replace("/\\bCOMMENT\\s+'(?:[^'\\\\]|\\\\.)*'/i", '', $stmt);
+        // inline indexes are not valid inside sqlite's column list: lift them out as CREATE INDEX
+        $stmt = preg_replace('/,\s*(?:UNIQUE\s+)?(?:KEY|INDEX)\s+\w+\s*\([^)]*\)/i', '', $stmt);
+        $stmt = preg_replace('/,\s*CONSTRAINT\s+\w+\s+FOREIGN\s+KEY\s*\([^)]*\)\s*REFERENCES\s+\w+\s*\([^)]*\)(?:\s+ON\s+(?:DELETE|UPDATE)\s+\w+)*/i', '', $stmt);
+        $stmt = preg_replace('/,\s*(?:FULLTEXT|SPATIAL)\s+(?:KEY|INDEX)\s+\w+\s*\([^)]*\)/i', '', $stmt);
+        // trailing commas left behind by the removals
+        $stmt = preg_replace('/,\s*\)/', ')', $stmt);
+        // AUTOINCREMENT only works on INTEGER PRIMARY KEY (sqlite rule)
+        if (stripos($stmt, 'AUTOINCREMENT') !== false) {
+            $stmt = preg_replace('/^(\s*CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s*\(\s*)(\w+)\s+INTEGER\s+NOT\s+NULL\s+AUTOINCREMENT/i', '$1$2 INTEGER PRIMARY KEY AUTOINCREMENT', $stmt);
+            if (stripos($stmt, 'PRIMARY KEY') === false) {
+                $stmt = preg_replace('/\bAUTOINCREMENT\b/i', '', $stmt);
+            }
+        }
+        return trim($stmt);
     }
 
     private static function initializeSqliteSchema(PDO $pdo): void

@@ -687,7 +687,7 @@ $jsConfig = [
             <div class="scr-search-row">
               <div class="scr-search-field">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="screenModelSearch" autocomplete="off" placeholder="<?= $en ? 'iPhone 15 / A54 / C17 … or barcode' : 'iPhone 15 / A54 / C17 … أو الباركود' ?>">
+                <input type="text" id="screenModelSearch" autocomplete="off" placeholder="<?= $en ? 'iPhone 15 · A54 · C17 · ريلمي سي 53 · اوبو … or barcode' : 'ايفون 15 · A54 · C17 · ريلمي سي 53 · اوبو … أو الباركود' ?>">
                 <button type="button" id="btnScreenSearchClear"><i class="fa-solid fa-xmark"></i></button>
               </div>
             </div>
@@ -695,7 +695,7 @@ $jsConfig = [
           </div>
 
           <div class="scr-stats">
-            <div class="scr-stat"><span><?= $en ? 'Sizes' : 'المقاسات' ?></span><strong id="scrStatTotal">0</strong></div>
+            <div class="scr-stat"><span><?= $en ? 'Cards (glasses)' : 'الكروت (الزجاجات)' ?></span><strong id="scrStatTotal">0</strong></div>
             <div class="scr-stat"><span><?= $en ? 'Devices' : 'الأجهزة' ?></span><strong id="scrStatDevices">0</strong></div>
             <div class="scr-stat"><span><?= $en ? 'Pieces' : 'القطع' ?></span><strong id="scrStatUnits">0</strong></div>
             <div class="scr-stat is-alert"><span><?= $en ? 'Missing' : 'ناقص' ?></span><strong id="scrStatMissing">0</strong></div>

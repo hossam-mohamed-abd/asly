@@ -1901,7 +1901,7 @@
   }
 
   function screenShelfText(screen) {
-    const v = String(screen.shelf_label || "").trim();
+    const v = String(screen.shelf_label || screen.place_label || "").trim();
     if (v && v !== "غير محدد" && v !== "Not placed") return v;
     return tr("مش محدد", "Not set");
   }
@@ -1915,24 +1915,40 @@
     return { list: shown, total, extra: Math.max(0, total - shown.length) };
   }
 
-  /* card: device (or the searched one) → drawer → price → compatibility */
+  /* one card per glass: the device, its drawer, and every type it comes in with its own price */
   function screenCardHtml(screen) {
-    const low = screen.quantity <= screen.low_stock_threshold;
-    const title = screen.device_label || screen.first_model || scrTypeLabel(screen.type_slug);
+    const types = (screen.types && screen.types.length)
+      ? screen.types
+      : [{ id: screen.id, type_slug: screen.type_slug, type_label: scrTypeLabel(screen.type_slug), sell_price: screen.sell_price, quantity: screen.quantity, is_low: screen.is_low, is_out: screen.is_out, barcode: screen.barcode, place_label: screen.place_label }];
+    const low = types.every(t => Number(t.quantity) <= 0);
+    const title = screen.card_title || screen.device_label || screen.first_model || scrTypeLabel(screen.type_slug);
     const compat = compatSummary(screen);
     const extra = compat.extra;
     const id = screen.id;
+    const multi = types.length > 1;
+    const rows = types.map(t => {
+      const out = Number(t.quantity) <= 0;
+      const place = String(t.place_label || t.shelf_label || "").trim();
+      return `
+        <button type="button" class="scr-price-row${out ? " is-out" : ""}${t.is_low ? " is-low" : ""}"
+                data-scr-sell="${id}" data-type="${esc(t.type_slug)}"
+                title="${esc(t.type_label)} — ${out ? tr("نفدت", "Out") : Number(t.quantity) + " " + tr("قطعة", "pcs")}">
+          <span class="scr-price-type">${esc(t.type_label)}</span>
+          <span class="scr-price-cash">${fmtMoney(t.sell_price)}</span>
+          <span class="scr-price-qty">${out ? `<i class="fa-solid fa-ban"></i>` : Number(t.quantity)}</span>
+        </button>`;
+    }).join("");
     return `
-      <article class="scr-card${low ? " is-missing" : ""}" data-screen-id="${id}">
+      <article class="scr-card${low ? " is-missing" : ""}" data-screen-id="${id}" data-group="${esc(screen.group_key || "")}">
         <div class="scr-card-top">
-          <span class="scr-card-type">${esc(scrTypeLabel(screen.type_slug))}</span>
-          ${low ? `<span class="scr-card-flag">${tr("ناقص", "Missing")}</span>` : `<span class="scr-card-qty">${Number(screen.quantity || 0)}</span>`}
+          <span class="scr-card-type${multi ? " is-multi" : ""}">${multi ? `${types.length} ${tr("أنواع", "types")}` : esc(types[0].type_label)}</span>
+          ${low ? `<span class="scr-card-flag">${tr("ناقص", "Missing")}</span>` : `<span class="scr-card-qty">${Number(screen.quantity || 0)} ${tr("قطعة", "pcs")}</span>`}
         </div>
-        <button type="button" class="scr-card-hit" data-scr-sell="${id}" title="${esc(title)}">
+        <button type="button" class="scr-card-hit" data-scr-sell="${id}" data-type="${esc(types[0].type_slug)}" title="${esc(title)}">
           <span class="scr-card-name">${esc(title)}</span>
-          <span class="scr-card-place"><i class="fa-solid fa-location-dot"></i> ${esc(screenShelfText(screen))}</span>
-          <span class="scr-card-price">${fmtMoney(screen.sell_price)}</span>
+          <span class="scr-card-place"><i class="fa-solid fa-location-dot"></i> ${esc(screenShelfText(types[0]))} · ${esc(screen.size_label || scrSizeText(screen))}</span>
         </button>
+        <div class="scr-price-list">${rows}</div>
         <div class="scr-card-compat">
           <span class="scr-compat-line"><i class="fa-solid fa-link"></i> ${compat.list.length ? compat.list.map(n => esc(n)).join(" · ") + (extra > 0 ? ` <em>+${extra}</em>` : "") : esc(tr("مفيش أجهزة مربوطة", "No devices linked"))}</span>
           ${extra > 0 ? `<button type="button" class="scr-compat-toggle" data-scr-compat="${id}" aria-label="${tr("كل التوافقات", "All compatible devices")}"><i class="fa-solid fa-chevron-down"></i></button>` : ""}
@@ -1944,6 +1960,24 @@
         </div>
       </article>
     `;
+  }
+
+  /** a card shows many types: the clicked one becomes the POS line (its own product, price and stock) */
+  function sellScreenVariant(card, variant) {
+    const productId = Number(variant.product_id || variant.id || card.product_id || card.id);
+    const line = {
+      id: productId,
+      product_id: productId,
+      barcode: variant.barcode || card.barcode,
+      display_name: `${card.device_label || card.first_model || ""} · ${variant.type_label || ""}`.trim(),
+      name: card.display_name || card.size_label || "",
+      sell_price: Number(variant.sell_price || card.sell_price),
+      min_sell_price: Number(variant.min_sell_price || card.min_sell_price),
+      quantity: Number(variant.quantity || 0),
+      image_path: card.image_path || ""
+    };
+    window.switchTab("pos");
+    setTimeout(() => addToPosCart(line, { viaScan: true }), 120);
   }
 
   function paintScreenPager() {
@@ -1984,10 +2018,11 @@
     wrap.querySelectorAll("[data-scr-sell]").forEach(btn => {
       btn.addEventListener("click", () => {
         const id = Number(btn.getAttribute("data-scr-sell"));
+        const slug = btn.getAttribute("data-type") || "";
         const item = list.find(x => x.id === id);
         if (!item) return;
-        window.switchTab("pos");
-        setTimeout(() => addToPosCart(item, { viaScan: true }), 120);
+        const variant = (item.types || []).find(t => t.type_slug === slug) || item;
+        sellScreenVariant(item, variant);
       });
     });
 
@@ -2020,10 +2055,14 @@
     wrap.querySelectorAll("[data-scr-edit]").forEach(btn => {
       btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit"))));
     });
+    // edit opens the card (size) with all its types, not a single protector
+    wrap.querySelectorAll("[data-scr-edit-group]").forEach(btn => {
+      btn.addEventListener("click", () => openScreenForm(Number(btn.getAttribute("data-scr-edit-group"))));
+    });
   }
 
   function paintScreenStats(stats) {
-    const map = { scrStatTotal: "sizes", scrStatDevices: "devices", scrStatUnits: "units", scrStatMissing: "missing" };
+    const map = { scrStatTotal: "cards", scrStatDevices: "devices", scrStatUnits: "units", scrStatMissing: "missing" };
     Object.entries(map).forEach(([id, key]) => {
       const el = document.getElementById(id);
       if (el && stats) el.textContent = String(Number(stats[key] || 0));
@@ -2046,7 +2085,8 @@
       typeSel.value = cur;
     }
     const brandSel = document.getElementById("scrBrandFilter");
-    if (brandSel && SCR.brands.length && brandSel.options.length <= 1) {
+    if (brandSel && SCR.brands.length) {
+      // keep the current pick alive even when the list is rebuilt
       brandSel.innerHTML = `<option value="">${tr("كل الماركات", "All brands")}</option>` +
         SCR.brands.map(b => `<option value="${esc(b.brand)}">${esc(b.brand)} (${b.total})</option>`).join("");
       brandSel.value = SCR.brand;
@@ -2070,6 +2110,53 @@
       paintScrFilters();
       paintScreens(list, SCR.missingOnly ? tr("الاسكرينات الناقصة", "Missing protectors") : tr("كل الاسكرينات", "All protectors"));
       paintScreenStats(res.stats || null);
+      return list;
+    } catch (err) {
+      showToast(err.message, true);
+      return [];
+    }
+  }
+
+  /** free-text search: typos, Arabic spellings, "a 1 5", "c53" — all land on the same device */
+  async function searchScreensFree(q) {
+    const params = new URLSearchParams();
+    params.set("action", "search");
+    params.set("q", q);
+    params.set("limit", "10");
+    if (SCR.type) params.set("type", SCR.type);
+    try {
+      const res = await apiFetch(`api/screens.php?${params.toString()}`);
+      const hits = res.hits || [];
+      const list = res.screens || [];
+      SCR.currentModel = res.model || null;
+      const box = document.getElementById("screenSuggestions");
+      if (box) {
+        if (!hits.length) {
+          box.innerHTML = `<span class="scr-model-none">${tr("مفيش جهاز بالاسم ده — جرّب اسم تاني أو امسح الباركود", "No device matches — try another spelling or scan the barcode")}</span>`;
+        } else {
+          box.innerHTML = hits.slice(0, 8).map((m, i) =>
+            `<button type="button" class="scr-suggest${i === 0 ? " is-match" : " is-alt"}" data-model-id="${m.id}">${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}${Number(m.id) === (res.model ? Number(res.model.id) : -1) ? ` <i class="fa-solid fa-check"></i>` : ""}</button>`
+          ).join("");
+          box.querySelectorAll("[data-model-id]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = Number(btn.getAttribute("data-model-id"));
+              const input = document.getElementById("screenModelSearch");
+              if (input) input.value = btn.textContent.trim().replace(/\s+\d+(\.\d+)?"\s*.*$/, "");
+              searchScreensByModel("", id);
+            });
+          });
+        }
+      }
+      if (!hits.length) {
+        paintScreens([], tr("نتيجة البحث", "Search results"));
+        return [];
+      }
+      // every hit that has glass in stock contributes its card, so nothing the user typed is hidden
+      const found = list.length;
+      const head = found === 0
+        ? tr(`مفيش اسكرينة متسجلة لـ ${hits[0].label}`, `No protector stored for ${hits[0].label}`)
+        : tr(`${hits[0].label} — ${found} زجاجة`, `${hits[0].label} — ${found} glass`);
+      paintScreens(list, head);
       return list;
     } catch (err) {
       showToast(err.message, true);
@@ -2286,10 +2373,12 @@
     if (id) {
       const sc = SCR.lastList.find(x => x.id === id);
       if (!sc) return;
+      // a card can hold several types: edit the first one, the size belongs to the whole card
+      const firstType = (sc.types && sc.types.length) ? sc.types[0] : null;
       document.getElementById("scrId").value = String(sc.id);
-      document.getElementById("scrBarcode").value = sc.barcode || "";
-      document.getElementById("scrWidth").value = sc.width_mm || "";
-      document.getElementById("scrHeight").value = sc.height_mm || "";
+      document.getElementById("scrBarcode").value = sc.barcode || (firstType ? firstType.barcode : "") || "";
+      document.getElementById("scrWidth").value = sc.width_mm || (firstType ? firstType.width_mm : "") || "";
+      document.getElementById("scrHeight").value = sc.height_mm || (firstType ? firstType.height_mm : "") || "";
       document.getElementById("scrShelf").value = sc.shelf_code || "";
       document.getElementById("scrDrawer").value = sc.drawer_label || "";
       document.getElementById("scrQty").value = String(sc.quantity ?? 0);
@@ -2325,11 +2414,16 @@
     const shell = document.getElementById("screenDevicesShell");
     if (!shell) return;
     SCR.devicesFor = screenId;
+    SCR.devicesGroup = screenId;
     const sc = SCR.lastList.find(x => x.id === screenId);
+    const scTypes = (sc && sc.types) ? sc.types : [];
     const title = document.getElementById("screenDevicesTitle");
     if (title) {
-      title.innerHTML = `<i class="fa-solid fa-mobile-screen"></i> ${esc(scrTypeLabel(sc ? sc.type_slug : ""))} · ${esc(scrSizeText(sc || {}))} — ${tr("الأجهزة", "Devices")} <b>${sc ? sc.model_count : 0}</b>`;
+      const typeNames = scTypes.length ? scTypes.map(t => t.type_label).join(" · ") : scrTypeLabel(sc ? sc.type_slug : "");
+      title.innerHTML = `<i class="fa-solid fa-mobile-screen"></i> ${esc(typeNames)} · ${esc((sc && sc.size_label) || scrSizeText(sc || {}))} — ${tr("الأجهزة", "Devices")} <b>${sc ? sc.model_count : 0}</b>`;
     }
+    // every type of the glass shares the same device list: link/unlink on all of them
+    SCR.deviceForIds = scTypes.length ? scTypes.map(t => Number(t.id)) : [screenId];
     document.getElementById("scrDevSearch").value = "";
     document.getElementById("scrDevResults").innerHTML = "";
     paintDevChips(sc || null);
@@ -2431,20 +2525,20 @@
         window.clearTimeout(timer);
         const q = search.value.trim();
         timer = window.setTimeout(() => {
-          if (q.length >= 1) searchScreensByModel(q);
+          if (q.length >= 1) searchScreensFree(q);
           else {
             const box = document.getElementById("screenSuggestions");
             if (box) box.innerHTML = "";
             loadScreens("");
           }
-        }, 260);
+        }, 200);
       });
       search.addEventListener("keydown", e => {
         if (e.key !== "Enter") return;
         e.preventDefault();
         const q = search.value.trim();
-        if (/^[A-Za-z0-9-]{4,}$/.test(q)) {
-          apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(q)}`)
+        if (/^[A-Za-z]{2,5}-?[A-Za-z0-9]{1,6}$/.test(q)) {
+          apiFetch(`api/screens.php?action=lookup&code=${encodeURIComponent(q.toUpperCase())}`)
             .then(res => {
               if (res.found) {
                 playScanBeep();
@@ -2453,12 +2547,12 @@
                 if (box) box.innerHTML = `<span class="scr-model-pill is-code"><i class="fa-solid fa-barcode"></i> ${esc(q)}</span>`;
                 return;
               }
-              searchScreensByModel(q);
+              searchScreensFree(q);
             })
-            .catch(() => searchScreensByModel(q));
+            .catch(() => searchScreensFree(q));
           return;
         }
-        searchScreensByModel(q);
+        searchScreensFree(q);
       });
     }
     document.getElementById("btnScreenSearchClear")?.addEventListener("click", () => {
