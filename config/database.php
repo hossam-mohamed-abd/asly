@@ -177,6 +177,7 @@ class Database
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
               `screen_id` INT UNSIGNED NOT NULL,
               `model_id` INT UNSIGNED NOT NULL,
+              `link_type` VARCHAR(20) NOT NULL DEFAULT 'manual',
               PRIMARY KEY (`id`),
               UNIQUE KEY `uniq_screen_model` (`screen_id`, `model_id`),
               KEY `idx_compat_model` (`model_id`)
@@ -292,6 +293,7 @@ class Database
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 screen_id INTEGER NOT NULL,
                 model_id INTEGER NOT NULL,
+                link_type TEXT NOT NULL DEFAULT 'manual',
                 UNIQUE (screen_id, model_id)
             );
             CREATE TABLE IF NOT EXISTS screen_movements (
@@ -323,6 +325,9 @@ class Database
                 'height_mm'   => ['sqlite' => 'REAL NOT NULL DEFAULT 0', 'mysql' => 'DECIMAL(6,2) NOT NULL DEFAULT 0.00'],
                 'diag_inch'   => ['sqlite' => 'REAL DEFAULT NULL', 'mysql' => 'DECIMAL(4,2) DEFAULT NULL'],
                 'size_tier'   => ['sqlite' => 'INTEGER NOT NULL DEFAULT 1', 'mysql' => 'TINYINT NOT NULL DEFAULT 1'],
+            ],
+            'screen_compatibility' => [
+                'link_type' => ['sqlite' => "TEXT NOT NULL DEFAULT 'manual'", 'mysql' => "VARCHAR(20) NOT NULL DEFAULT 'manual'"],
             ],
         ];
         foreach ($specs as $table => $columns) {
@@ -463,7 +468,7 @@ class Database
                 continue;
             }
             $diag = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
-            $tier = $diag >= 6.6 ? 3 : ($diag >= 6.0 ? 2 : 1);
+            $tier = 0;
             $findStmt->execute([$type, $width - 1, $width + 1, $height - 1.5, $height + 1.5, $width, $height]);
             $targetId = (int)$findStmt->fetchColumn();
             if ($targetId > 0) {
@@ -474,6 +479,58 @@ class Database
             } else {
                 $resize->execute([$width, $height, $diag, $tier, $now, (int)$row['id']]);
             }
+        }
+    }
+
+    /** retires the old 8-type / size-tier catalog: only HD, Banda and Privacy stay on sale */
+    private static function retireLegacyCatalog(PDO $pdo): void
+    {
+        try {
+            $keep = ['hd', 'banda', 'privacy'];
+            $pdo->exec("UPDATE screen_types SET is_active = 0 WHERE slug NOT IN ('hd', 'banda', 'privacy')");
+            // one price per type: keep the smallest tier as the single row and drop the rest
+            $seen = [];
+            $prices = $pdo->query('SELECT type_slug, size_tier, sell_price, cost_price, min_sell_price FROM screen_type_prices ORDER BY type_slug ASC, size_tier ASC')->fetchAll();
+            $ins = $pdo->prepare('INSERT INTO screen_type_prices (type_slug, size_tier, sell_price, cost_price, min_sell_price) VALUES (?, 0, ?, ?, ?)');
+            $del = $pdo->prepare('DELETE FROM screen_type_prices WHERE type_slug = ?');
+            foreach ($prices as $row) {
+                $slug = (string)$row['type_slug'];
+                if (isset($seen[$slug])) {
+                    continue;
+                }
+                $seen[$slug] = true;
+                $del->execute([$slug]);
+                $ins->execute([$slug, (float)$row['sell_price'], (float)$row['cost_price'], (float)$row['min_sell_price']]);
+            }
+            $pdo->exec("DELETE FROM screen_type_prices WHERE type_slug NOT IN ('hd', 'banda', 'privacy')");
+            // old size rows whose type is gone, or that carry a barcode from the retired catalogs
+            $find = $pdo->prepare('
+                SELECT id FROM screen_protectors
+                WHERE is_active = 1 AND barcode NOT LIKE \'ZS-%\' AND type_slug = ?
+                  AND width_mm BETWEEN ? AND ? AND height_mm BETWEEN ? AND ?
+                ORDER BY ABS(width_mm - ?) + ABS(height_mm - ?) ASC LIMIT 1
+            ');
+            $add = $pdo->prepare('UPDATE screen_protectors SET quantity = quantity + ?, updated_at = ? WHERE id = ?');
+            $off = $pdo->prepare('UPDATE screen_protectors SET is_active = 0, updated_at = ? WHERE id = ?');
+            $now = date('Y-m-d H:i:s');
+            $pdo->exec("UPDATE screen_protectors SET is_active = 0 WHERE is_active = 1 AND type_slug NOT IN ('hd', 'banda', 'privacy') AND barcode NOT LIKE 'ZS-%'");
+            $old = $pdo->query("SELECT id, type_slug, width_mm, height_mm, quantity FROM screen_protectors WHERE is_active = 1 AND barcode NOT LIKE 'ZS-%'")->fetchAll();
+            foreach ($old as $row) {
+                $type = (string)$row['type_slug'];
+                $qty = (int)$row['quantity'];
+                $w = (float)$row['width_mm'];
+                $h = (float)$row['height_mm'];
+                if ($qty > 0 && in_array($type, $keep, true) && $w > 0 && $h > 0) {
+                    $find->execute([$type, $w - 1.2, $w + 1.2, $h - 1.8, $h + 1.8, $w, $h]);
+                    $target = (int)$find->fetchColumn();
+                    if ($target > 0) {
+                        $add->execute([$qty, $now, $target]);
+                    }
+                }
+                $off->execute([$now, (int)$row['id']]);
+            }
+        } catch (Throwable $e) {
+            // nothing to retire
         }
     }
 
@@ -491,11 +548,11 @@ class Database
         // Cheap marker: skip the whole replay once the shipped catalog is in place and intact.
         try {
             $marker = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'screens_catalog_seeded'")->fetchColumn();
-            if ((string)$marker === '2') {
+            if ((string)$marker === '3') {
                 $models = (int)$pdo->query('SELECT COUNT(*) FROM `device_models`')->fetchColumn();
                 $screens = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors`')->fetchColumn();
                 $types = (int)$pdo->query('SELECT COUNT(*) FROM `screen_types`')->fetchColumn();
-                if ($models >= 1000 && $screens > 0 && $types > 0) {
+                if ($models >= 2000 && $screens > 0 && $types === 3) {
                     return;
                 }
             }
@@ -510,14 +567,15 @@ class Database
             $haveTypes = (int)$pdo->query('SELECT COUNT(*) FROM `screen_types`')->fetchColumn();
             $haveLinks = (int)$pdo->query('SELECT COUNT(*) FROM `screen_compatibility`')->fetchColumn();
             $pricesReady = (int)$pdo->query('SELECT COUNT(*) FROM `screen_protectors` WHERE `sell_price` > 0')->fetchColumn() > 0;
-            if ($haveModels >= 1000 && $haveScreens > 0 && $haveTypes > 0 && $haveLinks > 0 && $pricesReady) {
+            if ($haveModels >= 2000 && $haveScreens > 0 && $haveTypes === 3 && $haveLinks > 0 && $pricesReady) {
                 $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
-                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '2')");
+                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '3')");
                 return;
             }
         } catch (Throwable $e) {
             // fall through to the replay
         }
+        self::retireLegacyCatalog($pdo);
         $raw = (string)file_get_contents($sqlFile);
         // the shipped dump is minified into one line; statements are split on ';' only
         $statements = preg_split('/;\s*/', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
@@ -569,9 +627,9 @@ class Database
         }
 
         try {
-            if ($inserted || $modelCount >= 1000) {
+            if ($inserted || $modelCount >= 2000) {
                 $pdo->exec("DELETE FROM settings WHERE setting_key = 'screens_catalog_seeded'");
-                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '2')");
+                $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('screens_catalog_seeded', '3')");
             }
         } catch (Throwable $e) {
             // marker is an optimisation only
@@ -798,6 +856,7 @@ class Database
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 screen_id INTEGER NOT NULL,
                 model_id INTEGER NOT NULL,
+                link_type TEXT NOT NULL DEFAULT 'manual',
                 UNIQUE (screen_id, model_id)
             );
             CREATE TABLE IF NOT EXISTS screen_movements (

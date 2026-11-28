@@ -734,7 +734,7 @@ $jsConfig = [
               <strong><i class="fa-solid fa-layer-group"></i> <?= $en ? 'Protector types & prices' : 'أنواع الاسكرينات وأسعارها' ?></strong>
               <button type="button" data-close-shell="screenTypesShell"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="scr-hint"><?= $en ? 'Every protector of the same type takes the same price for its size tier: small, medium, large.' : 'كل اسكرينة من نفس النوع ليها نفس السعر حسب فئة المقاس: صغير، متوسط، كبير.' ?></p>
+            <p class="scr-hint"><?= $en ? 'Three types only — HD, Banda and Privacy. Every protector of the same type sells at the same price, whatever its size.' : '٣ أنواع بس: HD وباندا وبرايفسي. كل اسكرينة من نفس النوع بنفس السعر مهما كان مقاسها.' ?></p>
             <div class="scr-type-list" id="scrTypeList"></div>
             <form id="screenTypeForm" class="scr-type-form">
               <input type="hidden" name="slug" id="scrTypeSlug" value="">
@@ -749,18 +749,15 @@ $jsConfig = [
                 </div>
               </div>
               <div class="scr-type-prices">
-                <?php foreach ([[1, $en ? 'Small' : 'صغير'], [2, $en ? 'Medium' : 'متوسط'], [3, $en ? 'Large' : 'كبير']] as [$tier, $tierLabel]): ?>
                 <div class="scr-price-box">
-                  <strong><?= e($tierLabel) ?></strong>
-                  <label><?= $en ? 'Sell' : 'البيع' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_sell" id="scrPrice<?= $tier ?>Sell"></label>
-                  <label><?= $en ? 'Cost' : 'التكلفة' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_cost" id="scrPrice<?= $tier ?>Cost"></label>
-                  <label><?= $en ? 'Min' : 'أقل سعر' ?><input type="number" step="0.01" min="0" class="form-control" name="price_<?= $tier ?>_min" id="scrPrice<?= $tier ?>Min"></label>
+                  <strong><?= $en ? 'One price for every size' : 'سعر واحد لكل المقاسات' ?></strong>
+                  <label><?= $en ? 'Sell' : 'البيع' ?><input type="number" step="0.01" min="0" class="form-control" name="sell_price" id="scrTypeSell"></label>
+                  <label><?= $en ? 'Cost' : 'التكلفة' ?><input type="number" step="0.01" min="0" class="form-control" name="cost_price" id="scrTypeCost"></label>
+                  <label><?= $en ? 'Min' : 'أقل سعر' ?><input type="number" step="0.01" min="0" class="form-control" name="min_sell_price" id="scrTypeMin"></label>
                 </div>
-                <?php endforeach; ?>
               </div>
               <div class="scr-form-actions">
                 <button type="submit" class="btn btn-teal"><i class="fa-solid fa-floppy-disk"></i> <?= $en ? 'Save type' : 'حفظ النوع' ?></button>
-                <button type="button" class="btn btn-ghost" id="btnNewType"><i class="fa-solid fa-plus"></i> <?= $en ? 'New type' : 'نوع جديد' ?></button>
               </div>
             </form>
           </div>
@@ -832,7 +829,7 @@ $jsConfig = [
                 </div>
               </div>
 
-              <p class="scr-hint"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Every device with the same glass size is linked automatically.' : 'كل جهاز بنفس مقاس الزجاج بيتربط تلقائيًا.' ?></p>
+              <p class="scr-hint"><i class="fa-solid fa-wand-magic-sparkles"></i> <?= $en ? 'Pick the types you stock for this size — one price per type, no size tiers.' : 'اختار الأنواع اللي عندك للمقاس ده — سعر واحد لكل نوع، من غير فئات مقاسات.' ?></p>
               <div class="scr-chips" id="scrModelChips"></div>
 
               <div class="scr-form-actions">
@@ -858,10 +855,17 @@ $jsConfig = [
                 <div class="form-group"><label><?= $en ? 'Brand' : 'الماركة' ?></label><input type="text" id="scrNewBrand" class="form-control" placeholder="Samsung"></div>
                 <div class="form-group"><label><?= $en ? 'Model' : 'الموديل' ?></label><input type="text" id="scrNewModel" class="form-control" placeholder="Galaxy A54"></div>
               </div>
-              <div class="scr-two">
-                <div class="form-group"><label><?= $en ? 'Screen inch' : 'البوصة' ?></label><input type="number" step="0.01" min="0" id="scrNewInch" class="form-control" placeholder="6.4"></div>
-                <div class="form-group"><label><?= $en ? 'Glass size (optional)' : 'مقاس الزجاج (اختياري)' ?></label><div style="display:flex;gap:8px;"><input type="number" step="0.1" min="0" id="scrNewWidth" class="form-control" placeholder="68"><input type="number" step="0.1" min="0" id="scrNewHeight" class="form-control" placeholder="147"></div></div>
+              <div class="form-group">
+                <label><?= $en ? 'Works on the same protector as…' : 'بيشتغل على نفس اسكرينة…' ?></label>
+                <input type="text" id="scrNewSameSearch" class="form-control" autocomplete="off" placeholder="<?= $en ? 'Search a device (e.g. C17 or Galaxy A21s)' : 'ابحث عن جهاز (مثال C17 أو Galaxy A21s)' ?>">
+                <input type="hidden" id="scrNewSameId" value="">
+                <div class="scr-model-results" id="scrNewSameResults"></div>
+                <p class="scr-hint" id="scrNewSamePicked"><?= $en ? 'Pick a device and the new phone inherits its protector list — no measuring needed.' : 'اختار جهاز والجهاز الجديد هياخد نفس قايمة الاسكرينات بتاعته — من غير أي قياس.' ?></p>
               </div>
+              <label class="scr-type-check" style="margin-bottom:10px;">
+                <input type="checkbox" id="scrNewStandalone">
+                <span><?= $en ? 'Nothing matches — give it its own separate protector' : 'مفيش جهاز شبهه — يتعمل له اسكرينة لوحده' ?></span>
+              </label>
               <button type="button" class="btn btn-gold btn-sm" id="btnCreateModel"><i class="fa-solid fa-plus"></i> <?= $en ? 'Add device' : 'أضف الجهاز' ?></button>
             </div>
           </div>

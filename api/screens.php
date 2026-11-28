@@ -119,7 +119,7 @@ function screenQtyExpr(string $alias = ''): string
 function typeOrderExpr(string $alias = ''): string
 {
     $p = $alias !== '' ? $alias . '.' : '';
-    return "CASE {$p}type_slug WHEN 'clear' THEN 1 WHEN '9h' THEN 2 WHEN 'full_glue' THEN 3 WHEN 'privacy' THEN 4 WHEN 'matte' THEN 5 WHEN 'ceramic' THEN 6 WHEN 'nano' THEN 7 WHEN 'uv' THEN 8 ELSE 9 END";
+    return "CASE {$p}type_slug WHEN 'hd' THEN 1 WHEN 'banda' THEN 2 WHEN 'privacy' THEN 3 WHEN '9h' THEN 4 WHEN 'clear' THEN 5 ELSE 9 END";
 }
 
 function screenTypes(PDO $pdo): array
@@ -139,21 +139,35 @@ function screenTypes(PDO $pdo): array
 
 function screenTypePrices(PDO $pdo): array
 {
-    static $cache = null;
-    if ($cache !== null) {
-        return $cache;
+    static $rows = null;
+    if ($rows !== null) {
+        return $rows;
     }
     try {
-        $rows = $pdo->query('SELECT * FROM screen_type_prices')->fetchAll();
+        $rows = $pdo->query('SELECT * FROM screen_type_prices ORDER BY type_slug ASC, size_tier ASC')->fetchAll();
     } catch (Throwable $e) {
         $rows = [];
     }
-    $map = [];
-    foreach ($rows as $r) {
-        $map[$r['type_slug'] . '|' . (int)$r['size_tier']] = $r;
+    $rows = $rows ?: [];
+    return $rows;
+}
+
+/** one price per type — size tiers belong to the old catalog */
+function typePrice(PDO $pdo, string $slug): ?array
+{
+    $fallback = null;
+    foreach (screenTypePrices($pdo) as $row) {
+        if ($row['type_slug'] !== $slug) {
+            continue;
+        }
+        if ((int)$row['size_tier'] === 0) {
+            return $row;
+        }
+        if ($fallback === null) {
+            $fallback = $row;
+        }
     }
-    $cache = $map;
-    return $cache;
+    return $fallback;
 }
 
 function typeLabel(array $type, bool $en): string
@@ -201,7 +215,13 @@ function screenRow(array $row, bool $en): array
     $row['width_mm'] = round((float)($row['width_mm'] ?? 0), 2);
     $row['height_mm'] = round((float)($row['height_mm'] ?? 0), 2);
     $row['diag_inch'] = round((float)($row['diag_inch'] ?? 0), 2);
-    $row['size_tier'] = (int)($row['size_tier'] ?? 1);
+    $row['size_tier'] = (int)($row['size_tier'] ?? 0);
+    $price = typePrice($GLOBALS['ASLY_PDO'], (string)$row['type_slug']);
+    if ($price) {
+        $row['sell_price'] = (float)$price['sell_price'];
+        $row['purchase_price'] = empty($GLOBALS['ASLY_IS_ADMIN']) ? 0.0 : (float)$price['cost_price'];
+        $row['min_sell_price'] = (float)$price['min_sell_price'];
+    }
     $row = applyInventoryStock($GLOBALS['ASLY_PDO'], $row);
     // the card headline: type + physical size
     $row['display_name'] = trim($row['type_label'] . ' · ' . $row['size_label']);
@@ -228,7 +248,7 @@ function modelsForScreens(PDO $pdo, array $ids, int $limitPer = 400): array
     }
     $safe = implode(',', array_map('intval', $ids));
     $rows = $pdo->query("
-        SELECT c.screen_id, m.id, m.brand, m.model_name, m.model_name_ar, m.screen_inch
+        SELECT c.screen_id, c.link_type, m.id, m.brand, m.model_name, m.model_name_ar, m.screen_inch
         FROM screen_compatibility c
         INNER JOIN device_models m ON m.id = c.model_id
         WHERE c.screen_id IN ({$safe})
@@ -246,6 +266,7 @@ function modelsForScreens(PDO $pdo, array $ids, int $limitPer = 400): array
             'brand' => $r['brand'],
             'model_name' => $r['model_name'],
             'label' => $label,
+            'source' => (string)($r['link_type'] ?? 'manual'),
         ];
         $map[$sid]['brands'][$r['brand']] = true;
     }
@@ -579,9 +600,9 @@ if ($method === 'GET') {
     }
 
     if ($action === 'types') {
-        $prices = screenTypePrices($pdo);
         $out = [];
         foreach (screenTypes($pdo) as $t) {
+            $p = typePrice($pdo, (string)$t['slug']);
             $row = [
                 'slug' => $t['slug'],
                 'name_ar' => $t['name_ar'],
@@ -589,22 +610,12 @@ if ($method === 'GET') {
                 'label' => typeLabel($t, $en),
                 'sort_order' => (int)$t['sort_order'],
                 'is_active' => (int)$t['is_active'],
-                'prices' => [],
+                'sell_price' => $p ? (float)$p['sell_price'] : 0.0,
+                'cost_price' => $p && $isAdmin ? (float)$p['cost_price'] : 0.0,
+                'min_sell_price' => $p ? (float)$p['min_sell_price'] : 0.0,
                 'screens' => 0,
                 'units' => 0,
             ];
-            foreach ([1, 2, 3] as $tier) {
-                $p = $prices[$t['slug'] . '|' . $tier] ?? null;
-                if (!$p) {
-                    continue;
-                }
-                $row['prices'][] = [
-                    'size_tier' => $tier,
-                    'sell_price' => (float)$p['sell_price'],
-                    'cost_price' => $isAdmin ? (float)$p['cost_price'] : 0.0,
-                    'min_sell_price' => (float)$p['min_sell_price'],
-                ];
-            }
             $stmt = $pdo->prepare('SELECT COUNT(*) AS c, COALESCE(SUM(' . screenQtyExpr() . '), 0) AS u FROM screen_protectors WHERE type_slug = ? AND is_active = 1');
             $stmt->execute([$t['slug']]);
             $agg = $stmt->fetch() ?: ['c' => 0, 'u' => 0];
@@ -691,32 +702,26 @@ if ($action === 'save_type') {
         $pdo->prepare('INSERT INTO screen_types (slug, name_ar, name_en, sort_order, notes) VALUES (?, ?, ?, ?, ?)')
             ->execute([$slug, $nameAr ?: $nameEn, $nameEn ?: $nameAr, $sort, $input['notes'] ?? null]);
     }
-    $prices = $input['prices'] ?? [];
-    if (is_array($prices)) {
-        foreach ($prices as $tier => $price) {
-            $tier = (int)$tier;
-            if ($tier < 1 || $tier > 3 || !is_array($price)) {
-                continue;
-            }
-            $sell = round((float)($price['sell_price'] ?? 0), 2);
-            $cost = round((float)($price['cost_price'] ?? 0), 2);
-            $minSell = round((float)($price['min_sell_price'] ?? 0), 2);
-            if ($minSell <= 0) {
-                $minSell = round($sell * 0.85, 2);
-            }
-            $pdo->prepare('DELETE FROM screen_type_prices WHERE type_slug = ? AND size_tier = ?')->execute([$slug, $tier]);
-            $pdo->prepare('INSERT INTO screen_type_prices (type_slug, size_tier, sell_price, cost_price, min_sell_price) VALUES (?, ?, ?, ?, ?)')
-                ->execute([$slug, $tier, $sell, $cost, $minSell]);
+    $sell = round((float)($input['sell_price'] ?? -1), 2);
+    $cost = round((float)($input['cost_price'] ?? 0), 2);
+    $minSell = round((float)($input['min_sell_price'] ?? 0), 2);
+    if ($sell >= 0) {
+        if ($minSell <= 0) {
+            $minSell = round($sell * 0.9, 2);
         }
+        $pdo->prepare('DELETE FROM screen_type_prices WHERE type_slug = ?')->execute([$slug]);
+        $pdo->prepare('INSERT INTO screen_type_prices (type_slug, size_tier, sell_price, cost_price, min_sell_price) VALUES (?, 0, ?, ?, ?)')
+            ->execute([$slug, $sell, $cost, $minSell]);
     }
     // reprice every screen of this type
-    $pdo->prepare('UPDATE screen_protectors SET sell_price = COALESCE((SELECT t.sell_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug AND t.size_tier = screen_protectors.size_tier), sell_price), purchase_price = COALESCE((SELECT t.cost_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug AND t.size_tier = screen_protectors.size_tier), purchase_price), min_sell_price = COALESCE((SELECT t.min_sell_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug AND t.size_tier = screen_protectors.size_tier), min_sell_price) WHERE type_slug = ?')
+    $pdo->prepare('UPDATE screen_protectors SET sell_price = COALESCE((SELECT t.sell_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug ORDER BY t.size_tier ASC LIMIT 1), sell_price), purchase_price = COALESCE((SELECT t.cost_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug ORDER BY t.size_tier ASC LIMIT 1), purchase_price), min_sell_price = COALESCE((SELECT t.min_sell_price FROM screen_type_prices t WHERE t.type_slug = screen_protectors.type_slug ORDER BY t.size_tier ASC LIMIT 1), min_sell_price) WHERE type_slug = ?')
         ->execute([$slug]);
     $ids = $pdo->prepare('SELECT id FROM screen_protectors WHERE type_slug = ?');
     $ids->execute([$slug]);
     foreach ($ids->fetchAll() as $row) {
         syncScreenToProduct($pdo, (int)$row['id'], $en);
     }
+    // compatibility never comes from the screen size: the ZEUS sheets and the admin's own links own it
     jsonResponse(['ok' => true, 'message' => $en ? 'Type saved and all prices updated.' : 'تم حفظ النوع وتحديث أسعار كل الاسكرينات.']);
 }
 
@@ -757,9 +762,8 @@ if ($action === 'save') {
         jsonResponse(['ok' => false, 'error' => $en ? 'Enter the glass size in mm.' : 'اكتب مقاس الاسكرينة بالمليمتر.'], 400);
     }
     $diag = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
-    $tier = $diag >= 6.6 ? 3 : ($diag >= 6.0 ? 2 : 1);
-    $prices = screenTypePrices($pdo);
-    $price = $prices[$typeSlug . '|' . $tier] ?? null;
+    $tier = 0;
+    $price = typePrice($pdo, $typeSlug);
     $sell = (float)($price['sell_price'] ?? 0);
     $cost = (float)($price['cost_price'] ?? 0);
     $minSell = (float)($price['min_sell_price'] ?? 0);
@@ -816,11 +820,8 @@ if ($action === 'save') {
         $id = (int)$pdo->lastInsertId();
     }
 
-    // device links: every device of the same glass size joins automatically
-    $sync = $input['sync_devices'] ?? '1';
-    if ((string)$sync === '1') {
-        attachDevicesBySize($pdo, $id, $width, $height);
-    }
+    // a protector of the same size shares its device list (one sheet = one size, three types)
+    copySiblingLinks($pdo, $id);
     $modelIds = $input['model_ids'] ?? [];
     if (is_string($modelIds)) {
         $modelIds = array_filter(array_map('intval', explode(',', $modelIds)));
@@ -892,48 +893,95 @@ if ($action === 'save_model') {
     $brand = trim((string)($input['brand'] ?? ''));
     $modelName = trim((string)($input['model_name'] ?? ''));
     $inch = (float)($input['screen_inch'] ?? 0);
-    $width = round((float)($input['width_mm'] ?? 0), 2);
-    $height = round((float)($input['height_mm'] ?? 0), 2);
     $kind = trim((string)($input['device_kind'] ?? 'phone'));
+    $linkTo = (int)($input['link_to'] ?? 0);
+    $linkScreen = (int)($input['link_screen'] ?? 0);
     if ($brand === '' || $modelName === '') {
         jsonResponse(['ok' => false, 'error' => $en ? 'Brand and model are required.' : 'الماركة والموديل مطلوبين.'], 400);
     }
-    if ($width <= 0 || $height <= 0) {
-        if ($inch <= 0) {
-            jsonResponse(['ok' => false, 'error' => $en ? 'Enter the screen size.' : 'اكتب مقاس الشاشة.'], 400);
+    $base = null;
+    if ($linkTo > 0) {
+        $stmt = $pdo->prepare('SELECT id, brand, model_name FROM device_models WHERE id = ? LIMIT 1');
+        $stmt->execute([$linkTo]);
+        $base = $stmt->fetch();
+        if (!$base) {
+            jsonResponse(['ok' => false, 'error' => $en ? 'The selected device was not found.' : 'الجهاز اللي اخترته مش موجود.'], 404);
         }
-        $ratio = $inch >= 6.4 ? 2.16 : ($inch >= 5.5 ? 2.0 : 1.78);
-        $width = round($inch / sqrt(1 + $ratio ** 2) * 25.4, 2);
-        $height = round($width * $ratio, 2);
-    } else {
-        $inch = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
-    }
-    if ($inch <= 0) {
-        $inch = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
+    } elseif ($linkScreen > 0) {
+        $stmt = $pdo->prepare('SELECT id FROM screen_protectors WHERE id = ? LIMIT 1');
+        $stmt->execute([$linkScreen]);
+        if (!$stmt->fetchColumn()) {
+            jsonResponse(['ok' => false, 'error' => $en ? 'The selected protector was not found.' : 'الاسكرينة اللي اخترتها مش موجودة.'], 404);
+        }
     }
     $dup = $pdo->prepare('SELECT id FROM device_models WHERE brand = ? AND model_name = ? LIMIT 1');
     $dup->execute([$brand, $modelName]);
     $existingId = (int)$dup->fetchColumn();
+    $width = 0.0;
+    $height = 0.0;
     if ($existingId > 0) {
-        $pdo->prepare('UPDATE device_models SET screen_inch = ?, width_mm = ?, height_mm = ?, device_kind = ? WHERE id = ?')
-            ->execute([$inch, $width, $height, $kind ?: 'phone', $existingId]);
+        $cur = $pdo->prepare('SELECT screen_inch, width_mm, height_mm FROM device_models WHERE id = ?');
+        $cur->execute([$existingId]);
+        $row = $cur->fetch() ?: [];
+        $width = (float)($row['width_mm'] ?? 0);
+        $height = (float)($row['height_mm'] ?? 0);
+        if ($inch <= 0) {
+            $inch = (float)($row['screen_inch'] ?? 0);
+        }
+    }
+    $pdo->beginTransaction();
+    if ($existingId > 0) {
+        $pdo->prepare('UPDATE device_models SET screen_inch = ?, device_kind = ? WHERE id = ?')
+            ->execute([$inch, $kind ?: 'phone', $existingId]);
         $id = $existingId;
     } else {
-        $pdo->prepare('INSERT INTO device_models (brand, model_name, screen_inch, width_mm, height_mm, device_kind, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?)')
-            ->execute([$brand, $modelName, $inch, $width, $height, $kind ?: 'phone', date('Y-m-d H:i:s')]);
+        $pdo->prepare('INSERT INTO device_models (brand, model_name, screen_inch, width_mm, height_mm, device_kind, is_active, created_at) VALUES (?, ?, ?, 0, 0, ?, 1, ?)')
+            ->execute([$brand, $modelName, $inch, $kind ?: 'phone', date('Y-m-d H:i:s')]);
         $id = (int)$pdo->lastInsertId();
     }
-    // link the device to every protector of its size
-    $linked = attachDeviceToScreens($pdo, $id, $width, $height);
+    // compatibility comes from an existing device (same glass) or a picked protector — never from the screen size
+    $linked = 0;
+    if ($base) {
+        $rows = $pdo->prepare('SELECT screen_id FROM screen_compatibility WHERE model_id = ?');
+        $rows->execute([(int)$base['id']]);
+        $insert = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite'
+            ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)'
+            : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)';
+        $ins = $pdo->prepare($insert);
+        foreach ($rows->fetchAll(PDO::FETCH_COLUMN) as $sid) {
+            $ins->execute([(int)$sid, $id, 'same_as']);
+        }
+        $count = $pdo->prepare('SELECT COUNT(*) FROM screen_compatibility WHERE model_id = ?');
+        $count->execute([$id]);
+        $linked = (int)$count->fetchColumn();
+    } elseif ($linkScreen > 0) {
+        $insert = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite'
+            ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)'
+            : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id, link_type) VALUES (?, ?, ?)';
+        $pdo->prepare($insert)->execute([$linkScreen, $id, 'manual']);
+        $linked = 1;
+    }
+    $pdo->commit();
+    $msg = $en ? 'Device saved.' : 'تم حفظ الجهاز.';
+    if ($linked > 0 && $base) {
+        $msg = $en
+            ? "Device saved and linked to {$linked} protector(s) like {$base['brand']} {$base['model_name']}."
+            : "تم حفظ الجهاز وربطه بـ{$linked} اسكرينة زي {$base['brand']} {$base['model_name']}.";
+    } elseif ($linked > 0) {
+        $msg = $en ? 'Device saved and linked to its protector.' : 'تم حفظ الجهاز وربطه بالاسكرينة.';
+    } else {
+        $msg = $en
+            ? 'Device saved on its own — link it to a protector from the protector screen.'
+            : 'تم حفظ الجهاز لوحده — اربطه باسكرينة من شاشة الاسكرينات.';
+    }
     jsonResponse([
         'ok' => true,
         'id' => $id,
         'label' => trim($brand . ' ' . $modelName),
         'screen_inch' => $inch,
         'linked_screens' => $linked,
-        'message' => $en
-            ? "Device saved and linked to {$linked} protector(s)."
-            : "تم حفظ الجهاز وربطه بـ{$linked} اسكرينة.",
+        'standalone' => $linked === 0,
+        'message' => $msg,
     ]);
 }
 
@@ -959,10 +1007,9 @@ if ($action === 'save_size') {
         $height = round((float)$snapped['height_mm'], 2);
     }
     $diag = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
-    $tier = $diag >= 6.6 ? 3 : ($diag >= 6.0 ? 2 : 1);
+    $tier = 0;
     $created = 0;
     $now = date('Y-m-d H:i:s');
-    $prices = screenTypePrices($pdo);
     foreach ($typeSlugs as $slug) {
         $slug = trim((string)$slug);
         if ($slug === '') {
@@ -973,7 +1020,7 @@ if ($action === 'save_size') {
         if ($dup->fetchColumn()) {
             continue;
         }
-        $price = $prices[$slug . '|' . $tier] ?? null;
+        $price = typePrice($pdo, $slug);
         $sell = (float)($price['sell_price'] ?? 0);
         $cost = (float)($price['cost_price'] ?? 0);
         $minSell = (float)($price['min_sell_price'] ?? 0);
@@ -985,7 +1032,7 @@ if ($action === 'save_size') {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 3, ?, ?)
         ')->execute([$barcode, 'qr', $slug, $width, $height, $diag, $tier, $cost, $sell, $minSell, $now, $now]);
         $sid = (int)$pdo->lastInsertId();
-        attachDevicesBySize($pdo, $sid, $width, $height);
+        copySiblingLinks($pdo, $sid);
         syncScreenToProduct($pdo, $sid, $en);
         $created++;
     }
@@ -1007,8 +1054,7 @@ if ($action === 'add_existing_size') {
         jsonResponse(['ok' => false, 'error' => $en ? 'Pick a size and at least one type.' : 'اختار مقاس ونوع واحد على الأقل.'], 400);
     }
     $diag = round(sqrt($width ** 2 + $height ** 2) / 25.4, 2);
-    $tier = $diag >= 6.6 ? 3 : ($diag >= 6.0 ? 2 : 1);
-    $prices = screenTypePrices($pdo);
+    $tier = 0;
     $now = date('Y-m-d H:i:s');
     $created = 0;
     $ids = [];
@@ -1021,7 +1067,7 @@ if ($action === 'add_existing_size') {
             $ids[] = $existing;
             continue;
         }
-        $price = $prices[$slug . '|' . $tier] ?? null;
+        $price = typePrice($pdo, $slug);
         $barcode = generateUniqueScreenCode($pdo);
         $pdo->prepare('
             INSERT INTO screen_protectors
@@ -1037,7 +1083,7 @@ if ($action === 'add_existing_size') {
         $created++;
     }
     foreach ($ids as $sid) {
-        attachDevicesBySize($pdo, $sid, $width, $height);
+        copySiblingLinks($pdo, $sid);
         syncScreenToProduct($pdo, $sid, $en);
     }
     jsonResponse([
@@ -1100,34 +1146,25 @@ jsonResponse(['ok' => false, 'error' => 'Invalid request.'], 400);
 
 /* ------------------------------------------------------------ shared helpers */
 
-function attachDevicesBySize(PDO $pdo, int $screenId, float $width, float $height): int
+/** a new protector takes the device list of the protectors of the very same size (one ZEUS sheet = one size) */
+function copySiblingLinks(PDO $pdo, int $screenId): int
 {
-    $stmt = $pdo->prepare('SELECT id FROM device_models WHERE is_active = 1 AND width_mm BETWEEN ? AND ? AND height_mm BETWEEN ? AND ?');
-    $stmt->execute([$width - 0.6, $width + 0.6, $height - 0.9, $height + 0.9]);
-    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     $linkSql = DB_DRIVER === 'sqlite'
-        ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)'
-        : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)';
-    $link = $pdo->prepare($linkSql);
-    foreach ($ids as $mid) {
-        $link->execute([$screenId, $mid]);
-    }
-    return count($ids);
-}
-
-function attachDeviceToScreens(PDO $pdo, int $modelId, float $width, float $height): int
-{
-    $stmt = $pdo->prepare('SELECT id FROM screen_protectors WHERE is_active = 1 AND width_mm BETWEEN ? AND ? AND height_mm BETWEEN ? AND ?');
-    $stmt->execute([$width - 0.6, $width + 0.6, $height - 0.9, $height + 0.9]);
-    $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-    $linkSql = DB_DRIVER === 'sqlite'
-        ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)'
-        : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id) VALUES (?, ?)';
-    $link = $pdo->prepare($linkSql);
-    foreach ($ids as $sid) {
-        $link->execute([$sid, $modelId]);
-    }
-    return count($ids);
+        ? 'INSERT OR IGNORE INTO screen_compatibility (screen_id, model_id, link_type)'
+        : 'INSERT IGNORE INTO screen_compatibility (screen_id, model_id, link_type)';
+    $stmt = $pdo->prepare($linkSql . '
+        SELECT DISTINCT ?, c.model_id, c.link_type FROM screen_protectors me
+        INNER JOIN screen_protectors sib
+            ON ROUND(sib.width_mm, 1) = ROUND(me.width_mm, 1)
+           AND ROUND(sib.height_mm, 1) = ROUND(me.height_mm, 1)
+           AND sib.id <> me.id
+        INNER JOIN screen_compatibility c ON c.screen_id = sib.id
+        WHERE me.id = ?
+    ');
+    $stmt->execute([$screenId, $screenId]);
+    $count = $pdo->prepare('SELECT COUNT(*) FROM screen_compatibility WHERE screen_id = ?');
+    $count->execute([$screenId]);
+    return (int)$count->fetchColumn();
 }
 
 function applyInventoryStock(PDO $pdo, array $row): array

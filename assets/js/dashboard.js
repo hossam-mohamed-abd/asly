@@ -1907,9 +1907,10 @@
   }
 
   function compatSummary(screen) {
-    const list = (screen.models || []).map(m => m.label);
+    const models = screen.models || [];
+    // the searched device sits first; the rest keeps the supplier sheet order
+    const list = models.map(m => (m.source === "same_as" ? `${m.label} ⤴` : m.label));
     const total = Number(screen.model_count || list.length);
-    // when a device was searched it sits first in the list
     const shown = list.slice(0, 5);
     return { list: shown, total, extra: Math.max(0, total - shown.length) };
   }
@@ -2170,7 +2171,7 @@
     if (info) {
       const opt = document.getElementById("scrPickSize")?.selectedOptions?.[0];
       const models = opt ? Number(opt.getAttribute("data-models") || 0) : 0;
-      info.value = models ? `${models} ${tr("جهاز بنفس المقاس", "devices at this size")}` : "—";
+      info.value = models ? `${models} ${tr("جهاز على نفس المقاس", "devices on this size")}` : "—";
     }
   }
 
@@ -2199,10 +2200,9 @@
     const box = document.getElementById("scrTypeList");
     if (!box) return;
     box.innerHTML = SCR.types.map(t => {
-      const prices = (t.prices || []).map(p => {
-        const tier = p.size_tier === 1 ? tr("صغير", "S") : p.size_tier === 2 ? tr("متوسط", "M") : tr("كبير", "L");
-        return `<span class="scr-type-price"><b>${tier}</b> ${fmtMoney(p.sell_price)}</span>`;
-      }).join("");
+      const prices = Number(t.sell_price) > 0
+        ? `<span class="scr-type-price"><b>${tr("سعر واحد", "One price")}</b> ${fmtMoney(t.sell_price)}</span>`
+        : `<span class="scr-type-price is-empty">${tr("مفيش سعر", "No price")}</span>`;
       return `
         <div class="scr-type-row" data-type-row="${esc(t.slug)}">
           <div class="scr-type-info">
@@ -2211,30 +2211,12 @@
             <div class="scr-type-prices">${prices || `<span class="scr-type-price is-empty">${tr("مفيش أسعار", "No prices")}</span>`}</div>
           </div>
           <div class="scr-type-actions">
-            <button type="button" class="btn btn-ghost btn-sm" data-type-edit="${esc(t.slug)}"><i class="fa-solid fa-pen"></i></button>
-            <button type="button" class="btn btn-danger btn-sm" data-type-del="${esc(t.slug)}"><i class="fa-solid fa-trash"></i></button>
+            <button type="button" class="btn btn-ghost btn-sm" data-type-edit="${esc(t.slug)}"><i class="fa-solid fa-pen"></i> ${tr("تعديل السعر", "Edit price")}</button>
           </div>
         </div>`;
     }).join("");
     box.querySelectorAll("[data-type-edit]").forEach(btn => {
       btn.addEventListener("click", () => fillTypeForm(btn.getAttribute("data-type-edit")));
-    });
-    box.querySelectorAll("[data-type-del]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const slug = btn.getAttribute("data-type-del");
-        if (!window.confirm(tr(`حذف النوع ${slug}؟`, `Delete type ${slug}?`))) return;
-        try {
-          const fd = new FormData();
-          fd.set("action", "delete_type");
-          fd.set("slug", slug);
-          const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
-          showToast(res.message || tr("تم الحذف", "Deleted"));
-          await loadScreensMeta();
-          loadScreens("");
-        } catch (err) {
-          showToast(err.message, true);
-        }
-      });
     });
   }
 
@@ -2243,12 +2225,12 @@
     document.getElementById("scrTypeSlug").value = slug || "";
     document.getElementById("scrTypeAr").value = t ? t.name_ar : "";
     document.getElementById("scrTypeEn").value = t ? t.name_en : "";
-    [1, 2, 3].forEach(tier => {
-      const p = t ? (t.prices || []).find(x => Number(x.size_tier) === tier) : null;
-      document.getElementById(`scrPrice${tier}Sell`).value = p ? p.sell_price : "";
-      document.getElementById(`scrPrice${tier}Cost`).value = p && p.cost_price ? p.cost_price : "";
-      document.getElementById(`scrPrice${tier}Min`).value = p && p.min_sell_price ? p.min_sell_price : "";
-    });
+    const sell = document.getElementById("scrTypeSell");
+    const cost = document.getElementById("scrTypeCost");
+    const min = document.getElementById("scrTypeMin");
+    if (sell) sell.value = t && Number(t.sell_price) > 0 ? t.sell_price : "";
+    if (cost) cost.value = t && Number(t.cost_price) > 0 ? t.cost_price : "";
+    if (min) min.value = t && Number(t.min_sell_price) > 0 ? t.min_sell_price : "";
     const shell = document.getElementById("screenTypesShell");
     if (shell) {
       shell.style.display = "block";
@@ -2276,13 +2258,8 @@
       return;
     }
     const diag = Math.sqrt(w * w + h * h) / 25.4;
-    const tier = diag >= 6.6 ? 3 : (diag >= 6.0 ? 2 : 1);
-    const tierName = tier === 1 ? tr("صغير", "small") : tier === 2 ? tr("متوسط", "medium") : tr("كبير", "large");
-    const vals = SCR.types.map(t => {
-      const p = (t.prices || []).find(x => Number(x.size_tier) === tier);
-      return `${t.label}: ${p ? fmtMoney(p.sell_price) : "—"}`;
-    }).join(" • ");
-    hint.textContent = `${tr("المقاس", "Size")} ${diag.toFixed(2)}" (${tierName}) — ${vals}`;
+    const vals = SCR.types.map(t => `${t.label}: ${Number(t.sell_price) > 0 ? fmtMoney(t.sell_price) : "—"}`).join(" • ");
+    hint.textContent = `${tr("المقاس", "Size")} ${diag.toFixed(2)}" — ${vals}`;
   }
 
   /* --------------------------------------------------- add / edit a size */
@@ -2376,7 +2353,7 @@
           <span>${esc(m.label)}</span>
           <button type="button" data-unlink="${m.id}" title="${tr("فصل", "Unlink")}"><i class="fa-solid fa-xmark"></i></button>
         </span>`).join("")}
-      ${total > models.length ? `<span class="scr-pick-more">+${total - models.length} ${tr("جهاز كمان — كلهم بنفس مقاس الزجاج", "more devices — same glass size")}</span>` : ""}`;
+      ${total > models.length ? `<span class="scr-pick-more">+${total - models.length} ${tr("جهاز كمان على نفس الاسكرينة", "more devices on this protector")}</span>` : ""}`;
     wrap.querySelectorAll("[data-unlink]").forEach(btn => {
       btn.addEventListener("click", async () => {
         try {
@@ -2523,7 +2500,6 @@
         if (el) el.style.display = "none";
       });
     });
-    document.getElementById("btnNewType")?.addEventListener("click", () => fillTypeForm(""));
     document.getElementById("scrWidth")?.addEventListener("input", paintPriceHint);
     document.getElementById("scrHeight")?.addEventListener("input", paintPriceHint);
     document.getElementById("scrDevSearch")?.addEventListener("input", e => searchDevicesToLink(e.currentTarget.value));
@@ -2562,11 +2538,9 @@
       fd.set("slug", document.getElementById("scrTypeSlug").value || "");
       fd.set("name_ar", document.getElementById("scrTypeAr").value);
       fd.set("name_en", document.getElementById("scrTypeEn").value);
-      [1, 2, 3].forEach(tier => {
-        fd.set(`prices[${tier}][sell_price]`, document.getElementById(`scrPrice${tier}Sell`).value || "0");
-        fd.set(`prices[${tier}][cost_price]`, document.getElementById(`scrPrice${tier}Cost`).value || "0");
-        fd.set(`prices[${tier}][min_sell_price]`, document.getElementById(`scrPrice${tier}Min`).value || "0");
-      });
+      fd.set("sell_price", document.getElementById("scrTypeSell").value || "0");
+      fd.set("cost_price", document.getElementById("scrTypeCost").value || "0");
+      fd.set("min_sell_price", document.getElementById("scrTypeMin").value || "0");
       try {
         const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
         showToast(res.message || tr("تم الحفظ", "Saved"));
@@ -2619,14 +2593,56 @@
       }
     });
 
+    /* pick the existing device the new phone shares its glass with */
+    let sameTimer = 0;
+    document.getElementById("scrNewSameSearch")?.addEventListener("input", e => {
+      const q = e.currentTarget.value.trim();
+      const box = document.getElementById("scrNewSameResults");
+      document.getElementById("scrNewSameId").value = "";
+      if (e.currentTarget.dataset.picked) {
+        delete e.currentTarget.dataset.picked;
+        const picked = document.getElementById("scrNewSamePicked");
+        if (picked) picked.textContent = tr("اختار جهاز والجهاز الجديد هياخد نفس قايمة الاسكرينات بتاعته — من غير أي قياس.", "Pick a device and the new phone inherits its protector list — no measuring needed.");
+      }
+      window.clearTimeout(sameTimer);
+      if (q.length < 2) { if (box) box.innerHTML = ""; return; }
+      sameTimer = window.setTimeout(async () => {
+        try {
+          const res = await apiFetch(`api/screens.php?action=models&q=${encodeURIComponent(q)}&limit=10`);
+          const list = res.models || [];
+          if (!box) return;
+          box.innerHTML = list.length
+            ? list.map(m => `<button type="button" class="scr-model-option" data-same-model="${m.id}"><i class="fa-solid fa-link"></i> ${esc(m.label)}${m.screen_inch ? ` <em>${m.screen_inch}"</em>` : ""}</button>`).join("")
+            : `<p class="scr-hint">${tr("مفيش جهاز بالاسم ده — علّم على «مفيش جهاز شبهه».", "No device found — tick “nothing matches”.")}</p>`;
+          box.querySelectorAll("[data-same-model]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const id = btn.getAttribute("data-same-model");
+              document.getElementById("scrNewSameId").value = id;
+              const input = document.getElementById("scrNewSameSearch");
+              input.value = btn.textContent.trim();
+              input.dataset.picked = "1";
+              box.innerHTML = "";
+              const picked = document.getElementById("scrNewSamePicked");
+              if (picked) picked.textContent = tr(`هياخد نفس اسكرينات: ${input.value}`, `Will inherit the protectors of: ${input.value}`);
+              const standalone = document.getElementById("scrNewStandalone");
+              if (standalone) standalone.checked = false;
+            });
+          });
+        } catch (_) {}
+      }, 240);
+    });
+
     document.getElementById("btnCreateModel")?.addEventListener("click", async () => {
       const brand = document.getElementById("scrNewBrand").value.trim();
       const model = document.getElementById("scrNewModel").value.trim();
-      const inch = document.getElementById("scrNewInch").value;
-      const w = document.getElementById("scrNewWidth").value;
-      const h = document.getElementById("scrNewHeight").value;
+      const sameId = document.getElementById("scrNewSameId")?.value || "";
+      const standalone = !!document.getElementById("scrNewStandalone")?.checked;
       if (!brand || !model) {
         showToast(tr("اكتب الماركة والموديل", "Enter brand and model"), true);
+        return;
+      }
+      if (!sameId && !standalone) {
+        showToast(tr("اختار الجهاز اللي شبهه، أو علّم على «مفيش جهاز شبهه».", "Pick a similar device, or tick “nothing matches”."), true);
         return;
       }
       try {
@@ -2634,12 +2650,17 @@
         fd.set("action", "save_model");
         fd.set("brand", brand);
         fd.set("model_name", model);
-        fd.set("screen_inch", inch || "0");
-        fd.set("width_mm", w || "0");
-        fd.set("height_mm", h || "0");
+        if (sameId) fd.set("link_to", sameId);
+        else if (SCR.devicesFor) fd.set("link_screen", String(SCR.devicesFor));
         const res = await apiFetch("api/screens.php", { method: "POST", body: fd });
         showToast(res.message || tr("تمت إضافة الجهاز", "Device added"));
         document.getElementById("scrNewModel").value = "";
+        document.getElementById("scrNewBrand").value = "";
+        document.getElementById("scrNewSameSearch").value = "";
+        document.getElementById("scrNewSameId").value = "";
+        document.getElementById("scrNewSameResults").innerHTML = "";
+        const alone = document.getElementById("scrNewStandalone");
+        if (alone) alone.checked = false;
         if (SCR.devicesFor) await refreshLinkedScreen();
         loadScreens(SCR.lastQuery, true);
       } catch (err) {
